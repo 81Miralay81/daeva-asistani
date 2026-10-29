@@ -415,13 +415,18 @@ public class MainActivity extends Activity {
             hs.setJavaScriptEnabled(true);
             hs.setDomStorageEnabled(true);
             hs.setBlockNetworkImage(false);
+            // Masaüstü görünümü: MetaBot telefon görünümünde yetenek/ekipman listelerini sayfaya koymayabiliyor
+            hs.setUserAgentString("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36");
+            hs.setUseWideViewPort(true);
+            hs.setLoadWithOverviewMode(true);
             hidden.setWebViewClient(new WebViewClient() {
                 @Override public void onPageStarted(WebView v, String url, Bitmap f) { }
                 @Override public void onPageFinished(WebView v, String url) { CountDownLatch l = pageLatch; if (l != null) l.countDown(); }
             });
-            // Ekranda görünmez, ama gerçek bir sayfa gibi çalışsın diye pencereye 1x1 eklenir
-            hidden.setVisibility(View.INVISIBLE);
-            ((FrameLayout) web.getParent()).addView(hidden, new FrameLayout.LayoutParams(1, 1));
+            // Ana sayfanın ARKASINA, masaüstü boyutunda eklenir: ekranda görünmez ama sayfa tam çizilir
+            hidden.setAlpha(0f);
+            hidden.setFocusable(false);
+            ((FrameLayout) web.getParent()).addView(hidden, 0, new FrameLayout.LayoutParams(1280, 2400));
             hidden.loadUrl(METABOT);
             made.countDown();
         });
@@ -496,7 +501,11 @@ public class MainActivity extends Activity {
             ui.post(() -> hidden.loadUrl(url));
             if (!pageLatch.await(40, TimeUnit.SECONDS)) return new JSONObject().put("ok", false).put("error", "Sayfa yüklenemedi (zaman aşımı)");
             waitReady(25);
-            Thread.sleep(1200);
+            // yetenek ve ekipman listeleri sayfada belirene kadar bekle (en fazla ~20 sn)
+            String chk = "(function(){var t=(document.body&&document.body.innerText||'').toLowerCase();"
+                    + "return (document.querySelectorAll('[aria-label$=\"\\u2014 details\"]').length>0&&t.indexOf('active skills')>=0)?'1':'0';})()";
+            for (int i = 0; i < 40; i++) { if ("1".equals(eval(chk, 10))) break; Thread.sleep(500); }
+            Thread.sleep(600);
             String html = eval("document.documentElement.outerHTML", 40);
             String extra = extraJs.isEmpty() ? "" : eval(extraJs, 90);
             return new JSONObject().put("ok", true).put("html", html).put("extra", extra);

@@ -1453,6 +1453,8 @@ function rChar() {
     </div>`;
 }
 function charGaps(c, cls) {
+  // Veri eksik geldiyse yanlış öneri verme
+  if (!c.actives.length || !c.equipment.length) return [`⚠ MetaBot sayfası tam okunamadı (${!c.actives.length ? "yetenekler" : ""}${!c.actives.length && !c.equipment.length ? " ve " : ""}${!c.equipment.length ? "ekipman" : ""} boş geldi), bu yüzden öneri vermiyorum. Birkaç saniye sonra <b>Sorgula</b>'ya tekrar bas.${c.diag ? ` <span class="mut small">(${esc(c.diag)})</span>` : ""}`];
   const g = [], t = T(), role = CLS_ROLE[cls];
   // yetenek yuvaları
   const near = c.actives.filter(a => { const nx = t.find(v => v > a.level); return nx && nx - a.level <= 2; });

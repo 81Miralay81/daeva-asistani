@@ -100,10 +100,15 @@ out.push({label:b.getAttribute('aria-label'),icon:d,rarity:r?r[1]:''});});return
     const r = pick.row, url = `${BASE}/en${r.path}`;
     const pg = await call("metabot_page", url, ICON_JS);
     if (!pg || !pg.ok) return { ok: false, code: -2, error: (pg && pg.error) || "Profil sayfası açılamadı" };
-    const prof = parseProfile(htmlLines(pg.html), pg.html);
+    let lines = htmlLines(pg.html), prof = parseProfile(lines, pg.html);
+    if (!prof.actives.length || !prof.equipment.length) { // bir kez daha dene (sayfa geç çizildiyse)
+      const pg2 = await call("metabot_page", url, ICON_JS);
+      if (pg2 && pg2.ok) { pg.html = pg2.html; pg.extra = pg2.extra; lines = htmlLines(pg.html); prof = parseProfile(lines, pg.html); }
+    }
+    prof.diag = `sayfa ${Math.round((pg.html || "").length / 1024)} KB, ${lines.length} satır`;
     mergeIcons(prof, pg.extra);
     Object.assign(prof, { ok: true, name: r.name, server: r.serverName, region, classKey: r.classKey, url, via: "android" });
-    CACHE[key] = [Date.now(), prof];
+    if (prof.actives.length && prof.equipment.length) CACHE[key] = [Date.now(), prof]; // eksik okunanı saklama
     return prof;
   }
 
