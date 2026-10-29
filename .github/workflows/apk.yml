@@ -1,0 +1,59 @@
+name: APK derle
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Android SDK kontrolü
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls "$ANDROID_HOME/platforms" || true
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0" > /dev/null || true
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: Arayüzü hazırla
+        run: python3 build_assets.py
+
+      - name: İmza anahtarını hazırla
+        run: echo "${{ secrets.KEYSTORE_B64 }}" | base64 -d > "$RUNNER_TEMP/daeva.jks"
+
+      - name: APK derle
+        env:
+          KEYSTORE_FILE: ${{ runner.temp }}/daeva.jks
+          KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
+        run: gradle -p android assembleRelease --no-daemon --stacktrace
+
+      - name: APK'yı adlandır
+        run: cp android/app/build/outputs/apk/release/app-release.apk DaevaAsistani.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DaevaAsistani-apk
+          path: DaevaAsistani.apk
+
+      - name: Son sürüm olarak yayınla
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Daeva Asistanı 1.0.${{ github.run_number }}
+          body: "Telefonda DaevaAsistani.apk dosyasını indirip kur. Uygulama kuruluysa açtığında bu sürümü kendisi önerir."
+          files: DaevaAsistani.apk
+          make_latest: true

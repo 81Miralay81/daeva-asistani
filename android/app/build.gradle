@@ -1,0 +1,41 @@
+plugins {
+    id "com.android.application"
+}
+
+def runNo = (System.getenv("GITHUB_RUN_NUMBER") ?: "1") as Integer
+
+android {
+    namespace "com.daeva.asistani"
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.daeva.asistani"
+        minSdk 24
+        targetSdk 34
+        versionCode runNo
+        versionName "1.0." + runNo
+    }
+
+    signingConfigs {
+        // Sabit imza: yeni sürüm eskisinin üzerine kurulabilsin, ayarlar silinmesin
+        release {
+            // Anahtar depoda değil: GitHub Secrets'tan derleme sırasında oluşturulur
+            storeFile file(System.getenv("KEYSTORE_FILE") ?: "daeva.jks")
+            storePassword System.getenv("KEYSTORE_PASS") ?: ""
+            keyAlias "daeva"
+            keyPassword System.getenv("KEYSTORE_PASS") ?: ""
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
