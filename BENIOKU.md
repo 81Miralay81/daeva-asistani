@@ -15,3 +15,5 @@ Uygulama kuruluysa yeni sürüm çıkınca açılışta kendisi sorar: **Güncel
 ## Notlar
 - Gemini anahtarı sadece telefonda saklanır.
 - `web/templar-tank.html` güncellenip `main` dalına gönderilince GitHub yeni APK'yı kendisi derler.
+
+Sürüm notları: yetenek/eşya özellik pencereleri, otomatik güncelleme.
