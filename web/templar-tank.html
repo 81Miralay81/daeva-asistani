@@ -1181,13 +1181,17 @@ async function gemAsk(prompt, search = true) {
     const r = await api.ask_gemini(model, prompt, search);
     if (r && r.ok) {
       if (r.model && r.model !== S.gemModel) { S.gemModel = r.model; save(); }
-      if (attempt > 0) r.switched = { from: start || tried[0], to: r.model || model, why: firstErr && firstErr.code === 404 ? "kapalı" : "kotası dolu" };
+      if (attempt > 0) r.switched = { from: start || tried[0], to: r.model || model, why: firstErr && firstErr.code === 404 ? "kapalı" : zeroQuota(firstErr) ? "ücretsiz kotada kapalı" : "kotası dolu" };
       return r;
     }
     const er = normErr(r && r.error), used = (r && r.model) || model;
     lastErr = er; if (!firstErr) firstErr = er;
     if (er.code !== 404 && er.code !== 429) throw { gem: true, err: er, model: used };
-    if (er.code === 429) S.gemCool[used] = Date.now() + (er.retry || 60) * 1000; else S.gemBad[used] = Date.now();
+    if (er.code === 429 && search && searchQuota(er) && !zeroQuota(er)) { // sadece arama kotası: aynı modelle aramasız dene
+      const r2 = await api.ask_gemini(used, prompt, false);
+      if (r2 && r2.ok) { r2.noSearch = true; if (attempt > 0) r2.switched = { from: start || tried[0], to: r2.model || used, why: firstErr && firstErr.code === 404 ? "kapalı" : zeroQuota(firstErr) ? "ücretsiz kotada kapalı" : "kotası dolu" }; return r2; }
+    }
+    if (er.code === 429 && !zeroQuota(er)) S.gemCool[used] = Date.now() + (er.retry || 60) * 1000; else S.gemBad[used] = { at: Date.now(), why: er.code === 404 ? "404" : "kota 0" };
     // sıradaki model: önce Google'ın önerdiği, sonra listedeki ilk uygun olan
     if (!(S.gemModels && S.gemModels.length)) { try { const l = await api.list_models(); if (l && l.ok) S.gemModels = l.models; } catch (e) {} }
     const sug = (/use (?:models\/)?([a-z0-9.\-]+)/i.exec(er.message || "") || [])[1];
@@ -1250,6 +1254,8 @@ function normErr(e) {
   if (typeof e === "object") return e;
   const m = /HTTP (\d+)/.exec(e); return { code: m ? +m[1] : 0, status: "", message: String(e) };
 }
+const zeroQuota = e => /limit:\s*0\b/i.test(e.message || "");
+const searchQuota = e => /search|grounding/i.test(e.message || "");
 function coolLeft(model) { const u = (S.gemCool || {})[model]; return u ? Math.max(0, Math.ceil((u - Date.now()) / 1000)) : 0; }
 const mmss = sec => `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
 // Hataların Türkçe açıklaması
@@ -1263,6 +1269,8 @@ function trGemErr(e, model) {
   if (e.code === 400) return { t: "İstek kabul edilmedi (HTTP 400 – hatalı istek)", w: "Model bu isteği işleyemedi; seçili model Google aramasını ya da bu tür isteği desteklemiyor olabilir.", d: "Listeden başka bir model (tercihen 'flash') seç ve tekrar dene." };
   if (e.code === 401 || e.code === 403) return { t: `Yetki yok (HTTP ${e.code} – erişim reddedildi)`, w: "Anahtarın bu modeli ya da Gemini API'yi kullanma iznine sahip değil; anahtar kısıtlanmış ya da proje kapatılmış olabilir.", d: "AI Studio'da yeni bir anahtar oluşturup kaydet." };
   if (e.code === 404) return { t: `Model bulunamadı (HTTP 404 – bulunamadı)`, w: `${model} artık kullanılamıyor ya da yeni kullanıcılara kapatılmış.${sug ? ` Google bunun yerine <b>${esc(sug)}</b> modelini öneriyor.` : ""}`, d: "Başka bir model seç (önerilen modeller listenin başında).", sug };
+  if (e.code === 429 && zeroQuota(e)) return { t: `Bu model senin anahtarında ücretsiz kullanılamıyor (kota: 0)`, w: `Google, ${model} için ücretsiz anahtarlara hiç hak vermiyor (hata 429 "kota doldu" olarak geliyor ama aslında limit sıfır). Hiç kullanmamış olsan da bu hatayı alırsın.`, d: "Beklemek işe yaramaz. Yapay Zeka sekmesinde <b>Modelleri test et</b>'e bas ve ✅ çıkan bir modeli seç (genelde flash)." };
+  if (e.code === 429 && searchQuota(e)) return { t: "Google araması kotası doldu (HTTP 429)", w: "Uygulama her soruda Google'da güncel bilgi aratıyor; bu aramanın ücretsiz hakkı modelin kendi kotasından ayrı ve daha düşük.", d: "Uygulama aramasız tekrar dener. Sürerse başka bir model seç ya da yarın tekrar dene." };
   if (e.code === 429) return { t: "Kullanım sınırı doldu (HTTP 429 – çok fazla istek)", w: `Ücretsiz kotada ${model} için dakikalık ya da günlük istek sınırına ulaşıldı.`, d: `Sayaç bitene kadar bu modeli kullanma; istersen başka bir model seç (her modelin kotası ayrıdır).` };
   if (e.code === 500 || e.code === 503) return { t: `Google tarafında geçici sorun (HTTP ${e.code} – sunucu meşgul)`, w: "Model şu an aşırı yoğun ya da geçici olarak çalışmıyor; senin ayarlarınla ilgili değil.", d: "Biraz sonra tekrar dene ya da başka bir model seç." };
   if (e.code === 200 && st === "EMPTY") return { t: "Boş cevap geldi", w: "Model cevap üretmedi (güvenlik filtresi ya da çok uzun istek).", d: "Notunu kısaltıp tekrar dene ya da başka bir model seç." };
@@ -1272,7 +1280,7 @@ function trGemErr(e, model) {
 function modelInfo(m) {
   const bad = (S.gemBad || {})[m], cd = coolLeft(m);
   const best = (S.gemModels || []).find(x => !(S.gemBad || {})[x] && !coolLeft(x) && /flash/.test(x) && !/lite|preview|exp/.test(x));
-  if (bad) return { v: "❌ Kullanma", c: "bad", t: "Google bu modeli kapattı ya da yeni kullanıcılara açmıyor (HTTP 404). Seçsen de hata verir." };
+  if (bad) return { v: "❌ Kullanma", c: "bad", t: bad.why === "zero" || bad.why === "kota 0" ? "Bu model senin anahtarında ücretsiz kullanılamıyor (kota 0). Beklemek işe yaramaz." : "Google bu modeli kapattı ya da yeni kullanıcılara açmıyor (HTTP 404). Seçsen de hata verir." };
   if (cd) return { v: `⏳ Bekle ${mmss(cd)}`, c: "warn", t: "Bu modelin ücretsiz kotası doldu. Sayaç bitmeden kullanma; bu sürede başka bir model seç (her modelin kotası ayrıdır)." };
   if (!/gemini/.test(m)) return { v: "🚫 Kullanma", c: "bad", t: "Gemini modeli değil; Google aramasını desteklemiyor, güncel bilgi getiremez." };
   if (/preview|exp/.test(m)) return { v: "⚠ Gerekmedikçe kullanma", c: "warn", t: "Deneme sürümü. Bazen daha yeni bilgi verir ama her an kaldırılabilir ya da hata verebilir. Diğerleri beklemedeyse dene." };
@@ -1281,6 +1289,32 @@ function modelInfo(m) {
   if (/pro/.test(m)) return { v: "👍 İşe yarar · az kullan", c: "", t: "En akıllısı; karakter değerlendirmesi ve zor kararlar için. Ücretsiz kotası çok düşük, yavaş ve sık sınıra takılır. Her gün her şey için kullanma." };
   if (/flash/.test(m)) return { v: "👍 İşe yarar", c: "", t: "Eski ya da alternatif flash sürümü. Çalışır ama önerilenden daha eski bilgiyle cevap verebilir. Önerilen beklemedeyse kullan." };
   return { v: "❔ Bilinmiyor", c: "mut", t: "Tanınmayan model. Deneyebilirsin; hata verirse başka birini seç." };
+}
+// ---- Model testi: hangi model bu anahtarla gerçekten çalışıyor? ----
+let GEM_TEST = null;
+async function gemTest() {
+  const api = gemApi(); if (!api || GEM_BUSY) return;
+  if (!(S.gemModels && S.gemModels.length)) { const l = await api.list_models(); if (l && l.ok) S.gemModels = l.models; else { GEM_TEST = { err: normErr(l && l.error), rows: [] }; render(); return; } }
+  const models = S.gemModels.slice(0, 8);
+  GEM_TEST = { running: true, rows: models.map(m => ({ m, s: "…", g: "…" })) }; GEM_BUSY = true; render();
+  const res = r => !r ? "?" : r.ok ? "ok" : normErr(r.error).code === 404 ? "404" : normErr(r.error).code === 429 ? (zeroQuota(normErr(r.error)) ? "zero" : "429") : "err";
+  for (const row of GEM_TEST.rows) {
+    const a = await api.ask_gemini(row.m, "Sadece OK yaz.", false); row.s = res(a); row.sm = a && !a.ok ? normErr(a.error).message : "";
+    if (row.s === "ok") { const b = await api.ask_gemini(row.m, "Sadece OK yaz.", true); row.g = res(b); row.gm = b && !b.ok ? normErr(b.error).message : ""; } else row.g = "-";
+    S.gemBad = S.gemBad || {}; S.gemCool = S.gemCool || {};
+    if (row.s === "404" || row.s === "zero") S.gemBad[row.m] = { at: Date.now(), why: row.s }; else if (row.s === "ok") { delete S.gemBad[row.m]; delete S.gemCool[row.m]; }
+    render();
+  }
+  const best = GEM_TEST.rows.find(r => r.s === "ok" && r.g === "ok") || GEM_TEST.rows.find(r => r.s === "ok");
+  if (best) S.gemModel = best.m;
+  GEM_TEST.running = false; GEM_TEST.best = best && best.m; GEM_BUSY = false; save(); render();
+}
+function gemTestHtml() {
+  const T2 = GEM_TEST, lab = { ok: "✅ çalışıyor", "404": "❌ kapalı", zero: "❌ ücretsiz kota 0", "429": "⏳ kota dolu", err: "⚠ hata", "?": "?", "…": "⏳", "-": "—" };
+  if (T2.err) return `<p class="bad small">⚠ ${esc(T2.err.message || "Modeller alınamadı")}</p>`;
+  return `<div class="card" style="margin-top:8px"><div class="nm small">Model testi ${T2.running ? "(sürüyor…)" : ""}</div><table class="small"><tr><th>Model</th><th>Normal</th><th>Google aramalı</th></tr>
+    ${T2.rows.map(r => `<tr title="${esc(r.sm || r.gm || "")}"><td>${esc(r.m)}${r.m === T2.best ? " ⭐" : ""}</td><td>${lab[r.s] || r.s}</td><td>${lab[r.g] || r.g}</td></tr>`).join("")}</table>
+    ${T2.running ? "" : T2.best ? `<p class="small ok">⭐ <b>${esc(T2.best)}</b> seçildi.${T2.rows.find(r => r.m === T2.best).g !== "ok" ? " Bu modelde Google araması çalışmıyor; cevaplar aramasız verilecek." : ""}</p>` : `<p class="small bad">Hiçbir model çalışmadı. Anahtarı AI Studio'da kontrol et ya da yarın tekrar dene.</p>`}</div>`;
 }
 function modelTag(m) { return `${m} — ${modelInfo(m).v}`; }
 function modelInfoBox(m) {
@@ -1333,7 +1367,8 @@ function rAi() {
   let h = `<div class="grid2"><div class="card"><div class="nm">Gemini API anahtarı</div>
     <p class="mut small">Anahtarı <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>'dan ücretsiz alırsın ("Create API key"). Anahtar sadece bu bilgisayarda saklanır; exe'yi paylaşsan da anahtarın gitmez. Kimseyle paylaşma.</p>
     <div class="lv"><input type="password" id="gemkey" placeholder="${GEM_HAS_KEY ? "Kayıtlı ✓ (değiştirmek için yeni anahtar yaz)" : "AIza..."}" style="flex:1;min-width:200px"><button class="btn pri" id="gemsave">Kaydet</button>${GEM_HAS_KEY ? '<button class="btn" id="gemdel">Sil</button>' : ""}</div>
-    <div class="lv"><label for="gemmodel">Model</label><select id="gemmodel" style="max-width:100%">${(S.gemModels || [S.gemModel || ""]).filter(Boolean).map(m => `<option value="${m}" title="${esc(modelInfo(m).t)}" ${m === (S.gemModel || "") ? "selected" : ""}>${modelTag(m)}</option>`).join("") || '<option value="">Önce "Modelleri yükle"</option>'}</select><button class="btn" id="gemlist" ${GEM_HAS_KEY ? "" : "disabled"}>Modelleri yükle / test et</button></div>
+    <div class="lv"><label for="gemmodel">Model</label><select id="gemmodel" style="max-width:100%">${(S.gemModels || [S.gemModel || ""]).filter(Boolean).map(m => `<option value="${m}" title="${esc(modelInfo(m).t)}" ${m === (S.gemModel || "") ? "selected" : ""}>${modelTag(m)}</option>`).join("") || '<option value="">Önce "Modelleri yükle"</option>'}</select><button class="btn" id="gemlist" ${GEM_HAS_KEY ? "" : "disabled"}>Modelleri yükle</button><button class="btn" id="gemtest" ${GEM_HAS_KEY && !GEM_BUSY ? "" : "disabled"} title="Her modele kısa bir deneme isteği gönderir (aramasız ve aramalı)">Modelleri test et</button></div>
+    ${GEM_TEST ? gemTestHtml() : ""}
     <div id="gemminfo">${modelInfoBox(S.gemModel)}</div>
     <details class="small" ${S.gemModels && S.gemModels.length ? "open" : ""}><summary>Hangi modeli seçmeliyim? (modelin üstüne gelince açıklama çıkar)</summary><div id="gemguide">${modelGuide()}</div>
       <p class="mut">Her modelin kotası ayrıdır: biri ⏳ beklemedeyse başka birini seçebilirsin.</p></details></div>
@@ -1369,6 +1404,7 @@ document.addEventListener("click", async e => {
   const id = e.target.id; const api = gemApi();
   if (id === "gemsave" && api) { const k = document.getElementById("gemkey").value.trim(); if (!k) return; const r = await api.save_key(k); GEM_HAS_KEY = !!(r && r.ok); render(); }
   else if (id === "gemdel" && api) { await api.delete_key(); GEM_HAS_KEY = false; render(); }
+  else if (id === "gemtest" && api) { gemTest(); }
   else if (id === "gemlist" && api) { e.target.textContent = "Bağlanıyor…"; const r = await api.list_models(); if (r && r.ok) { const bad = S.gemBad || {}; S.gemModels = [...r.models.filter(m => !bad[m]), ...r.models.filter(m => bad[m])]; const ok = S.gemModels.find(m => !bad[m] && !coolLeft(m)); if (!r.models.includes(S.gemModel) || bad[S.gemModel] || coolLeft(S.gemModel)) S.gemModel = ok || S.gemModels[0]; save(); GEM_OUT = { kind: "q", text: `Bağlantı başarılı ✓ — ${r.models.length} model bulundu. Seçili: **${S.gemModel}**`, at: Date.now(), model: S.gemModel }; } else GEM_OUT = { err: normErr(r && r.error), model: S.gemModel }; render(); }
   else if (id === "gemsug") { S.gemModel = e.target.dataset.gm; S.gemModels = [S.gemModel, ...(S.gemModels || []).filter(x => x !== S.gemModel)]; save(); GEM_OUT = null; render(); }
   else if (id === "gemplan") gemRun("plan", (document.getElementById("gemnote") || {}).value);
@@ -1812,7 +1848,7 @@ function aiErrHtml(er, model) {
   const cd = coolLeft(model);
   return `<div class="errcard small"><p class="bad"><b>⚠ ${tr.t}</b></p><p><b>Neden:</b> ${tr.w}</p><p><b>Ne yapmalı:</b> ${tr.d}</p>
     <p>Model: <b>${esc(model || "—")}</b>${cd ? ` · Bekleme: <b class="warn" data-until="${S.gemCool[model]}">${mmss(cd)}</b>` : ""}</p>
-    ${er.message ? `<details class="mut"><summary>Orijinal mesaj</summary>${esc(er.message)}</details>` : ""}</div>`;
+    ${er.message ? `<details class="mut" ${er.code === 429 ? "open" : ""}><summary>Orijinal mesaj</summary>${esc(er.message)}</details>` : ""}</div>`;
 }
 function gemMark(er, model) {
   S.gemCool = S.gemCool || {}; S.gemBad = S.gemBad || {};
@@ -1982,7 +2018,7 @@ async function aiDist(kind) {
     try {
       const r = await gemAsk(aiPrompt(kind), true); model = r.model || model;
       AI_PROG.phase = "calc"; updProg();
-      res = aiParse(kind, aiJson(r.text)); res.ai = true; res.sources = r.sources || []; res.switched = r.switched;
+      res = aiParse(kind, aiJson(r.text)); res.ai = true; res.sources = r.sources || []; res.switched = r.switched; res.noSearch = r.noSearch;
     } catch (e) {
       if (e && e.gem) { err = e.err; model = e.model || model; gemMark(err, model); }
       else err = { code: -1, status: "PARSE", message: String((e && e.message) || e) };
@@ -1997,7 +2033,7 @@ async function aiDist(kind) {
   AI_BUSY = null; AI_PROG = null; save(); render();
 }
 function doneBar(r) {
-  return `<div class="donebar">✅ <b>İşlem tamamlandı</b>${r.dur ? ` · ${r.dur} sn` : ""}${r.err ? " · yapay zeka cevap veremedi, kural tabanlı yapıldı" : r.ai ? " · yapay zeka araştırmasıyla" : ""}${r.switched ? `<div class="small">ℹ ${esc(r.switched.from)} ${r.switched.why} olduğu için <b>${esc(r.switched.to)}</b> modeline geçildi; bundan sonra o kullanılacak.</div>` : ""}</div>`;
+  return `<div class="donebar">✅ <b>İşlem tamamlandı</b>${r.dur ? ` · ${r.dur} sn` : ""}${r.err ? " · yapay zeka cevap veremedi, kural tabanlı yapıldı" : r.ai ? " · yapay zeka araştırmasıyla" : ""}${r.switched ? `<div class="small">ℹ ${esc(r.switched.from)} ${r.switched.why} olduğu için <b>${esc(r.switched.to)}</b> modeline geçildi; bundan sonra o kullanılacak.</div>` : ""}${r.noSearch ? `<div class="small">ℹ Google araması kotası dolu olduğu için bu cevap <b>aramasız</b> (modelin kendi bilgisiyle) verildi.</div>` : ""}</div>`;
 }
 function aiUndo(kind) {
   const u = S.aiUndo; if (!u || u.kind !== kind || u.cls !== CLS || u.mode !== S.mode) return;
