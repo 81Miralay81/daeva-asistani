@@ -2253,5 +2253,12 @@ out.push({label:b.getAttribute('aria-label'),icon:d,rarity:r?r[1]:''});});return
   };
   document.addEventListener("click", e => { const a = e.target.closest('a[target="_blank"]'); if (a) { e.preventDefault(); call("open_url", a.href); } });
   setTimeout(() => window.dispatchEvent(new Event("pywebviewready")), 0);
+  // Başlıkta sürüm numarası (güncellemenin geldiğini görmek için)
+  call("app_version").then(v => {
+    const t = document.getElementById("apptitle"); if (!t || !v || !v.code) return;
+    const b = document.createElement("span"); b.textContent = "v1.0." + v.code;
+    b.style.cssText = "font-size:11px;font-weight:600;margin-left:8px;padding:2px 6px;border-radius:6px;background:#2e3542;color:#cfd6e0;vertical-align:middle";
+    t.appendChild(b);
+  });
 })();
 </script></body></html>
