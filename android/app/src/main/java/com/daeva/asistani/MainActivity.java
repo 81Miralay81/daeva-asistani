@@ -291,10 +291,23 @@ public class MainActivity extends Activity {
                     status = err.optString("status", "");
                     msg = err.optString("message", msg);
                     JSONArray det = err.optJSONArray("details");
+                    StringBuilder quota = new StringBuilder();
                     if (det != null) for (int i = 0; i < det.length(); i++) {
-                        Matcher mm = Pattern.compile("(\\d+(?:\\.\\d+)?)s").matcher(det.optJSONObject(i) == null ? "" : det.optJSONObject(i).optString("retryDelay", ""));
+                        JSONObject d = det.optJSONObject(i);
+                        if (d == null) continue;
+                        Matcher mm = Pattern.compile("(\\d+(?:\\.\\d+)?)s").matcher(d.optString("retryDelay", ""));
                         if (mm.find()) retry = Math.max(retry, (int) Double.parseDouble(mm.group(1)) + 1);
+                        JSONArray vs = d.optJSONArray("violations");
+                        if (vs != null) for (int j = 0; j < vs.length(); j++) {
+                            JSONObject v = vs.optJSONObject(j);
+                            if (v == null) continue;
+                            JSONObject dims = v.optJSONObject("quotaDimensions");
+                            if (quota.length() > 0) quota.append(" ; ");
+                            quota.append("quotaId=").append(v.optString("quotaId")).append(" metric=").append(v.optString("quotaMetric"))
+                                 .append(" model=").append(dims == null ? "" : dims.optString("model")).append(" limit: ").append(v.optString("quotaValue", "?"));
+                        }
                     }
+                    if (quota.length() > 0) msg = msg + " | " + quota;
                 }
             } catch (Exception ignored) { }
             if (code == 429 && retry == 0) {

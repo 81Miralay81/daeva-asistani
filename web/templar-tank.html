@@ -316,7 +316,7 @@ const DEFAULT_STATE = {
 const TABS = [["ask","💬 Asistan"],["ai","🤖 Yapay Zeka"],["kar","👤 Karakter"],["akt","Aktif Yetenekler"],["pas","Pasifler"],["stg","Stigmalar"],["mak","Makro"],["pln","Puan Planı"],["dae","Daevanion"]];
 let S = load(); let TAB = "ask";
 function load(){ try{ const s = JSON.parse(localStorage.getItem("templarTank")); if(s&&s.lv) return merge(s);}catch(e){} return JSON.parse(JSON.stringify(DEFAULT_STATE)); }
-function merge(s){ const d = JSON.parse(JSON.stringify(DEFAULT_STATE)); Object.assign(d.lv, s.lv||{}); Object.assign(d.st, s.st||{}); d.mode = s.mode||d.mode; d.freeSkill=s.freeSkill||0; d.freeStigma=s.freeStigma||0; d.dae=s.dae||{}; d.daeHave=s.daeHave||{}; d.cls=s.cls||"templar"; d.byCls=s.byCls||{}; d.region=s.region||"eu"; for(const k of ["freeActive","freePassive","slotLv","stCost11","gemModel","gemModels","gemLast","gemUpdate","gemNew","chName","chRegion","chServer","chCls","chLast","chApplied","gemCool","gemBad","freeSkills","ai","aiUndo","daeBud","macroKey","barKeys","chSpec"]) if(s[k]!==undefined) d[k]=s[k]; return d; }
+function merge(s){ const d = JSON.parse(JSON.stringify(DEFAULT_STATE)); Object.assign(d.lv, s.lv||{}); Object.assign(d.st, s.st||{}); d.mode = s.mode||d.mode; d.freeSkill=s.freeSkill||0; d.freeStigma=s.freeStigma||0; d.dae=s.dae||{}; d.daeHave=s.daeHave||{}; d.cls=s.cls||"templar"; d.byCls=s.byCls||{}; d.region=s.region||"eu"; for(const k of ["freeActive","freePassive","slotLv","stCost11","gemModel","gemModels","gemLast","gemUpdate","gemNew","chName","chRegion","chServer","chCls","chLast","chApplied","gemCool","gemBad","freeSkills","ai","aiUndo","daeBud","macroKey","barKeys","chSpec","gemAuto"]) if(s[k]!==undefined) d[k]=s[k]; return d; }
 function save(){ try{ localStorage.setItem("templarTank", JSON.stringify(S)); }catch(e){} if(typeof cloudSave==="function") cloudSave(); }
 let ALL = Object.fromEntries([...ACTIVES,...PASSIVES,...STIGMAS].map(x=>[x.id,x]));
 const icon = id => `<img src="${iconSrc(id)}" alt="">`;
@@ -1155,7 +1155,7 @@ window.addEventListener("pywebviewready", async () => {
   try { GEM_HAS_KEY = !!(await gemApi().has_key()); } catch (e) { GEM_HAS_KEY = false; }
   if (TAB === "ai") render(); else document.getElementById("tabs").innerHTML = tabButtons();
   // günde bir kez güncelleme kontrolü
-  if (GEM_HAS_KEY && (!S.gemLast || Date.now() - S.gemLast > 24 * 3600 * 1000)) gemUpdateCheck(true);
+  if (GEM_HAS_KEY && S.gemAuto && (!S.gemLast || Date.now() - S.gemLast > 24 * 3600 * 1000)) gemUpdateCheck(true);
 });
 function tabButtons() { return TABS.map(([k, t]) => `<button data-t="${k}" class="${TAB === k ? "on" : ""}">${t}${k === "ai" && S.gemNew ? " •" : ""}</button>`).join(""); }
 
@@ -1191,7 +1191,7 @@ async function gemAsk(prompt, search = true) {
       const r2 = await api.ask_gemini(used, prompt, false);
       if (r2 && r2.ok) { r2.noSearch = true; if (attempt > 0) r2.switched = { from: start || tried[0], to: r2.model || used, why: firstErr && firstErr.code === 404 ? "kapalı" : zeroQuota(firstErr) ? "ücretsiz kotada kapalı" : "kotası dolu" }; return r2; }
     }
-    if (er.code === 429 && !zeroQuota(er)) S.gemCool[used] = Date.now() + (er.retry || 60) * 1000; else S.gemBad[used] = { at: Date.now(), why: er.code === 404 ? "404" : "kota 0" };
+    if (er.code === 429 && !zeroQuota(er)) S.gemCool[used] = dayQuota(er) ? nextQuotaReset() : Date.now() + (er.retry || 60) * 1000; else S.gemBad[used] = { at: Date.now(), why: er.code === 404 ? "404" : "kota 0" };
     // sıradaki model: önce Google'ın önerdiği, sonra listedeki ilk uygun olan
     if (!(S.gemModels && S.gemModels.length)) { try { const l = await api.list_models(); if (l && l.ok) S.gemModels = l.models; } catch (e) {} }
     const sug = (/use (?:models\/)?([a-z0-9.\-]+)/i.exec(er.message || "") || [])[1];
@@ -1241,8 +1241,7 @@ VERİ: ${gemContext()}`;
   } catch (e) {
     const er = e && e.gem ? e.err : normErr(String((e && e.message) || e)), model = (e && e.model) || S.gemModel;
     S.gemCool = S.gemCool || {}; S.gemBad = S.gemBad || {};
-    if (er.code === 429) S.gemCool[model] = Date.now() + (er.retry || 60) * 1000;
-    if (er.code === 404) S.gemBad[model] = Date.now();
+    gemMark(er, model);
     save(); GEM_OUT = { kind, err: er, model };
   }
   GEM_BUSY = false; render();
@@ -1255,6 +1254,10 @@ function normErr(e) {
   const m = /HTTP (\d+)/.exec(e); return { code: m ? +m[1] : 0, status: "", message: String(e) };
 }
 const zeroQuota = e => /limit:\s*0\b/i.test(e.message || "");
+const dayQuota = e => /PerDay/i.test(e.message || "");
+const minQuota = e => /PerMinute/i.test(e.message || "");
+// Google'ın günlük ücretsiz kotası Pasifik gece yarısı yenilenir (Türkiye saatiyle 10:00–11:00)
+function nextQuotaReset() { const d = new Date(), r = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 8, 0, 0)); if (r <= d) r.setUTCDate(r.getUTCDate() + 1); return r.getTime(); }
 const searchQuota = e => /search|grounding/i.test(e.message || "");
 function coolLeft(model) { const u = (S.gemCool || {})[model]; return u ? Math.max(0, Math.ceil((u - Date.now()) / 1000)) : 0; }
 const mmss = sec => `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
@@ -1271,6 +1274,8 @@ function trGemErr(e, model) {
   if (e.code === 404) return { t: `Model bulunamadı (HTTP 404 – bulunamadı)`, w: `${model} artık kullanılamıyor ya da yeni kullanıcılara kapatılmış.${sug ? ` Google bunun yerine <b>${esc(sug)}</b> modelini öneriyor.` : ""}`, d: "Başka bir model seç (önerilen modeller listenin başında).", sug };
   if (e.code === 429 && zeroQuota(e)) return { t: `Bu model senin anahtarında ücretsiz kullanılamıyor (kota: 0)`, w: `Google, ${model} için ücretsiz anahtarlara hiç hak vermiyor (hata 429 "kota doldu" olarak geliyor ama aslında limit sıfır). Hiç kullanmamış olsan da bu hatayı alırsın.`, d: "Beklemek işe yaramaz. Yapay Zeka sekmesinde <b>Modelleri test et</b>'e bas ve ✅ çıkan bir modeli seç (genelde flash)." };
   if (e.code === 429 && searchQuota(e)) return { t: "Google araması kotası doldu (HTTP 429)", w: "Uygulama her soruda Google'da güncel bilgi aratıyor; bu aramanın ücretsiz hakkı modelin kendi kotasından ayrı ve daha düşük.", d: "Uygulama aramasız tekrar dener. Sürerse başka bir model seç ya da yarın tekrar dene." };
+  if (e.code === 429 && dayQuota(e)) return { t: "Günlük ücretsiz hak bitti (HTTP 429)", w: `${model} için bugünkü ücretsiz istek hakkın doldu. (Uygulamanın her Dağıt / Planla / soru isteği 1 hak harcar; açılıştaki günlük kontrol de 1 hak.)`, d: `Yarın Türkiye saatiyle 10:00–11:00 civarı yenilenir (${new Date(nextQuotaReset()).toLocaleString("tr-TR", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}). O zamana kadar başka bir model seç; her modelin günlük hakkı ayrı.` };
+  if (e.code === 429 && minQuota(e)) return { t: "Dakikalık sınır doldu (HTTP 429)", w: `${model} için bir dakikada izin verilen istek ya da metin miktarı aşıldı.`, d: "1 dakika bekleyip tekrar dene." };
   if (e.code === 429) return { t: "Kullanım sınırı doldu (HTTP 429 – çok fazla istek)", w: `Ücretsiz kotada ${model} için dakikalık ya da günlük istek sınırına ulaşıldı.`, d: `Sayaç bitene kadar bu modeli kullanma; istersen başka bir model seç (her modelin kotası ayrıdır).` };
   if (e.code === 500 || e.code === 503) return { t: `Google tarafında geçici sorun (HTTP ${e.code} – sunucu meşgul)`, w: "Model şu an aşırı yoğun ya da geçici olarak çalışmıyor; senin ayarlarınla ilgili değil.", d: "Biraz sonra tekrar dene ya da başka bir model seç." };
   if (e.code === 200 && st === "EMPTY") return { t: "Boş cevap geldi", w: "Model cevap üretmedi (güvenlik filtresi ya da çok uzun istek).", d: "Notunu kısaltıp tekrar dene ya da başka bir model seç." };
@@ -1377,7 +1382,8 @@ function rAi() {
     <div class="lv" style="flex-direction:column;align-items:stretch"><textarea id="gemnote" rows="2" placeholder="İsteğe bağlı not: ör. healer'ım zayıf, daha çok hayatta kalma istiyorum"></textarea></div>
     <div class="lv"><button class="btn pri" id="gemplan" ${GEM_HAS_KEY && !GEM_BUSY ? "" : "disabled"}>Puanlarıma göre araştır ve öner</button><button class="btn" id="gemupd" ${GEM_HAS_KEY && !GEM_BUSY ? "" : "disabled"}>Güncellemeleri kontrol et</button><button class="btn" id="gemq" ${GEM_HAS_KEY && !GEM_BUSY ? "" : "disabled"}>Notu soru olarak sor</button><button class="btn" id="gemver" ${GEM_HAS_KEY && !GEM_BUSY ? "" : "disabled"}>Yetenek verilerini doğrula</button></div>
     <p class="small"><b>Hedef:</b> ${modeGoal()}</p>
-    <p class="mut small">Son otomatik kontrol: ${S.gemLast ? new Date(S.gemLast).toLocaleString("tr-TR") : "henüz yok"} (günde bir kez kendiliğinden yapılır).</p></div></div>`;
+    <p class="mut small">Son otomatik kontrol: ${S.gemLast ? new Date(S.gemLast).toLocaleString("tr-TR") : "henüz yok"} .</p>
+    <label class="small"><input type="checkbox" id="gemauto" ${S.gemAuto ? "checked" : ""}> Açılışta günde bir kez güncellemeleri kendiliğinden kontrol et <span class="mut">(her gün 1 ücretsiz hak harcar)</span></label></div></div>`;
   const out = GEM_OUT || S.gemUpdate;
   if (out) {
     if (out.loading) h += `<div class="card"><p>⏳ Gemini Google'da araştırıyor… (10–60 sn sürebilir)</p></div>`;
@@ -1413,6 +1419,7 @@ document.addEventListener("click", async e => {
   else if (id === "gemver") gemRun("verify");
   else if (id === "gemslots") { S.slotLv = e.target.dataset.v.split(",").map(Number); save(); render(); }
 });
+document.addEventListener("change", e => { if (e.target.id === "gemauto") { S.gemAuto = e.target.checked; save(); } });
 document.addEventListener("change", e => { if (e.target.id === "gemmodel") { S.gemModel = e.target.value; save(); const bx = document.getElementById("gemminfo"); if (bx) bx.innerHTML = modelInfoBox(S.gemModel); } });
 // ---------- Karakter sorgulama (MetaBot.GG Armory, sadece masaüstü) ----------
 const CLASS_KEY = { templar: "Templar", gladiator: "Gladiator", assassin: "Assassin", ranger: "Ranger", sorcerer: "Sorcerer", spiritmaster: "Elementalist", cleric: "Cleric", chanter: "Chanter" };
@@ -1852,8 +1859,9 @@ function aiErrHtml(er, model) {
 }
 function gemMark(er, model) {
   S.gemCool = S.gemCool || {}; S.gemBad = S.gemBad || {};
-  if (er.code === 429) S.gemCool[model] = Date.now() + (er.retry || 60) * 1000;
-  if (er.code === 404) S.gemBad[model] = Date.now();
+  if (er.code === 429 && zeroQuota(er)) S.gemBad[model] = { at: Date.now(), why: "kota 0" };
+  else if (er.code === 429) S.gemCool[model] = dayQuota(er) ? nextQuotaReset() : Date.now() + (er.retry || 60) * 1000;
+  if (er.code === 404) S.gemBad[model] = { at: Date.now(), why: "404" };
 }
 
 // ---- yapay zekaya giden veri ve görevler ----
