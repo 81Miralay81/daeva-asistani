@@ -1169,11 +1169,35 @@ function gemContext() {
     maliyet: "Yetenek: 2-4. sv 1, 5-7. sv 2, 8-10. sv 4 puan (temel en fazla 10). Stigma: 2-5. sv 1, 6-10. sv 2 puan.", stigmaYuvasi: 4,
     uygulamaStigmaOnerisi: STIGMA_SET[S.mode].set.map(id => ALL[id].ad), aktifler: act, pasifler: pas, stigmalar: stg });
 }
+// Tek istek gönderir; model kapalıysa (404) ya da kotası dolduysa (429) kendiliğinden sıradaki uygun modele geçip bir kez daha dener.
 async function gemAsk(prompt, search = true) {
   const api = gemApi(); if (!api) throw new Error("Masaüstü sürümü gerekli");
-  const r = await api.ask_gemini(S.gemModel || "", prompt, search);
-  if (!r || !r.ok) throw { gem: true, err: normErr(r && r.error), model: (r && r.model) || S.gemModel };
-  return r;
+  S.gemCool = S.gemCool || {}; S.gemBad = S.gemBad || {};
+  const tried = [], start = S.gemModel || "";
+  let lastErr = null, firstErr = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const model = S.gemModel || "";
+    tried.push(model);
+    const r = await api.ask_gemini(model, prompt, search);
+    if (r && r.ok) {
+      if (r.model && r.model !== S.gemModel) { S.gemModel = r.model; save(); }
+      if (attempt > 0) r.switched = { from: start || tried[0], to: r.model || model, why: firstErr && firstErr.code === 404 ? "kapalı" : "kotası dolu" };
+      return r;
+    }
+    const er = normErr(r && r.error), used = (r && r.model) || model;
+    lastErr = er; if (!firstErr) firstErr = er;
+    if (er.code !== 404 && er.code !== 429) throw { gem: true, err: er, model: used };
+    if (er.code === 429) S.gemCool[used] = Date.now() + (er.retry || 60) * 1000; else S.gemBad[used] = Date.now();
+    // sıradaki model: önce Google'ın önerdiği, sonra listedeki ilk uygun olan
+    if (!(S.gemModels && S.gemModels.length)) { try { const l = await api.list_models(); if (l && l.ok) S.gemModels = l.models; } catch (e) {} }
+    const sug = (/use (?:models\/)?([a-z0-9.\-]+)/i.exec(er.message || "") || [])[1];
+    const ok = m => m && !S.gemBad[m] && !coolLeft(m) && !tried.includes(m);
+    const next = [sug, ...(S.gemModels || [])].find(ok);
+    save();
+    if (!next) throw { gem: true, err: er, model: used };
+    S.gemModel = next; save();
+  }
+  throw { gem: true, err: lastErr || normErr(null), model: S.gemModel };
 }
 async function gemRun(kind, extra) {
   if (GEM_BUSY) return;
@@ -1958,7 +1982,7 @@ async function aiDist(kind) {
     try {
       const r = await gemAsk(aiPrompt(kind), true); model = r.model || model;
       AI_PROG.phase = "calc"; updProg();
-      res = aiParse(kind, aiJson(r.text)); res.ai = true; res.sources = r.sources || [];
+      res = aiParse(kind, aiJson(r.text)); res.ai = true; res.sources = r.sources || []; res.switched = r.switched;
     } catch (e) {
       if (e && e.gem) { err = e.err; model = e.model || model; gemMark(err, model); }
       else err = { code: -1, status: "PARSE", message: String((e && e.message) || e) };
@@ -1973,7 +1997,7 @@ async function aiDist(kind) {
   AI_BUSY = null; AI_PROG = null; save(); render();
 }
 function doneBar(r) {
-  return `<div class="donebar">✅ <b>İşlem tamamlandı</b>${r.dur ? ` · ${r.dur} sn` : ""}${r.err ? " · yapay zeka cevap veremedi, kural tabanlı yapıldı" : r.ai ? " · yapay zeka araştırmasıyla" : ""}</div>`;
+  return `<div class="donebar">✅ <b>İşlem tamamlandı</b>${r.dur ? ` · ${r.dur} sn` : ""}${r.err ? " · yapay zeka cevap veremedi, kural tabanlı yapıldı" : r.ai ? " · yapay zeka araştırmasıyla" : ""}${r.switched ? `<div class="small">ℹ ${esc(r.switched.from)} ${r.switched.why} olduğu için <b>${esc(r.switched.to)}</b> modeline geçildi; bundan sonra o kullanılacak.</div>` : ""}</div>`;
 }
 function aiUndo(kind) {
   const u = S.aiUndo; if (!u || u.kind !== kind || u.cls !== CLS || u.mode !== S.mode) return;
@@ -2201,7 +2225,7 @@ async function daeAi() {
       const j = aiJson(r.text), cand = (j.dugumler || j.nodes || []).map(x => Array.isArray(x) ? (+x[0] - 1) * n + (+x[1] - 1) : -1).filter(i => i >= 0 && i < n * n);
       if (!cand.length) throw new Error("Yapay zeka düğüm listesi vermedi");
       const f = daeFit(b, cand, budget), top = f.left > 0 ? daeLocal(b, f.left, f.plan) : { plan: f.plan, left: 0 };
-      res = { plan: top.plan, left: top.left, ai: true, why: j.gerekce, dropped: f.dropped, topUp: f.left - top.left, sources: r.sources || [] };
+      res = { plan: top.plan, left: top.left, ai: true, why: j.gerekce, dropped: f.dropped, topUp: f.left - top.left, sources: r.sources || [], switched: r.switched };
     } catch (e) {
       if (e && e.gem) { err = e.err; model = e.model || model; gemMark(err, model); }
       else err = { code: -1, status: "PARSE", message: String((e && e.message) || e) };
