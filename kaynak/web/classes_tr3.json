@@ -1,0 +1,86 @@
+{
+"cleric": {
+"actives": [
+ {"d":"Hedefe toprak hasarı verir ve 110 MP kazandırır. Temel spam yeteneği.","s":["Gelen MP +%20","Discharge zincirinin tetiklenme şansı +%20","Multi-hit şansı +%50","Discharge isabet edince Bolt cooldown'u −7 sn","Blok ve kaçınmayı yok sayar"]},
+ {"d":"Hedefin yakınındaki 4 düşmana rüzgar hasarı.","s":["%20 daha az MP","Az hedefe %12'ye kadar fazla hasar","Divine Punishment isabetinde 5 sn düşman savaş hızı −%10","Divine Punishment isabetinde %10 şansla 2 sn köklenme","Divine Punishment bir kez daha tetiklenir"]},
+ {"d":"Yakındakilere rüzgar hasarı; zamanla hasar bonuslarını düşürür (zayıflatma).","s":["MP maliyeti kalkar, 150 MP verir","Zamanla hasar süresince hedefin savunması −%15","%20 şansla 3 sn stun","PvE/PvP hasar düşürme etkisi artar","Blok ve kaçınmayı yok sayar; DoT iki kat sık işler"]},
+ {"d":"Sabit bir aura kurar, seçili hedefe düzenli toprak hasarı verir.","s":["Yakındaki düşmanlara 3 sn −%40 hareket hızı","Alan yeteneğine dönüşür","Aura saldırı hızı +%50","Aura süresi +3 sn","Cooldown −10 sn"]},
+ {"d":"Yakındakilere toprak hasarı; zamanla hasar azaltmalarını düşürür.","s":["5 sn yavaşlatır","Zamanla hasar +3 sn","%20 şansla 3 sn yere serer","PvE/PvP hasar azaltma düşürme etkisi artar","Blok ve kaçınmayı yok sayar; DoT iki kat sık işler"]},
+ {"d":"Stagger almış hedefe hasar; cooldown'u yok.","s":["Canının %5'ini çalar","120 MP verir","Hareket ederken kullanılabilir","Vuruşta multi-hit","Her vuruşta TÜM cooldown'lar 1 sn azalır"]},
+ {"d":"Seni ve yakındaki grubu 30 sn boyunca 2 sn'de bir iyileştirir (HoT).","s":["İyileşme süresince savunma +%5","Canı %50 altındakilere +%20 iyileşme","İyileşme süresince alınan heal +%5","İyileşme süresince hareket hızı +%5","İyileşme süresince PvE/PvP hasar azaltma artar"]},
+ {"d":"Yakındakilere toprak hasarı; hedefte Chain of Torment olmalı.","s":["Vuruşta 100 MP","Az hedefe %12'ye kadar fazla hasar","%20 şansla 3 sn köklenme","Kritikte cooldown sıfırlanır","Vuruşta multi-hit"]},
+ {"d":"Seni ve 40 m'deki en düşük canlı grup üyesini iyileştirir. Ana tek hedef heal.","s":["+2 art arda kullanım","Canı %50 altındakilere +%20 iyileşme","%50 şansla 1 zayıflatma (debuff) kaldırır","İyileştirilen can +%2","Cooldown −2 sn"]},
+ {"d":"Yakındaki grubu iyileştirir ve bir debuff kaldırır. Grup heal.","s":["2 debuff'a kadar kaldırır","+1 art arda kullanım","Cooldown −3 sn","10 sn alınan heal +%10","İyileştirilen can +%5"]},
+ {"d":"Şarjlı rüzgar hasarı, yakındaki 4 düşmana.","s":["Tam şarjda %30 şansla 3 sn stun","Bu yeteneğin isabeti +300","Yetenek hızı +%30","Az hedefe %20'ye kadar fazla hasar","Vuruş kritik"]},
+ {"d":"Yaygın kontrol etkilerini temizler ve 5 sn bağışıklık verir.","s":["Blessing of Regeneration zincir yeteneğini ekler","Kullanınca 1.000 stamina","Kullanınca canının %10'u","Tenacity +2 sn","Tenacity süresince PvE/PvP hasar azaltma artar"]}
+],
+"passives": [
+ {"d":"Maksimum canı %6 ve maksimum MP'yi artırır."},
+ {"d":"+200 Block verir, blokta can kazandırır."},
+ {"d":"Kritik, Double şansı ve saldırılarda ekstra hasar."},
+ {"d":"Saldırı değerine göre iyileştirme gücünü (Heal Boost) artırır."},
+ {"d":"Savunma +%2 ve kritik direnci +100."},
+ {"d":"Şansa bağlı olarak hedefin aldığı iyileşmeyi %32 azaltır."},
+ {"d":"Can düşükken kalkan ve +%20 iyileştirme gücü."},
+ {"d":"Kritik hasar +%10,5 ve isabet +100."},
+ {"d":"Durum direnci; kontrol etkisi altındayken ekstra hasar azaltma."},
+ {"d":"Saldırı isabet edince seni ve yakındaki grubu iyileştirir."}
+],
+"stigmas": [
+ {"d":"Seni ve yakındaki grubu 20 sn boyunca iyileştirir.","lv":{"5":"Süre +10 sn","10":"5 sn'de bir 200 stamina","15":"5 sn'de bir %2 can","20":"5 sn'de bir arındırma (debuff temizleme)"}},
+ {"d":"Yakındakilere toprak hasarı ve köklenme şansı.","lv":{"5":"Hareket ederken kullanılabilir","10":"Köklenme +2 sn","15":"Köklenme şansı +%25","20":"Köklü hedeflere zamanla hasar iki katı"}},
+ {"d":"Kısa süre hasar ve durum etkilerine bağışıklık. Acil durum kalkanı.","lv":{"5":"Alınan iyileşme +%100","10":"Bitince maksimum canın %20'si","15":"En düşük canlı grup üyesine de aynı etki","20":"Impact etkisi yiyince kendiliğinden devreye girer"}},
+ {"d":"Tek hedefe toprak hasarı.","lv":{"5":"Yetenek hızı +%20","10":"Vuruş kritik","15":"%75 geri itme","20":"%75 şansla 3 sn stun"}},
+ {"d":"2 debuff'a kadar kaldırır ve yakındaki grubu iyileştirir.","lv":{"5":"Cooldown −30 sn","10":"Bütün debuff'ları kaldırır","15":"İyileştirilen can +%5","20":"10 sn boyunca 2 sn'de bir %1,5 can"}},
+ {"d":"Yakındakilere toprak hasarı; aldıkları iyileşmeyi azaltır.","lv":{"5":"Çok hedefe %20'ye kadar fazla hasar","10":"Vuruşta koruyucu kalkanları kırar","15":"Süre boyunca kritik direnci −200","20":"Zamanla hasar aralığı −%50"}},
+ {"d":"Yakında ölen bir grup üyesini diriltir.","lv":{"5":"Yükleme süresi −1 sn","10":"Dirilince 3 sn ölümsüzlük","15":"Maksimum canın %20'siyle diriltir","20":"Dirilince 5 sn ölümsüzlük"}},
+ {"d":"Hedefe toprak hasarı, ardından zamanla hasar.","lv":{"5":"İşaretli hedefte Condemnation kritik vurur","10":"Sana +%10, gruba +%5 Double şansı","15":"Sana +%10, gruba +%5 saldırı ve savunma","20":"Earth Punishment ve Earth's Blessing +10 sn"}},
+ {"d":"Açık/kapalı (toggle): grubun hasarını ve hasar azaltmasını artırır.","lv":{"5":"Alınan iyileşme +%10","10":"İsabet +100","15":"Maksimum can +%10","20":"Perfect şansı +%10"}},
+ {"d":"Grubun hasar azaltmasını artırır ve kalkan verir.","lv":{"5":"Maksimum canın %10'u kalkan","10":"Blok ve kaçınma +100","15":"Durum direnci +%20","20":"PvE +%10, PvP +%5 hasar azaltma daha"}},
+ {"d":"10 sn saldırıyı %20 artırır.","lv":{"5":"PvE +%20, PvP +%10 hasar","10":"Empyrean Lord's Grace x1,5","15":"Earth's Grace x1,5","20":"Saldırı +%15 daha"}},
+ {"d":"Seni takip edip seninle saldıran bir aura çağırır.","lv":{"5":"Auranın kritiği +200","10":"Debilitating Mark'lı hedeflere +20 hasar","15":"Kontrol bağışıklığı olan hedeflere (boss) +%30 hasar","20":"Aura saldırı cooldown'u −1 sn"}},
+ {"d":"Yakındaki düşmanları işaretler, köklenme şansı, savunmanı artırır.","lv":{"5":"Vuruşta 5 sn +%20 saldırı","10":"Vuruşta 500 MP hasarı","15":"Menzil +10 m","20":"Köklenme şansı +%20"}}
+]},
+"chanter": {
+"actives": [
+ {"d":"Yakındaki 4 düşmana vurur, MP verir. Temel spam yeteneği.","s":["Gelen MP +%20","Vurulanlardan canının %0,7'sini çalar","Multi-hit şansı +%50","Her vuruşta Spinning Strike cooldown'u 1 sn azalır","Storm Chain takip yeteneğini açar"]},
+ {"d":"Yakın mesafede 4 düşmana vurur.","s":["%20 daha az MP","Yetenek aktifken +200 Block","Az hedefe %12'ye kadar fazla hasar","Bursting Blow isabetinden sonra düşmanın isabeti düşer","Blok ve kaçınmayı yok sayar, çoklu vurur"]},
+ {"d":"20 m'deki düşmana atılır, yakındaki 4 düşmana vurur.","s":["Hedefin impact direnci kısa süre −%20","Şarj yeteneğine dönüşür, %200'e kadar bonus hasar","%50 şansla Heat Wave Blow'u tetikler","Düşman ölünce cooldown sıfırlanır","Blok ve kaçınmayı yok sayar, çoklu vurur"]},
+ {"d":"20 m'deki düşmana vurur, sersemletebilir.","s":["Alan hasarına dönüşür","Stun +1 sn","Hareket ederken kullanılabilir","Yetenek hızı +%30","Stun şansı +%20"]},
+ {"d":"Belirli yeteneklerden sonra kısa süre açılan 20 m menzilli vuruş.","s":["Canının %0,7'sini çalar","Impact etkisindeki hedeflere ekstra hasar","Her vuruş kritik","Piercing Strike takip yeteneğini açar","Cooldown tamamen kalkar"]},
+ {"d":"Stagger almış hedefe vurur; cooldown'u yok.","s":["Canının %5'ini çalar","120 MP verir","Hareket ederken kullanılabilir","Vuruşta multi-hit","Her vuruşta TÜM cooldown'lar 1 sn azalır"]},
+ {"d":"Yakındaki 4 düşmana vurur; blokta mühürleyebilir.","s":["%40 şansla 3 sn stun","Mühür şansı +%20","Çok hedefe %20'ye kadar fazla hasar","Blok ve kaçınmayı yok sayar, çoklu vurur","Blok yapınca %25 şansla cooldown sıfırlanır"]},
+ {"d":"Seni ve 40 m'deki grubu iyileştirir, bir debuff kaldırır. Grup heal.","s":["+1 art arda kullanım; zamanla iyileşme iki kez birikir","2 debuff'a kadar kaldırır","İyileşme süresi +4 sn","İyileştirilen can +%5","Cooldown −3 sn"]},
+ {"d":"10 m'deki düşmana atılır; dodge sonrası sersemletebilir.","s":["İsabette 300 stamina","Menzil +10 m","Multi-hit şansı +%50","Surging Strike takip yeteneğini açar","Stun şansı +%25"]},
+ {"d":"Sersemlemiş düşmanı 3 sn yere serer.","s":["Vuruşta multi-hit","Menzil +6 m","Yere serme +1 sn","Hedefin hasar bonusları 10 sn düşer","Cooldown −5 sn"]},
+ {"d":"20 m alan saldırısı; vuruşta kritik hasar artışı biriktirir.","s":["Cooldown −5 sn","İyileştirme gücü +%10 (en fazla %20)","Az hedefe %20'ye kadar fazla hasar","%40 şansla 3 sn mühür","Blok ve kaçınmayı yok sayar, her zaman kritik"]},
+ {"d":"Kontrol etkilerini temizler ve 5 sn bağışıklık verir.","s":["Crushing Strike takip yeteneğini açar","Kullanınca 1.000 stamina","Kullanınca canının %10'u","Tenacity +2 sn","Tenacity süresince daha az hasar"]}
+],
+"passives": [
+ {"d":"Maksimum canı ve saldırıya göre iyileştirme gücünü artırır."},
+ {"d":"Block'u artırır, blokta can verir."},
+ {"d":"Saldırılarla yük biriktirip gruba Divine Barrier kalkanı verir."},
+ {"d":"Kritik ve Perfect şansını biraz artırır."},
+ {"d":"Hasar bonuslarını, savunmayı ve isabeti artırır."},
+ {"d":"Impact etkisi ve Double şansını artırır."},
+ {"d":"Stagger ya da impact etkisindeki hedeflere bonus hasar."},
+ {"d":"Her isabetten sonra hedefin hasar azaltması düşer."},
+ {"d":"Durum direncini ve kontrol altındayken hasar azaltmayı artırır."},
+ {"d":"Kritik hasarı artırır; kritikte bazen bonus hasar."}
+],
+"stigmas": [
+ {"d":"Düşmana atılır, hasar verir, savunmasını kısa süre %30 düşürür.","lv":{"5":"Cooldown −15 sn","10":"Vuruşta 5 sn Exposed (açık hedef)","15":"Vuruş kritik","20":"Impact etkisindeki hedeflere +%30 hasar"}},
+ {"d":"Kısa süre blok garantili ve blok hasar azaltması artar.","lv":{"5":"+1 art arda kullanım","10":"Hareket ederken kullanılabilir","15":"Blokta 3 sn +%20 hareket hızı","20":"Savuşturmada bir kez %5 can"}},
+ {"d":"Açık/kapalı: grubun hareket hızını artırır, bazen iyileştirir.","lv":{"5":"Alınan iyileşme +%10","10":"Doğal stamina yenilenmesi +%30","15":"Canı %50 altındakilere +%50 iyileşme","20":"Restoration +%10"}},
+ {"d":"Seni ve 40 m'deki grubu iyileştirir.","lv":{"5":"Canı %50 altındakilere +%20 iyileşme","10":"1.000 stamina verir","15":"5 debuff kaldırır","20":"İyileştirilen can +%5"}},
+ {"d":"Açık/kapalı: grubun hasarını ve hasar azaltmasını artırır.","lv":{"5":"Kritik +100","10":"İsabet +100","15":"Kritik hasar +%5","20":"Double şansı +%5"}},
+ {"d":"Hedefin yakınındaki 4 düşmana vurur, yere serebilir.","lv":{"5":"Çok hedefe %20'ye kadar fazla hasar","10":"Yetenek hızı +%20","15":"Vuruş kritik","20":"Yere serme şansı +%25"}},
+ {"d":"Hedefe ve yakınındakilere vurur, mühürleyebilir.","lv":{"5":"%50 şansla köklenme","10":"%50 şansla düşman maks. staminası −1.000","15":"Mühür, köklenme ve stamina düşüşü +3 sn","20":"Bu etkilerin şansı +%25"}},
+ {"d":"Gruba 20 sn maksimum canın %16'sı kadar kalkan verir.","lv":{"5":"Savunma +%15","10":"Alınan iyileşme +%10","15":"PvE +%10, PvP +%5 hasar azaltma","20":"Kalkan bitince/kırılınca maksimum canın %7'si"}},
+ {"d":"Sana ve gruba savaş hızı verir, cooldown'ları kısaltır.","lv":{"5":"Cooldown −30 sn","10":"İsabet +200","15":"Kritik +200","20":"Sana +%20, gruba +%10 saldırı"}},
+ {"d":"Hedefe ve yakınındakilere vurur; Dark Crush'ı açar.","lv":{"5":"Az hedefe %20'ye kadar fazla hasar","10":"%50 şansla 3 sn stun","15":"Hedefin iyileşmesi ve iksir etkisi −%70","20":"Ek stun şansı +%25"}},
+ {"d":"Maksimum canı %5,4 artırır ve anında %5,4 can verir.","lv":{"5":"Durum direnci +%10","10":"Süre boyunca Crossguard x1,5","15":"Süre boyunca Wind's Promise x1,5","20":"Alınan iyileşme +%10"}},
+ {"d":"Kısa süre grubun canının %10'un altına düşmesini engeller. Grup acil kalkanı.","lv":{"5":"Doğal bitince %10 can","10":"Bitince 10 sn PvE +%10 / PvP +%5 hasar azaltma","15":"Can sınırı +%10","20":"Süre +1 sn"}},
+ {"d":"4 düşmana vurur, sersemletebilir, savunmanı artırır.","lv":{"5":"Vuruşta 5 sn +%20 saldırı","10":"Vuruşta 500 MP hasarı","15":"Menzil +10 m","20":"Stun şansı +%20"}}
+]}
+}

@@ -1,0 +1,36 @@
+DAEVA ASISTANI - MASAUSTU SURUMU
+================================
+
+1) Python kurulu olmali (python.org). Kurarken "Add python.exe to PATH" kutusunu isaretleyin.
+2) Bu klasordeki build.bat dosyasina cift tiklayin.
+   - Gerekli paketleri (pywebview, pyinstaller) kurar
+   - dist\DaevaAsistani.exe dosyasini olusturur (1-3 dakika surebilir)
+3) dist\DaevaAsistani.exe dosyasini istediginiz yere tasiyip calistirin.
+   Paylasmak icin sadece bu exe dosyasini vermeniz yeterli, karsi tarafta Python gerekmez.
+
+Denemek icin (exe yapmadan): calistir_test.bat
+
+Notlar
+- Seviyeleriniz ve sohbet gecmisi %APPDATA%\DaevaAsistani klasorunde saklanir.
+- Disaridaki baglantilar (MetaBot, GameWith) varsayilan tarayicinizda acilir.
+- Windows Defender ilk calistirmada "bilinmeyen yayinci" uyarisi verebilir: "Ek bilgi" > "Yine de calistir".
+- Pencere icin Windows'taki Microsoft Edge WebView2 kullanilir (Windows 10/11'de genelde yuklu).
+
+YAPAY ZEKA (GEMINI)
+-------------------
+1) https://aistudio.google.com/apikey adresine Google hesabinla gir, "Create API key" ile anahtar olustur.
+2) Programda "Yapay Zeka" sekmesine anahtari yapistir, Kaydet'e bas, sonra "Modelleri yukle / test et".
+3) Puanlarini Aktif / Pasif / Stigma sekmelerinin ustundeki kutulara gir.
+4) "Puanlarima gore arastir ve oner": Gemini Google'da guncel bilgileri arayip plan verir.
+   "Guncellemeleri kontrol et": son yamalari arar. Program bunu gunde bir kez kendiliginden yapar.
+- Anahtar %APPDATA%\DaevaAsistani\gemini_key.txt dosyasinda durur; exe'yi paylassan da anahtarin gitmez.
+- Ucretsiz kotada dakikalik/gunluk sinir vardir; hata alirsan biraz bekleyip tekrar dene.
+
+KARAKTER SORGULAMA
+------------------
+"Karakter" sekmesinde nick, bolge, (istege bagli) sunucu ve sinifini gir, Sorgula'ya bas.
+- Guncel ekipman, statlar, yetenek/stigma seviyeleri ve Daevanion ilerlemesi gelir.
+- "Eksikler ve oneriler" secili moda (Zindan / Kasma / PvP) gore hazirlanir.
+- "Seviyeleri uygulamaya aktar" yetenek ve stigma seviyelerini otomatik doldurur.
+- "Yapay zeka ile degerlendir" karakterini Gemini'ye inceletir (API anahtari gerekir).
+- Veriler MetaBot.GG Armory'den okunur; ayni sorgu 10 dakika onbellekte tutulur, kaynak baglantisi her zaman gosterilir.

@@ -1,0 +1,86 @@
+{
+"sorcerer": {
+"actives": [
+ {"d":"20 m'deki hedefe ateş hasarı verir.","s":["MP maliyeti %50 azalır","Yetenek hızı +%20","Vuruşta hedefin aldığı iyileşmeyi azaltır","Her ateş topu Hellfire cooldown'unu kısaltır","Her ateş topu hasar ekler (en fazla %75)"]},
+ {"d":"Yakındaki düşmanlara su hasarı verir ve yavaşlatır.","s":["MP maliyeti %20 azalır","Yetenek hızı +%20","Az hedefte ekstra hasar","Vuruşta Winter's Shackles cooldown'u kısalır","Cold Wave isabetinde %5 dondurma (Frost) şansı"]},
+ {"d":"Hedefe ateş hasarı verir ve MP geri kazandırır. Temel spam yeteneği.","s":["Gelen MP +%20","Vuruşta canının %1'i iyileşir","Multi-hit şansı artar","Pyroclasm'dan sonra kısa süre ateş hasarı artar","Pyroclasm isabet edince Blaze cooldown'u sıfırlanır"]},
+ {"d":"Yakındaki düşmanları kökleyen (root) bir rüzgar çağırır.","s":["Rüzgar süresi +1 sn","Hareket ederken kullanılabilir","Düşmanları içe çeker","Blok ve kaçınmayı yok sayar, kritik vurur","Vuruşta Frost cooldown'u 1 sn kısalır"]},
+ {"d":"Fire Mark (ateş işareti) olan hedeflere ateş hasarı, MP verir.","s":["Canının %3'ü iyileşir","Gelen MP +%50","3 sn sonra gecikmeli ek hasar","Vuruşta multi-hit","Wish of Concentration cooldown'u 3 sn kısalır"]},
+ {"d":"Stagger almış hedefe ateş hasarı; cooldown'u yok.","s":["Canının %5'i iyileşir","120 MP verir","Hareket ederken kullanılabilir","Vuruşta multi-hit","Her vuruşta TÜM cooldown'lar 1 sn azalır"]},
+ {"d":"Yakındaki düşmanları dondurabilen su hasarı.","s":["200 MP verir","Cooldown −5 sn","Frost isabet edince Frost Burst cooldown'u sıfırlanır","Oyunculara karşı dondurma şansı +%25","Donma süresi +1 sn"]},
+ {"d":"Yakındaki düşmanlara su hasarı ve yavaşlatma.","s":["Hareket ederken kullanılabilir","Vuruşta %30 dondurma şansı","Vuruşta kısa süre PvE/PvP hasar artışı","Winter's Illusion zincir yeteneğini ekler","Cooldown −15 sn"]},
+ {"d":"Donmuş hedefin etrafındaki düşmanlara su hasarı.","s":["Canının %7'si iyileşir","Hareket ederken kullanılabilir","%75 geri itme şansı","Blok ve kaçınmayı yok sayar, kritik vurur","%50 şansla cooldown sıfırlanır"]},
+ {"d":"Kısa süre kendi saldırını ve isabetini artırır. Hasar buff'ı.","s":["MP maliyeti %10 azalır","Saldırı +%10 daha","Maksimum MP +500","Savaş hızı +%10","Tüm yetenek cooldown'ları 10 sn azalır"]},
+ {"d":"Şarj edilebilen, yakındakilere ateş hasarı. Büyük hasar yeteneği.","s":["Yetenek hızı +%30","Vuruşta zamanla ateş hasarı","Hareket ederken kullanılabilir","Blok ve kaçınmayı yok sayar, çoklu vuruş","Cooldown −15 sn"]},
+ {"d":"Kontrol etkilerini temizler ve kısa süre bağışıklık verir.","s":["Curse: Old Tree zincir yeteneğini ekler","Kullanınca 1.000 stamina","Kullanınca canının %20'si","Tenacity +2 sn","Tenacity süresince daha az hasar"]}
+],
+"passives": [
+ {"d":"Ateş saldırılarıyla vurduğun hedefleri işaretler (Fire Mark)."},
+ {"d":"Maksimum MP'yi, MP yenilenmesini ve MP yüksekken kritiği artırır."},
+ {"d":"Yavaşlamış hedeflere bonus hasar şansı."},
+ {"d":"İsabeti, hasar bonuslarını ve Double şansını artırır."},
+ {"d":"Durum etkisi şansını artırır, vuruşlarda MP verir."},
+ {"d":"Mental ve impact dirençlerini artırır."},
+ {"d":"Savunmayı artırır ve sana vuranları yavaşlatır."},
+ {"d":"MP yüksekken hasarı artırır, bonus hasar şansı verir."},
+ {"d":"Durum direncini artırır; ölmek üzereyken iyileştirir."},
+ {"d":"Canı %70'in üstündeki hedeflere vuruşta ek hasar."}
+],
+"stigmas": [
+ {"d":"Yakındaki düşmanlara su hasarı.","lv":{"5":"Çok hedefe bonus hasar","10":"Cooldown −30 sn","15":"Vuruşta %50 dondurma şansı","20":"Blok ve kaçınmayı yok sayar, çoklu vuruş"}},
+ {"d":"Su hasarı ve hedefi mühürleme (seal) şansı.","lv":{"5":"%50 şansla 5 sn köklenme","10":"Hedefin staminası −1.000","15":"Mühür +2 sn","20":"Mühür şansı +%25"}},
+ {"d":"Hedefi ağaca çevirir (polymorph), ateş direncini düşürür.","lv":{"5":"Dönüşümü bozmak için daha çok vuruş gerekir","10":"Bitince hedefin blok ve kaçınması düşer","15":"Bitince impact direnci düşer","20":"Dönüşüm bozulsa da zayıflatma uygulanır"}},
+ {"d":"Maksimum canla ölçeklenen kalkan + hasar azaltma.","lv":{"5":"Hareket hızı +%10","10":"Düzenli can yenilenmesi","15":"Hasar azaltma bonusu artar","20":"Cooldown −15 sn"}},
+ {"d":"Su hasarı, yavaşlatma ve zamanla fırtına hasarı.","lv":{"5":"Güçlü Frostbite vuruşta bonus hasar","10":"%30 şansla 2 sn köklenme","15":"Fırtına +3 sn","20":"Frostbite +10 sn"}},
+ {"d":"Aldığın hasarı azaltır ve bir kısmını MP'ye aktarır.","lv":{"5":"Impact direnci +%20","10":"Absorb Essence x1,5","15":"Robe of Cold x1,5","20":"PvE ve PvP hasar azaltma artar"}},
+ {"d":"Yakındakilere hasar ve havaya kaldırma şansı.","lv":{"5":"Çok hedefe bonus hasar","10":"The Depths zincir yeteneğini ekler","15":"The Depths yere serme süresi uzar","20":"Cooldown −30 sn"}},
+ {"d":"Gecikmeli ateş hasarı; bekleme süresince hedefin aldığı hasar artar.","lv":{"5":"200 MP verir","10":"Cooldown −10 sn","15":"Alan yeteneğine dönüşür","20":"Aldığı hasar +%10 daha"}},
+ {"d":"Güçlü ateş vuruşu, hedefleri geri iter.","lv":{"5":"Yetenek hızı +%20","10":"Canının %10'unu çalar","15":"%75 geri itme şansı","20":"Geri itmeden sonra kısa stun"}},
+ {"d":"Düşmanları yakan bir ateş duvarı oluşturur.","lv":{"5":"Güçlü Embers vuruşta bonus hasar","10":"Duvar genişliği +2 m","15":"Duvar süresi +2 sn","20":"Embers +10 sn"}},
+ {"d":"Kısa süre ateş ve su saldırısını artırır.","lv":{"5":"İsabet +200","10":"Robe of Flame x1,5","15":"Grace of Enhancement x1,5","20":"Ateş/su saldırısı +%10 daha"}},
+ {"d":"Kısa süre hasar ve durum etkilerine bağışıklık. Acil durum kalkanı.","lv":{"5":"Alınan iyileşme +%100","10":"Her saniye maksimum canın %5'i","15":"Süre +2 sn","20":"Impact etkisi yiyince kendiliğinden devreye girer"}},
+ {"d":"Yakındakilere hasar ve dondurma şansı.","lv":{"5":"Vuruşta 5 sn +%20 saldırı","10":"Vuruşta 500 MP hasarı","15":"Menzil +10 m","20":"Dondurma şansı +%20"}}
+]},
+"spiritmaster": {
+"actives": [
+ {"d":"Hedefe su hasarı verir ve 100 MP kazandırır. Temel spam yeteneği.","s":["Gelen MP +%20","Canının %1'ini çalar","Multi-hit şansı +%50","Earth Tremor ile 5'e kadar biriken saldırı buff'ı","Earth Tremor ile şansa bağlı bir buff söker"]},
+ {"d":"Hedefe ve yakındaki 4 düşmana ateş hasarı.","s":["%20 daha az MP","Az hedefe %12'ye kadar fazla hasar","Bu yeteneğin isabeti +100","Yetenek hızı +%20","Ashy Call zincir yeteneğini açar"]},
+ {"d":"Ateş ruhu çağırır; ara sıra alan hasarı yapar.","s":["MP maliyeti %50 azalır","Ateş ruhunun kritik hasarı +%20","Saldırıda %10 şansla yetenek kullanır","Ruh saldırısında %5 yere serme şansı","Ateş ruhunun statları +%20"]},
+ {"d":"Su ruhu çağırır; ara sıra su hasarı verir.","s":["MP maliyeti %50 azalır","Su ruhunun saldırısı +%10","Saldırıda %10 şansla yetenek kullanır","Ruh saldırısında %5 köklenme şansı","Su ruhunun statları +%20"]},
+ {"d":"Yakındakilere hasar ve Curse (lanet) verir; ruha göre bonus.","s":["Lanet süresi +2 sn","Multi-hit şansı +%50","Hareket ederken kullanılabilir","Cooldown −2 sn","Blok ve kaçınmayı yok sayar, her zaman kritik"]},
+ {"d":"Stagger almış hedefe hasar; cooldown'u yok.","s":["Canının %5'ini çalar","120 MP verir","Hareket ederken kullanılabilir","Vuruşta multi-hit","Her vuruşta TÜM cooldown'lar 1 sn azalır"]},
+ {"d":"Toprak ruhu çağırır; aggro toplar ve taunt yapabilir (tank ruh).","s":["MP maliyeti %50 azalır","Ruhun PvE hasar azaltması +%20, PvP +%10","Saldırıda %10 şansla yetenek kullanır","Ruh saldırısında %5 şansla ruhun canı %5 iyileşir","Toprak ruhunun statları +%20"]},
+ {"d":"Ruhlar yetenek kullandıkça tetiklenir; yakındakilere hasar ve yavaşlatma.","s":["Yavaşlatma +%20","3 sn sonra gecikmeli ek hasar","Multi-hit şansı +%50","Yakındaki hedefleri içe çeker","%30 şansla 3 sn köklenme"]},
+ {"d":"Rüzgar ruhu çağırır; düşmanlara vurur ve seni iyileştirir.","s":["MP maliyeti %50 azalır","Rüzgar ruhunun kritiği +%20","Saldırıda %10 şansla yetenek kullanır","Ruh saldırısında %5 şansla düşman saldırı hızı −%30","Rüzgar ruhunun statları +%20"]},
+ {"d":"Hedefe hasar ve %70 şansla korku (fear) verir.","s":["Multi-hit şansı +%50","5 sn köklenme","Hareket ederken kullanılabilir","Cooldown −10 sn","Korku süresi +2 sn"]},
+ {"d":"Ruh yeteneklerinden element toplar; Dört Element yükünü harcayıp hasar verir.","s":["Alan yeteneğine dönüşür","3 sn sonra gecikmeli ek hasar","Vuruşta tüm element bonusu +10","Şarj yeteneğine dönüşür, %200'e kadar fazla hasar","%25 şansla Dört Element geri gelir"]},
+ {"d":"Kontrol etkilerini temizler ve 5 sn bağışıklık (Tenacity) verir.","s":["Curse of Despair zincir yeteneğini açar","Kullanınca 1.000 stamina","Kullanınca canının %20'si","Tenacity +2 sn","Tenacity süresince PvE'de %50, PvP'de %25 daha az hasar"]}
+],
+"passives": [
+ {"d":"Senin ve ruhunun hasarını ve Perfect şansını artırır."},
+ {"d":"Senin ve ruhunun savunmasını artırır."},
+ {"d":"Ruh çağırdıktan kısa süre sonra ekstra hasar şansı."},
+ {"d":"Kritiği artırır; kritikte bonus hasar şansı."},
+ {"d":"Ruh çağırma cooldown'larını kısaltma şansı; ruhun canı azalınca iyileştirir."},
+ {"d":"Mental etki şansını ve Double şansını artırır."},
+ {"d":"Zamanla hasar alan hedeflere ekstra hasar şansı."},
+ {"d":"İsabeti artırır; seni ve ruhunu iyileştirme şansı."},
+ {"d":"Durum direncini artırır; can düşükken iyileştirir."},
+ {"d":"Ruh yetenekleri isabet ettikçe biriken kritik hasar artışı."}
+],
+"stigmas": [
+ {"d":"Hedefe hasar verir, canının %10'unu emer ve 300 MP kazandırır.","lv":{"5":"Yetenek hızı +%20","10":"Emilen can +%5","15":"Kullanınca 30 sn maksimum canın %30'u kalkan","20":"Vuruşta 3 sn stun"}},
+ {"d":"Yakındakilere hasar ve %50 korku şansı.","lv":{"5":"Vuruşta 5 sn köklenme","10":"Çok hedefe %20'ye kadar fazla hasar","15":"Korku +2 sn","20":"Korku şansı +%20"}},
+ {"d":"Yakındakilere hasar ve 20 sn Corrode (aşındırma).","lv":{"5":"Corrode süresince ruhtan alınan hasar +%15","10":"Vuruşta 10 sn savaş hızı −%20","15":"Corrode süresince alınan iyileşme −%70","20":"Corrode +10 sn"}},
+ {"d":"Aldığın hasarı en yüksek canlı ruhunla paylaşırsın.","lv":{"5":"Süre +2 sn","10":"PvP hasar azaltma +%10 (ruha +%5)","15":"Süre boyunca Spirit Protection x1,5","20":"Süre boyunca ruh her saniye %3 iyileşir"}},
+ {"d":"Hasar ve hasar azaltmayı artırır, seni ve ruhunu iyileştirir.","lv":{"5":"Kullanınca maksimum canın %10'u","10":"Spirit Strike hasar bonusu x1,5","15":"Spirit Communion şansı ve iyileşmesi x1,5","20":"PvE +%25, PvP +%12,5 hasar ve hasar azaltma"}},
+ {"d":"Yakındakilere hasar, ardından 10 sn zamanla hasar.","lv":{"5":"DoT süresince düşmanın maks. staminası −1.000","10":"DoT süresince oyuncunun maks. canı −%20","15":"DoT +10 sn","20":"DoT süresince durum direnci −%30"}},
+ {"d":"Yakındakilere hasar ve 2 buff'a kadar söker.","lv":{"5":"3 buff'a kadar söker","10":"3+ buff sökünce 5 sn mühür","15":"5 buff'a kadar söker","20":"Cooldown −30 sn"}},
+ {"d":"Ruhunla birlikte ağır bir vuruş yaparsın.","lv":{"5":"Şarj yeteneği, %200'e kadar fazla hasar","10":"Yetenek hızı +%30","15":"Vuruş kritik","20":"İlk vuruşta Curse ve Corrode cooldown'ları sıfırlanır"}},
+ {"d":"30 sn Kadim Ruh çağırır; Dört Element verir.","lv":{"5":"Kadim ruhun saldırısı +%10","10":"30 sn Spirit's Descent şansı ve hasarı x1,5","15":"5 normal saldırıdan sonra yetenek kullanır","20":"Kadim ruhun statları +%20"}},
+ {"d":"Hedefe hasar ve %75 şansla 5 sn mühür.","lv":{"5":"Vuruşta %50 şansla 5 sn köklenme","10":"Vuruşta 5 sn düşman maks. staminası −1.000","15":"Mühür +2 sn","20":"Mühür şansı +%25"}},
+ {"d":"10 sn durum etkisi şansını ve direncini artırır.","lv":{"5":"Blok ve kaçınma +150","10":"Durum direnci +%15","15":"İsabet +150","20":"Durum etkisi şansı +%15"}},
+ {"d":"10 sn saldırılarda ekstra hasar şansı.","lv":{"5":"İsabet +100","10":"Kritik +100","15":"Kritik hasar +%10","20":"Ekstra hasar cooldown'u −%50"}},
+ {"d":"Yakındakilere hasar ve korku şansı.","lv":{"5":"5 sn saldırı +%20","10":"Vuruşta 500 MP hasarı","15":"Menzil +10 m","20":"Korku şansı +%20"}}
+]}
+}

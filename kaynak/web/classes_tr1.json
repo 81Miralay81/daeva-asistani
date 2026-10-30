@@ -1,0 +1,128 @@
+{
+"gladiator": {
+"actives": [
+ {"d":"Yakındaki düşmanlara 3 vuruşluk zincir saldırı yapar, aggro (düşmanlık) oluşturur ve MP geri kazandırır. Temel spam yeteneği.","s":["Yetenekten gelen MP %20 daha fazla olur","Her vuruşta canının %1'ini çalar","Vuruşta multi-hit (çoklu vuruş) şansı artar","Her vuruşta Ruinous Blow'un cooldown'u 1 sn azalır","Zincire Reckless Strike adlı ek bir vuruş eklenir"]},
+ {"d":"Yakındaki düşmanlara 2 vuruşluk zincir saldırı; MP harcar ve stagger (sersemletme göstergesi) hasarı verir.","s":["%20 daha az MP harcar","Yetenek kullanılırken +200 Block kazanırsın","Hareket ederken kullanılabilir hale gelir","Az hedef vurduğunda %12'ye kadar fazla hasar","Kritik vurunca 50 MP geri kazanırsın"]},
+ {"d":"Uzaktaki hedefin üzerine sıçrayıp vurur ve stagger hasarı verir. Hedefe hızlı yaklaşma yeteneği.","s":["3 sn boyunca Prepare for Battle (savaş hazırlığı) buff'ı verir","Vuruşta %50 şansla Ankle Slice'ı tetikler","Bir düşman ölünce cooldown sıfırlanır","Kısa süre aldığın hasarı azaltır","Etrafındaki düşmanları içine çeken alan (AoE) yeteneğine dönüşür"]},
+ {"d":"Yakındaki hedefe vurup kısa süre yere serer (knockdown).","s":["Canının %4'ünü, boss tipinde %15'ini çalar","Yere seriliyken vuruş alan hasarı verir","İki ekstra vuruş ekler","Knockdown süresi +1 sn","Blok ve kaçınmayı yok sayar, çoklu vuruş yapar"]},
+ {"d":"Yere serilmiş hedefe takip vuruşu yapar ve aggro'yu artırır.","s":["Canının %0,7'sini çalar","Alan (AoE) yeteneğine dönüşür","Upward Strike zincir vuruşunu ekler","Her vuruş kritik olur","Cooldown tamamen kalkar"]},
+ {"d":"Sadece stagger almış hedefe vurur, cooldown'u yoktur. Stagger anında spam edilir.","s":["Canının %5'ini çalar","Vuruşta 120 MP verir","Hareket ederken kullanılabilir","Vuruşta multi-hit yapar","Her vuruşta TÜM yetenek cooldown'ları 1 sn azalır"]},
+ {"d":"Blok yaptıktan sonra yakındaki düşmanlara vurur, köklenme (root) uygulayabilir.","s":["İsabette %30 şansla yere serer","Ankle Smash zincir vuruşunu ekler","Menzil +16 m","Blok ve kaçınmayı yok sayar, çoklu vuruş","Blok yapınca %25 şansla cooldown sıfırlanır"]},
+ {"d":"Etrafındaki düşmanlara vurur ve ardından ikinci bir dalga saldırısı yapar.","s":["Canının %2'sini çalar","Kritik vurunca 50 MP verir","Daha çok hedef vurdukça %20'ye kadar fazla hasar","Kritik vurunca cooldown sıfırlanır","%50 şansla düşmanları içine çeker"]},
+ {"d":"Uzaktaki hedefe atılır, yere serme şansı vardır.","s":["İsabette 300 stamina verir","Menzil +10 m","Basılı tutulan şarj yeteneğine dönüşür, alan hasarı verir","Cooldown −10 sn","Yere serme şansı +%25"]},
+ {"d":"Yere serilmiş hedefi havaya kaldırır (airborne).","s":["Vuruşta multi-hit","Havaya kaldırma şansı +%25","Kontrol bağışıklığı olan hedeflere (çoğu boss) +%100 hasar","Forced Fall zincir vuruşunu ekler","Cooldown %50 azalır"]},
+ {"d":"Hedefe atılıp etrafındakilere vurur ve kendi hasarını artırır. Büyük hasar yeteneği.","s":["Yetenek hızı +%20","Menzil +12,5 m","Bu yeteneğin kritik şansı +%30","Vuruşta ekstra hasar","Blok ve kaçınmayı yok sayar, çoklu vuruş"]},
+ {"d":"Kaçış yeteneği: üzerindeki kontrol etkilerini (stun, knockdown vb.) temizler ve kısa süre bağışıklık (Tenacity) verir.","s":["Wrath Burst zincir vuruşunu ekler","Kullanınca 1.000 stamina verir","Kullanınca canının %20'si geri gelir","Tenacity süresi +2 sn","Tenacity süresince aldığın hasar azalır"]}
+],
+"passives": [
+ {"d":"Maksimum HP'yi, can yenilenmesini ve hasar azaltmayı artırır. Temel dayanıklılık pasifi."},
+ {"d":"Block değerini artırır, başarılı blokta can verir."},
+ {"d":"Vuruşlarda şansa bağlı iyileşme sağlar; canın yarının altına düşünce acil iyileşme yapar."},
+ {"d":"Kritik vuruş ve Perfect (mükemmel vuruş) şansını artırır."},
+ {"d":"Hasar bonusunu, savunmayı ve isabeti artırır."},
+ {"d":"Stun/knockdown gibi etki (impact) uygulama şansını ve Double (çift vuruş) şansını artırır."},
+ {"d":"Stagger almış ya da impact etkisi altındaki hedeflere ekstra hasar verir."},
+ {"d":"Önden saldırı hasarını artırır; blok yapınca kısa süre grubun hasarını yükseltir."},
+ {"d":"Durum etkisi direncini artırır; kontrol etkisi altındayken aldığın hasar azalır."},
+ {"d":"Her vuruşta yük biriktirir, dolunca yakındaki düşmanlara patlama hasarı verir."}
+],
+"stigmas": [
+ {"d":"Bıçak fırlatıp hedefin savunmasını ve aldığı iyileşmeyi düşürür.","lv":{"5":"İyileşme azaltma etkisi +%20","10":"Hedefi 5 sn yavaşlatır","15":"Koruyucu kalkanları kırar","20":"Blade Dance %30 şansla yere serer"}},
+ {"d":"Basılı tutulan savunma duruşu: önden gelen vuruşları savuşturur (parry) ve MP verir.","lv":{"5":"+1 art arda kullanım","10":"Hareket ederken kullanılabilir","15":"Savuşturunca 3 sn +%20 hareket hızı","20":"Savuşturunca bir kez %10 can"}},
+ {"d":"Kısa süre stun/knockdown gibi etkilere direnci artırır.","lv":{"5":"Ailment ve mental dirençleri +%20","10":"Süre boyunca Blood Absorption x1,5","15":"Süre boyunca Protection Armor x1,5","20":"Impact direnci +%50 daha"}},
+ {"d":"Yakındaki düşmanlara vurur, yere serme şansı ve yüksek stagger hasarı vardır.","lv":{"5":"Çok hedefe %20'ye kadar fazla hasar","10":"Hedefin saldırısını 5 sn %20 düşürür","15":"Bir ek hasar vuruşu","20":"Yere serme şansı +%25"}},
+ {"d":"Kendi saldırını ve isabetini artıran buff.","lv":{"5":"Stagger hasarı +%50","10":"PvE hasar +%10, PvP +%5","15":"Multi-hit şansı +%50","20":"Durum etkisi şansı +%20"}},
+ {"d":"Yakındaki düşmanlara vurup canlarını emer (can çalma).","lv":{"5":"Çok hedefe %20'ye kadar fazla hasar","10":"Gruba 20 sn Predation (can çalma) buff'ı verir","15":"Cooldown −30 sn","20":"Emilen can +%5"}},
+ {"d":"Kısa süre hasar almazsın, ardından aldığın hasar azalır. Acil durum kalkanı.","lv":{"5":"Alınan iyileşme +%100","10":"Bitince maksimum canının %20'si geri gelir","15":"Saldırı +%20","20":"Impact etkisi yiyince kendiliğinden devreye girer"}},
+ {"d":"Hedefe vurur, onun saldırısını düşürür ve senin hasarını artırır.","lv":{"5":"Rage Burst cooldown −15 sn","10":"Hedefin saldırı düşüşü +%10","15":"Vuruş kritik olur","20":"Ek PvE +%10, PvP +%5 hasar"}},
+ {"d":"Aktifken savaş hızını (combat speed) artırır.","lv":{"5":"Süre boyunca Double şansı +%5","10":"Süre boyunca hareket hızı +%20","15":"Süre boyunca Identify Weakness x1,5","20":"Kritikte %50 şansla cooldown'lar kısalır"}},
+ {"d":"Etrafındaki düşmanlara zamanla hasar verir.","lv":{"5":"Canının %2'sini çalar","10":"Süre boyunca Experienced Counterstrike x1,5","15":"Süre boyunca Murderous Burst x1,5","20":"Aldığın hasarın %10'unu geri yansıtır"}},
+ {"d":"Hedefe vurur, mühürleme (seal: yetenek kullanamaz) şansı vardır.","lv":{"5":"%50 şansla 5 sn köklenme","10":"Hedefin staminası −1.000","15":"Mühür süresi +2 sn","20":"Mühür şansı +%25"}},
+ {"d":"İleri atılıp yoldaki düşmanlara vurur, köklenme şansı vardır.","lv":{"5":"Vurulan maksimum hedef +2","10":"Destructive Rush zincir vuruşunu ekler","15":"Köklenme şansı +%20","20":"%50 şansla 3 sn havaya kaldırır"}},
+ {"d":"Uzaktaki hedefin etrafındaki düşmanlara vurur, yere serme şansı vardır.","lv":{"5":"Vuruşta 5 sn +%20 saldırı","10":"Vuruşta 500 MP hasarı","15":"Menzil +10 m","20":"Yere serme şansı +%20"}}
+]},
+"assassin": {
+"actives": [
+ {"d":"En fazla 4 düşmana 3 vuruşluk zincir saldırı, MP geri verir. Temel spam yeteneği.","s":["Gelen MP +%20","Canının %0,7'sini çalar","Vuruşta multi-hit şansı +%50","Her vuruşta Insignia Explosion cooldown'u 1 sn azalır","Blok ve kaçınmayı yok sayar, her zaman kritik"]},
+ {"d":"3 vuruşluk zincir: hedefe Insignia (işaret) kazır, MP harcar.","s":["%20 daha az MP harcar","Yetenek hızı +%20","Az hedef vurunca %12'ye kadar fazla hasar","Her vuruşta Shadowstrike cooldown'u 1 sn azalır","Savage Smash kullanınca yakındakileri içine çeker"]},
+ {"d":"Uzaktaki hedefin arkasına geçip onu sersemletir (stun).","s":["Stun süresi +1 sn","Vuruşta 5 sn kritik hasarın +%20","%50 şansla 5 sn mühürler (seal)","%50 şansla 5 sn kökler (root)","Alan (AoE) yeteneğine dönüşür"]},
+ {"d":"Yakındaki hedefe vurur; arkadan vurursan daha fazla hasar.","s":["Arkadan vurunca 10 sn 2 Insignia kazır","Canının %3'ünü çalar","Vuruşta koruyucu kalkanları kırar","%50 şansla Whirlwind Slice'ı tetikler","+2 art arda kullanım"]},
+ {"d":"Kritik vuruştan sonra kullanılır, en fazla 4 düşmana vurur.","s":["Canının %0,7'sini çalar","Vuruşta 10 sn 1 Insignia kazır","Az hedefte %20'ye kadar kritik şansı","Vuruşta multi-hit","Kritik vurunca kendi cooldown'u sıfırlanır"]},
+ {"d":"Sadece stagger almış hedefe çalışır, cooldown'u yoktur.","s":["Canının %5'ini çalar","Vuruşta 120 MP","Hareket ederken kullanılabilir","Vuruşta multi-hit","Her vuruşta TÜM cooldown'lar 1 sn azalır"]},
+ {"d":"Kaçındıktan (evasion) sonra hedefe vurur, stun şansı vardır.","s":["Multi-hit şansı +%50","Alan hasarına dönüşür","Menzil +16 m","Stun şansı +%20","Kaçınınca %25 şansla cooldown sıfırlanır"]},
+ {"d":"Hedefin arkasına geçer, 4 düşmana kadar kör (blind) edebilir.","s":["Körlük süresi +2 sn","Menzil +6 m","Çok hedefe %20'ye kadar fazla hasar","+1 art arda kullanım","Kör hedefleri %50 şansla 3 sn sersemletir"]},
+ {"d":"Dodge sonrası ya da uçarken hedefin arkasına geçer.","s":["İnişte 300 stamina","Menzil +10 m","İnişte koruyucu kalkanları kırar","Dark Strike zincir vuruşunu ekler","Körleştirme şansı +%20"]},
+ {"d":"Sersemlemiş (stun) hedefe vurup yere serer.","s":["Canının %10'unu çalar","Vuruşta 10 sn 3 Insignia kazır","Cooldown −5 sn","Yere serme süresi +1 sn","Kör hedeflerde de kullanılabilir"]},
+ {"d":"Biriken Insignia yüklerini harcayıp yakındakilere hasar verir ve sersemletir.","s":["Dönme (rotate) etkisi ekler","Multi-hit şansı +%50","Kullanımdan sonra 2 Insignia kalır","Stun süresi +1 sn","Cooldown −3 sn"]},
+ {"d":"Kontrol etkilerini temizler ve kısa süre bağışıklık (Tenacity) verir. Kaçış yeteneği.","s":["Storm Slice zincir vuruşunu ekler","Kullanınca 1.000 stamina","Kullanınca canının %20'si","Tenacity süresi +2 sn","Tenacity süresince PvE'de %50, PvP'de %25 daha az hasar"]}
+],
+"passives": [
+ {"d":"Kaçınmayı ve canı artırır; başarılı kaçınmada can verir."},
+ {"d":"Kritik vuruşlar klon çağırıp saldırı buff'ı verebilir."},
+ {"d":"Vuruşlar hedefi zehirleyip aldığı iyileşmeyi azaltabilir."},
+ {"d":"Arkadan saldırı, PvE ve PvP hasarını artırır."},
+ {"d":"Kritik hasar bonusunu artırır."},
+ {"d":"Impact etkisi uygulama ve Double şansını artırır."},
+ {"d":"Hareket yeteneklerinden sonra vuruşlara ekstra hasar şansı verir."},
+ {"d":"Impact etkisindeki hedefin savunması ve durum direnci düşer."},
+ {"d":"Kontrol etkisi altındayken artan hasar; can azalınca iyileşme."},
+ {"d":"Canı düşük hedeflere ekstra hasar."}
+],
+"stigmas": [
+ {"d":"Hançer fırlatıp hedefi yavaşlatır.","lv":{"5":"Shadowblade Pursuit ile hedefe yaklaşırsın","10":"Düşman ölünce cooldown sıfırlanır","15":"Garanti kritik","20":"Alan yeteneğine dönüşür"}},
+ {"d":"Basılı tutulan duruş: kısa süre bütün hasardan kaçarsın.","lv":{"5":"+1 art arda kullanım","10":"Hareket ederken kullanılabilir","15":"Kaçınınca 3 sn +%20 hareket hızı","20":"Kaçınınca bir kez %10 can"}},
+ {"d":"Yakındaki hedefe vurur, sonra geri sıçrayıp gizlenir.","lv":{"5":"%40 şansla 3 sn stun","10":"Vuruşta 5 Insignia kazır","15":"Kullanınca 10 sn +200 kaçınma","20":"Cooldown −15 sn"}},
+ {"d":"Savaş dışında 20 sn görünmez olursun.","lv":{"5":"Gizliyken saldırılar kritik","10":"Süre boyunca +%20 hareket hızı","15":"Savaşta da kullanılabilir","20":"Oyuncu öldürmeye yardım edince cooldown sıfırlanır"}},
+ {"d":"Hedefi havaya kaldırabilir; her zaman 5 Insignia ile birlikte.","lv":{"5":"Menzil +16 m","10":"Aerial Slaughter zincir vuruşunu ekler","15":"İlk vuruşta 10 sn Ambush Stance x1,5","20":"Cooldown −30 sn"}},
+ {"d":"Bomba atıp hedefi kör eder.","lv":{"5":"Menzil +10 m","10":"Alan yeteneğine dönüşür","15":"Vuruşta 5 sn yavaşlatır","20":"+1 art arda kullanım"}},
+ {"d":"4 düşmana vurur ve 5 Insignia kazır.","lv":{"5":"Çok hedefe %20'ye kadar fazla hasar","10":"Stagger hasarı +50","15":"Vuruşta 10 sn PvE +%10 / PvP +%5 hasar","20":"Vuruş kritik"}},
+ {"d":"Hedefe atılır, buff'larını söker ve ekstra hasar verir.","lv":{"5":"2 buff'a kadar söker","10":"2+ buff sökünce 3 sn stun","15":"3 buff'a kadar söker","20":"Cooldown −30 sn"}},
+ {"d":"Hedefin cooldown'larına süre ekler; arkadan bonus hasar.","lv":{"5":"Hareket ederken kullanılabilir","10":"Vuruşta tüm cooldown'ların %10 azalır","15":"Bu yetenekle düşman ölürse cooldown sıfırlanır","20":"Hedefin cooldown'larına +%3"}},
+ {"d":"Klon çağırır: Heart Gore cooldown'unu kaldırır ve hasar ekler.","lv":{"5":"Süre boyunca durum etkisi şansı +%10","10":"Süre boyunca kritik hasar +%20","15":"Süre boyunca Exploit Weakness x1,5","20":"Kritikte %50 şansla ekstra hasar"}},
+ {"d":"Yavaşlatma ve köklenmeyi kaldırır, bağışıklık verir, kaçınmayı artırır.","lv":{"5":"Süre boyunca %25 mermi bağışıklığı","10":"Süre boyunca +%30 hareket hızı","15":"Kaçınınca %50 şansla cooldown'lar 1 sn kısalır","20":"Kaçınma +100"}},
+ {"d":"Kısa süre savaş hızını %20 artırır.","lv":{"5":"Süre boyunca MP maliyeti −%20","10":"Süre boyunca Rear Smite x1,5","15":"Süre boyunca Assault Stance x1,5","20":"Savaş hızı +%10 daha"}},
+ {"d":"4 düşmana vurur, kör etme şansı var, savunmanı artırır.","lv":{"5":"Vuruşta 5 sn +%20 saldırı","10":"Vuruşta 500 MP hasarı","15":"Menzil +10 m","20":"Körleştirme şansı +%20"}}
+]},
+"ranger": {
+"actives": [
+ {"d":"Temel zincir atış; MP verir, hareket ederken kullanılabilir. Spam yeteneği.","s":["Gelen MP +%20","Vuruşta canının %0,7'sini çalar","Multi-hit şansı +%50","Her vuruşta Deadshot cooldown'u 1 sn azalır","Tempest Arrow zincir atışını ekler"]},
+ {"d":"4 düşmana kadar vurur; MP harcar, hareket ederken kullanılabilir.","s":["%20 daha az MP","Bu yeteneğin kritik şansı +%10","Az hedefe daha fazla hasar","Kritikte %5 geri itme şansı","Yetenek hızı +%20"]},
+ {"d":"4 düşmana vurur ve 5 sn %40 yavaşlatır.","s":["Yavaşlatma +%20","Yetenek hızı +%20","Hareket ederken kullanılabilir","Shackling Arrow (köklenme) zincir atışını ekler","Yavaşlatma ve köklenme +2 sn"]},
+ {"d":"Precision (hassasiyet) buff'ı verir ve seni hedefe doğru taşır.","s":["Precision süresince Perfect şansı +%5","Vuruşta %30 geri itme şansı","Precision süresi +5 sn","+1 art arda kullanım","Blok ve kaçınmayı yok sayar, her zaman kritik"]},
+ {"d":"Kritikten sonra kullanılır; çoklu vurur, MP verir, kanama yapar.","s":["Canının %3'ünü çalar","Kanama +2 sn","Yetenek hızı +%20","Vuruşta multi-hit","Bir kez daha tetiklenir"]},
+ {"d":"Sadece stagger almış hedefe kullanılır, cooldown'u yoktur.","s":["Canının %5'ini çalar","Vuruşta 120 MP","Hareket ederken kullanılabilir","Vuruşta multi-hit","Her vuruşta TÜM cooldown'lar 1 sn azalır"]},
+ {"d":"4 düşmana vurur; Gale (savaş hızı) buff'ı verir.","s":["Gale süresi +5 sn","Vuruşta %50 geri itme","Hareket ederken kullanılabilir","Az hedefte savaş hızı ve hasar artar","Cooldown −10 sn"]},
+ {"d":"Yere tuzak kurar, tetiklenince yakındakileri sersemletir.","s":["Patlamada düşmanları içine çeker","Stun +1 sn","3 sn sonra ekstra hasar","Stun şansı +%20","+1 art arda kullanım"]},
+ {"d":"Yavaşlamış ya da köklenmiş hedefin etrafındaki 4 düşmana vurur.","s":["Canının %10'unu çalar","Multi-hit şansı +%50","Hareket ederken kullanılabilir","Az hedefte %20'ye kadar fazla hasar","Vuruşta %25 şansla cooldown sıfırlanır"]},
+ {"d":"Hedefi sersemletir; sadece Precision varken kullanılır.","s":["Multi-hit şansı +%50","Stun +1 sn","Yetenek hızı +%20","Stun şansı +%20","Vuruşta %25 şansla cooldown sıfırlanır"]},
+ {"d":"3 kademeli şarjlı atış; Precision varken daha fazla hasar. Ana hasar yeteneği.","s":["MP maliyeti kalkar","Yetenek hızı +%30","Hareket ederken kullanılabilir","Blok ve kaçınmayı yok sayar, hep çoklu vurur","Vuruşta ekstra hasar"]},
+ {"d":"Kontrol etkilerini temizler ve kısa süre bağışıklık verir.","s":["Lightning Arrow zincir atışını ekler","Kullanınca 1.000 stamina","Kullanınca canının %20'si","Tenacity +2 sn","Tenacity süresince daha az hasar"]}
+],
+"passives": [
+ {"d":"Kaçınmayı ve maksimum canı artırır; kaçınınca can verir."},
+ {"d":"Zamanla hasar (DoT) alan hedeflere bonus hasar şansı."},
+ {"d":"Maksimum staminayı artırır; saldırı alınca kısa süre hız verir."},
+ {"d":"İsabeti, hasar bonuslarını ve Double şansını artırır."},
+ {"d":"Kritik hasar bonusunu artırır."},
+ {"d":"Ailment ve impact dirençlerini artırır."},
+ {"d":"Yavaşlamış ya da köklenmiş hedeflere bonus hasar şansı."},
+ {"d":"Bonus hasar şansı ve küçük geri itme şansı."},
+ {"d":"Durum direncini artırır; can düşükken maksimum canın %35'i iyileşir."},
+ {"d":"Kritik vuruşlarda bonus hasar şansı."}
+],
+"stigmas": [
+ {"d":"4 düşmana vurur ve ateşle zamanla hasar (DoT) uygular.","lv":{"5":"Hareket ederken kullanılabilir","10":"DoT süresi +5 sn","15":"Yanan hedef vurulunca ekstra hasar","20":"DoT iki kat sık işler"}},
+ {"d":"Yakındaki hedefin arkasına geçip tekmeler ve geri sıçrar.","lv":{"5":"Menzil +5 m","10":"Vuruşta kalkan verir","15":"%50 şansla stun","20":"Stun şansı +%50"}},
+ {"d":"Hedefi kısa süre kör eder.","lv":{"5":"Körlük +1 sn","10":"Alan yeteneğine dönüşür","15":"Vuruşta yavaşlatır","20":"+1 art arda kullanım"}},
+ {"d":"Hedefi mühürleme şansıyla vurur.","lv":{"5":"%50 şansla köklenme","10":"Düşmanın maksimum staminasını düşürür","15":"Mühür +2 sn","20":"Mühür şansı +%25"}},
+ {"d":"Yere tuzak kurar, düşmanları havaya kaldırır.","lv":{"5":"Guerilla Strike zincir vuruşunu ekler","10":"2 buff'a kadar söker","15":"Havada kalma +1 sn","20":"Cooldown −30 sn"}},
+ {"d":"Kısa süre görünmez olursun.","lv":{"5":"Gizliyken saldırı kritik","10":"Gizliyken +%20 hareket hızı","15":"Savaşta kullanılabilir","20":"Gizlilik +10 sn"}},
+ {"d":"Kısa süre kritik ve isabeti artırır.","lv":{"5":"Multi-hit şansı +%50","10":"Kritik değerini saldırıya çevirir","15":"Kritik hasar +%20","20":"Double şansı +%7"}},
+ {"d":"4 düşmana vurur, stun şansı vardır.","lv":{"5":"Çok hedefe %20'ye kadar fazla hasar","10":"Vuruşta yavaşlatır","15":"Stun +1 sn","20":"Stun şansı +%25"}},
+ {"d":"Kısa süre saldırıyı %20 artırır.","lv":{"5":"Perfect şansı +%10","10":"Focused Eye etkisi artar","15":"Hunter's Soul etkisi artar","20":"Kritikler tüm cooldown'ları kısaltabilir"}},
+ {"d":"Aldığın hasarı azaltır ve aldığın hasardan can kazanabilirsin.","lv":{"5":"Zamanla hasarları kaldırır ve engeller","10":"Vigilant Eye etkisi artar","15":"Unyielding Resolve etkisi artar","20":"PvE ve PvP'de daha fazla hasar azaltma"}},
+ {"d":"4 düşmana vurur; yavaşlamış/köklenmiş hedeflere bonus hasar.","lv":{"5":"Cooldown −15 sn","10":"Yavaş/köklü hedefe daha fazla hasar","15":"Vuruş kritik","20":"Yavaş/köklü hedefe çok daha fazla hasar"}},
+ {"d":"Destek atışları yapan ve can emen bir küre çağırır.","lv":{"5":"Tetiklenme şansı +%25","10":"Süre +15 sn","15":"Cooldown −30 sn","20":"Vuruş kritik"}},
+ {"d":"4 düşmana vurur, stun şansı vardır.","lv":{"5":"Vuruşta 5 sn +%20 saldırı","10":"Vuruşta 500 MP hasarı","15":"Menzil +10 m","20":"Stun şansı +%20"}}
+]}
+}
