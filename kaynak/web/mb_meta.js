@@ -16,18 +16,29 @@ function mbUndo() {
 }
 const mbRows = (rows, unit) => rows.length ? `<table>${rows.map(x => `<tr><td>${icon(x.id)}</td><td>${esc(ALL[x.id].ad)}</td><td>${x.from} → <b class="${x.to < x.from ? "warn" : "ok"}">${x.to}</b></td></tr>`).join("")}</table>` : `<p class="small mut">Değişiklik yok; zaten bu dizilimdesin.</p>`;
 
-// --- Aktif / Pasif ---
+// --- Aktif / Pasif: mevcut harcanmış puanla, MetaBot hedeflerine doğru dağıt ---
+const mbSpent = lv => { let c = 0; for (let l = 2; l <= lv; l++) c += skillCost(l); return c; };
 function mbSkills(pool, best) {
-  const list = (pool === "active" ? ACTIVES : PASSIVES).map(x => x.id), m = mbGet(), want = {}, miss = [];
-  // PvP kartı sadece öncelikli 11 yeteneği verir; kalanlar için Endgame PvE seviyeleri kullanılır
-  const srcs = best && m ? (mbKey() === "pvp" && MB_META[CLS].pve ? [MB_META[CLS].pve.sk, m.sk] : [m.sk]) : [];
-  srcs.forEach(sk => sk.forEach(([nm, lv]) => { const id = mbId(nm); if (id && list.includes(id)) want[id] = lv; else if (!id) miss.push(nm); }));
-  const rows = [];
-  for (const id of list) { const from = S.lv[id][0], to = best ? (want[id] || 1) : 1; if (from !== to) rows.push({ id, from, to }); S.lv[id][0] = to; }
-  const n = Object.keys(want).length;
-  return best
-    ? `<p class="small">⭐ ${CLASS_NAME[CLS]} · ${mbKey() === "pvp" ? "PvP" : "Endgame PvE"}: top oyuncuların ${pool === "active" ? "aktif" : "pasif"} yetenek temel seviyeleri işlendi (${n} yetenek${mbKey() === "pvp" ? "; PvP listesinde olmayanlar için Endgame PvE seviyeleri" : ""}; listede hiç olmayanlar 1. seviyede). Bonuslara (+) dokunulmadı.</p>${mbRows(rows)}`
-    : `<p class="small">↺ Bütün ${pool === "active" ? "aktif" : "pasif"} yeteneklerin temel seviyesi 1'e çekildi.</p>${mbRows(rows)}`;
+  const list = (pool === "active" ? ACTIVES : PASSIVES).map(x => x.id), m = mbGet(), want = {}, ad = pool === "active" ? "aktif" : "pasif";
+  const rows = [], cur = Object.fromEntries(list.map(id => [id, S.lv[id][0]]));
+  if (!best) { for (const id of list) { if (cur[id] !== 1) rows.push({ id, from: cur[id], to: 1 }); S.lv[id][0] = 1; }
+    return `<p class="small">↺ Bütün ${ad} yeteneklerin temel seviyesi 1'e çekildi (${list.reduce((a, id) => a + mbSpent(cur[id]), 0)} puan boşa çıktı).</p>${mbRows(rows)}`; }
+  // PvP kartı sadece öncelikli 11 yeteneği verir; kalanlar için Endgame PvE seviyeleri
+  const srcs = m ? (mbKey() === "pvp" && MB_META[CLS].pve ? [MB_META[CLS].pve.sk, m.sk] : [m.sk]) : [];
+  srcs.forEach(sk => sk.forEach(([nm, lv]) => { const id = mbId(nm); if (id && list.includes(id)) want[id] = lv; }));
+  const order = [...(m ? m.sk : []).map(([nm]) => mbId(nm)), ...Object.keys(want)].filter((id, k, a) => id && want[id] && a.indexOf(id) === k);
+  const budget = list.reduce((a, id) => a + mbSpent(cur[id]), 0), lv = Object.fromEntries(list.map(id => [id, 1]));
+  let left = budget;
+  // MetaBot sırasıyla, hepsini birer birer yükselterek (adil dağıtım) hedefe kadar
+  for (let moved = true; moved;) { moved = false;
+    for (const id of order) { if (lv[id] >= want[id]) continue; const c = skillCost(lv[id] + 1); if (c > left) continue; lv[id]++; left -= c; moved = true; } }
+  // hepsi hedefe ulaştıysa artan puanı yine MetaBot sırasıyla 10'a doğru
+  for (let moved = true; moved;) { moved = false;
+    for (const id of [...order, ...list.filter(x => !order.includes(x))]) { if (lv[id] >= 10) continue; const c = skillCost(lv[id] + 1); if (c > left) continue; lv[id]++; left -= c; moved = true; } }
+  for (const id of list) { if (cur[id] !== lv[id]) rows.push({ id, from: cur[id], to: lv[id] }); S.lv[id][0] = lv[id]; }
+  const need = order.reduce((a, id) => a + mbSpent(want[id]), 0), reach = order.filter(id => lv[id] >= want[id]).length;
+  return `<p class="small">⭐ ${CLASS_NAME[CLS]} · ${mbKey() === "pvp" ? "PvP" : "Endgame PvE"}: <b>mevcut ${budget} puanınla</b> top oyuncuların ${ad} dizilimine göre yeniden dağıtıldı. MetaBot dizilimi ${need} puan istiyor; ${reach}/${order.length} yetenek hedef seviyede${left ? `, artan ${left} puan` : ""}. Bonuslara (+) dokunulmadı.</p>
+    <p class="small mut">Oyunda: yetenek penceresinde (K) sıfırlama yapıp aşağıdaki seviyelere getir.</p>${mbRows(rows)}`;
 }
 // --- Stigma ---
 function mbStigma(best) {
@@ -80,16 +91,22 @@ function mbDae(best) {
   const m = MB_META[CLS], dec = mbDvDecode(m && m.dv); S.dvBest = S.dvBest || {};
   let tot = 0, wr = 0, mi = 0;
   const lines = DV_ORDER.filter(b => dec[b]).map(b => {
-    const nodes = dec[b], st = dstate(b), { typ } = daeInfo(b), cost = nodes.reduce((a, i) => a + (NCOST[typ(i)] || 0), 0);
-    S.dvBest[b] = { nodes, mode: "*", cls: CLS };
-    const wrongN = st.own.filter(i => !nodes.includes(i)).length, missN = nodes.filter(i => !st.own.includes(i)).length;
-    st.plan = nodes.filter(i => !st.own.includes(i));
-    DAE_RES[b] = { plan: nodes, cost, left: 0, best: true, meta: true, wrongN, missN, mode: S.mode, dur: 0 };
+    const all = dec[b], st = dstate(b), { typ, nb, c0 } = daeInfo(b), pc = i => NCOST[typ(i)] || 0, full = all.reduce((a, i) => a + pc(i), 0);
+    const ownPts = st.own.reduce((a, i) => a + pc(i), 0), budget = ownPts || full;
+    // başlangıçtan bağlı olarak (BFS), bütçe kadar meta düğümü seç; mevcut düğümlerin önce
+    const set = new Set(all), pick = [], seen = new Set([c0]), q = [c0]; let left = budget;
+    while (q.length) { const i = q.shift(); for (const j of nb(i).sort((x, y) => (st.own.includes(y) ? 1 : 0) - (st.own.includes(x) ? 1 : 0))) { if (!set.has(j) || seen.has(j)) continue; seen.add(j); if (pc(j) > left) continue; pick.push(j); left -= pc(j); q.push(j); } }
+    for (const i of all) if (!seen.has(i) && pc(i) <= left) { pick.push(i); left -= pc(i); }
+    S.dvBest[b] = { nodes: all, mode: "*", cls: CLS };
+    const wrongN = st.own.filter(i => !set.has(i)).length, missN = pick.filter(i => !st.own.includes(i)).length;
+    st.plan = pick.filter(i => !st.own.includes(i));
+    const cost = budget - left;
+    DAE_RES[b] = { plan: pick, cost, left, best: true, meta: true, wrongN, missN, mode: S.mode, dur: 0 };
     tot += cost; wr += wrongN; mi += missN;
     const bd = BOARDS.find(x => x.id === b);
-    return `<tr><td>${esc(bd ? bd.ad : b)}</td><td>${nodes.length} düğüm · ${cost} puan</td><td class="small">${missN ? `<b style="color:var(--acc)">${missN} eksik</b>` : "tamam"}${wrongN ? ` · <b style="color:#ff4d4d">${wrongN} ✕</b>` : ""}</td></tr>`;
+    return `<tr><td>${esc(bd ? bd.ad : b)}</td><td>${ownPts ? `mevcut ${ownPts} puanla ${pick.length}/${all.length} düğüm` : `${all.length} düğüm · ${full} puan (sende alınmış yok, tamamı)`}</td><td class="small">${missN ? `<b style="color:var(--acc)">${missN} eksik</b>` : "tamam"}${wrongN ? ` · <b style="color:#ff4d4d">${wrongN} ✕</b>` : ""}</td></tr>`;
   });
-  return `<p class="small">⭐ ${CLASS_NAME[CLS]} için MetaBot'ta en çok kullanılan Daevanion dizilimi işlendi (${tot} puan). Eksik düğümler <b style="color:var(--acc)">sarı</b>, sende olup bu dizilimde olmayanlar <b style="color:#ff4d4d">✕</b> ile gösterildi. Tahta seçip kontrol et.</p><table>${lines.join("")}</table>`;
+  return `<p class="small">⭐ ${CLASS_NAME[CLS]} için MetaBot'ta en çok kullanılan Daevanion dizilimi <b>mevcut puanlarına göre</b> işlendi (her tahtada sende alınmış kadar puanla, başlangıçtan bağlı olarak). Eksik düğümler <b style="color:var(--acc)">sarı</b>, sende olup bu dizilimde olmayanlar <b style="color:#ff4d4d">✕</b> ile gösterildi. Tahta seçip kontrol et.</p><table>${lines.join("")}</table>`;
 }
 const MB_TAB = {
   akt: { t: "Aktif yetenekler", run: b => mbSkills("active", b), d: "Top oyuncuların aktif yetenek temel seviyeleri işlenir; bonuslar (+) korunur." },
