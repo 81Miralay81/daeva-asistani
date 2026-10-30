@@ -67,10 +67,12 @@ def main():
         time.sleep(2)
     if not res: sys.exit("hiç veri alınamadı")
     cls = dict(old.get("cls", {})); cls.update(res)
-    if cls == old.get("cls"): print("değişiklik yok"); return
-    OUT.parent.mkdir(exist_ok=True)
-    OUT.write_text(json.dumps({"date": datetime.date.today().isoformat(), "src": "metabot.gg", "cls": cls}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    print("güncellendi", sorted(res), "bozuk:", bad)
+    if cls == old.get("cls"): print("değişiklik yok")
+    else:
+        OUT.parent.mkdir(exist_ok=True)
+        OUT.write_text(json.dumps({"date": datetime.date.today().isoformat(), "src": "metabot.gg", "cls": cls}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        print("güncellendi", sorted(res))
+    if bad: sys.exit("okunamayan sınıflar (eski veri korundu): " + ", ".join(bad))
 
 
 if __name__ == "__main__":

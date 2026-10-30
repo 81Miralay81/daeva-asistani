@@ -15,6 +15,7 @@ jobs:
       - run: pip install beautifulsoup4
       - run: python tools/mb_scrape.py
       - name: Değiştiyse kaydet
+        if: always()
         run: |
           if git diff --quiet meta/; then echo "değişiklik yok"; exit 0; fi
           git config user.name "daeva-meta-bot"
