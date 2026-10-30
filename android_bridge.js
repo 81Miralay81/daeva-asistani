@@ -38,7 +38,9 @@
     const ia = idx("active skills"), ip = idx("passive skills"), ist = idx("stigmas"), idv = idx("daevanion");
     const lvre = /^Lv\. (\d+)( · equipped)?$/;
     const skills = (a, b, key) => { let i = a + 1; while (i > 0 && i < b - 1) { const m = lvre.exec(lines[i + 1]); if (m) { const d = { name: lines[i], level: +m[1] }; if (key === "stigmas") d.equipped = !!m[2]; out[key].push(d); i += 2; } else i++; } };
-    if (Math.min(ia, ip, ist, idv) >= 0) { skills(ia, ip, "actives"); skills(ip, ist, "passives"); skills(ist, idv, "stigmas"); }
+    // bölüm başlıklarından biri eksik olabilir (ör. hiç stigması olmayan karakter)
+    const marks = [ia, ip, ist, idv].filter(i => i >= 0).sort((a, b) => a - b), endOf = a => marks.find(m => m > a) ?? lines.length;
+    if (ia >= 0) skills(ia, endOf(ia), "actives"); if (ip >= 0) skills(ip, endOf(ip), "passives"); if (ist >= 0) skills(ist, endOf(ist), "stigmas");
     if (idv >= 0) for (let i = idv; i < Math.min(idv + 60, lines.length - 1); i++)
       if (["Nezekan", "Zikel", "Vaizel", "Triniel", "Ariel", "Azphel"].includes(lines[i]) && /^\d+\/\d+$/.test(lines[i + 1])) {
         const [a, b] = lines[i + 1].split("/"); const k = lines[i].toLowerCase(); if (!out.daevanion[k]) out.daevanion[k] = { open: +a, total: +b };

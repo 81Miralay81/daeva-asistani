@@ -1425,6 +1425,8 @@ document.addEventListener("change", e => { if (e.target.id === "gemmodel") { S.g
 const CLASS_KEY = { templar: "Templar", gladiator: "Gladiator", assassin: "Assassin", ranger: "Ranger", sorcerer: "Sorcerer", spiritmaster: "Elementalist", cleric: "Cleric", chanter: "Chanter" };
 const KEY_CLASS = Object.fromEntries(Object.entries(CLASS_KEY).map(([k, v]) => [v.toLowerCase(), k]));
 const CLS_ROLE = { templar: "tank", gladiator: "bruiser", assassin: "dps", ranger: "dps", sorcerer: "dps", spiritmaster: "dps", cleric: "healer", chanter: "support" };
+// MetaBot'taki Aion 2 sunucuları (bölgeler aynı adları kullanıyor)
+const AION_SERVERS = ["Agnita", "Ariel", "Atiel", "Azphel", "Baba", "Bakarma", "Beritra", "Daminu", "Ereshkigal", "Fafnir", "Fregion", "Gauss", "Hadala", "Hithanya", "Indnath", "Ishtar", "Israphel", "Kaisinel", "Kasaka", "Kochi", "Kromede", "Lamuatan", "Ludra", "Lumiel", "Luteros", "Marchutan", "Meslamtaeda", "Munin", "Nania", "Nathara", "Nemon", "Nezekan", "Odar", "Phernos", "Quai", "Siel", "Tahavatha", "Tassin", "Tiamat", "Triniel", "Tsenka", "Ulgorn", "Vaizel", "Yustiel", "Zemurru", "Zikel"];
 function chErrHtml(er) {
   if (typeof er === "string") return `<p class="bad small">⚠ ${esc(er)}</p>`;
   const raw = String(er.error || ""), code = er.code || +((/HTTP (\d+)/.exec(raw) || [])[1]) || 0;
@@ -1461,7 +1463,7 @@ function rKar2() {
     <div class="chform">
       <label>Nick<input id="chname" value="${esc(S.chName || "")}" placeholder="Miralay"></label>
       <label>Bölge<select id="chreg">${REGIONS.map(([k, a]) => `<option value="${k}" ${reg === k ? "selected" : ""}>${a}</option>`).join("")}</select></label>
-      <label>Sunucu <span class="mut">(isteğe bağlı)</span><input id="chsrv" value="${esc(S.chServer || "")}" placeholder="Ishtar"></label>
+      <label>Sunucu<select id="chsrv"><option value="">Tümü</option>${AION_SERVERS.map(n => `<option ${S.chServer === n ? "selected" : ""}>${n}</option>`).join("")}</select></label>
       <label>Sınıf<select id="chcls">${CLASSES.map(([k, a]) => `<option value="${k}" ${(S.chCls || CLS) === k ? "selected" : ""}>${a}</option>`).join("")}</select></label>
       <button class="btn pri" id="chgo" ${desk && !CH_BUSY ? "" : "disabled"}>${CH_BUSY ? "Sorgulanıyor…" : "Sorgula"}</button>
     </div>
@@ -1572,7 +1574,7 @@ function applyChar() {
 async function charLookup(pick) {
   const api = gemApi(); if (!api) return;
   S.chName = (document.getElementById("chname") || {}).value?.trim() || S.chName; S.chRegion = (document.getElementById("chreg") || {}).value || S.chRegion;
-  S.chServer = (document.getElementById("chsrv") || {}).value?.trim() ?? S.chServer; S.chCls = (document.getElementById("chcls") || {}).value || S.chCls; save();
+  S.chServer = (document.getElementById("chsrv") || {}).value ?? S.chServer; if (S.chServer && !AION_SERVERS.includes(S.chServer)) S.chServer = AION_SERVERS.find(n => n.toLowerCase() === S.chServer.toLowerCase()) || ""; S.chCls = (document.getElementById("chcls") || {}).value || S.chCls; save();
   if (!S.chName) { CH_ERR = "Nick gir"; render(); return; }
   CH_BUSY = true; CH_ERR = null; render();
   try {
