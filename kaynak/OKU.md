@@ -17,6 +17,10 @@ Uygulamanın bütün kaynakları burada; bir sonraki değişiklikte buradan deva
 Yapay zeka sekmesi ve düğmeleri kaldırıldı (`aiState()` hep "off"). En iyi dizilim MetaBot verisinden gelir; veriyi yenilemek için
 `metabot.gg/en/aion-2/classes/<sınıf>/build` sayfalarından Endgame PvE / PvP kartları ve "most common Daevanion build" hash'i `mbmeta/` altına yazılır.
 
+## MetaBot verisi kendiliğinden
+`.github/workflows/meta.yml` her gün `tools/mb_scrape.py` ile MetaBot'tan çeker, `meta/mb_meta.json` değiştiyse depoya kaydeder.
+Uygulama açılışta bu dosyayı GitHub'dan okur (yeni APK gerekmez); internet yoksa gömülü/önbellek veri kullanılır.
+
 ## gemini.js üretimi
 `gemini_body.js` içindeki `/*MD*/` yerine `md.js` konur:
 

@@ -1,7 +1,24 @@
 // ---------- MetaBot top oyuncu dizilimi: Sıfırla / En iyi dizilim (yapay zeka yok) ----------
 // Kaynak: metabot.gg/en/aion-2/classes/<sınıf>/build — Endgame PvE (Zindan, Kasma) ve PvP kartları + en çok kullanılan Daevanion dizilimi
 const MB_META = /*MBMETA*/;
-const MB_DATE = "/*MBDATE*/";
+let MB_DATE = "/*MBDATE*/";
+// Güncel veri: GitHub'daki depo her gün MetaBot'tan kendiliğinden yenilenir; uygulama açılışta oradan çeker (olmazsa gömülü veri)
+const MB_REMOTE = "https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/meta/mb_meta.json";
+let MB_LIVE = false;
+const mbDateTr = d => { const m = /^(\d{4})-(\d\d)-(\d\d)$/.exec(d || ""); return m ? `${m[3]}.${m[2]}.${m[1]}` : d; };
+function mbUse(j) {
+  if (!j || !j.cls || !j.date || j.date < MB_DATE) return false;
+  for (const k in j.cls) if (j.cls[k] && j.cls[k].pve && j.cls[k].pvp) MB_META[k] = j.cls[k];
+  MB_DATE = j.date; return true;
+}
+try { mbUse(JSON.parse(localStorage.getItem("mbMetaCache") || "null")); } catch (e) {}
+(async () => {
+  try {
+    const r = await fetch(MB_REMOTE + "?t=" + Math.floor(Date.now() / 3600000), { cache: "no-store" }); if (!r.ok) return;
+    const j = await r.json();
+    if (mbUse(j)) { MB_LIVE = true; try { localStorage.setItem("mbMetaCache", JSON.stringify(j)); } catch (e) {} if (["akt", "pas", "stg", "mak", "dae"].includes(TAB)) { const y = window.scrollY; render(); window.scrollTo(0, y); } }
+  } catch (e) {}
+})();
 const mbKey = () => (S.mode === "pvp" ? "pvp" : "pve");
 const mbNorm = s => String(s || "").toLowerCase().replace(/[’`]/g, "'").replace(/\s+/g, " ").trim();
 function mbId(name) { const n = mbNorm(name); for (const id in ALL) if (mbNorm(ALL[id].ad) === n) return id; return null; }
@@ -121,7 +138,7 @@ function mbBar(tab) {
   return `<div class="card pcard mbbar"><div class="pc-head"><span class="nm">⭐ En iyi dizilim · ${esc(c.t)}${mk}</span>
     <button class="btn" data-mbreset="${tab}">↺ Sıfırla</button>
     <button class="btn pri" data-mbbest="${tab}" ${m ? "" : "disabled"}>⭐ En iyi dizilimi göster</button></div>
-    <p class="small mut">${c.d} Veri: <a href="${mbUrl()}" target="_blank" rel="noopener">MetaBot.gg</a> top oyuncu istatistikleri (${MB_DATE}). Yapay zeka kullanılmaz.</p>
+    <p class="small mut">${c.d} Veri: <a href="${mbUrl()}" target="_blank" rel="noopener">MetaBot.gg</a> top oyuncu istatistikleri (${mbDateTr(MB_DATE)}${MB_LIVE ? ", güncel" : ""} · her gün kendiliğinden yenilenir). Yapay zeka kullanılmaz.</p>
     ${ok ? `<div class="donebar">✅ <b>İşlem tamamlandı</b></div>${msg.html}${MB_UNDO && MB_UNDO.tab === tab ? `<p class="small"><button class="btn" data-mbundo="1">↶ Geri al</button></p>` : ""}` : ""}</div>`;
 }
 macroAiCard = () => "";

@@ -1,0 +1,24 @@
+name: MetaBot verisi
+on:
+  schedule:
+    - cron: "17 3 * * *"   # her gün 06:17 (Türkiye)
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  meta:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install beautifulsoup4
+      - run: python tools/mb_scrape.py
+      - name: Değiştiyse kaydet
+        run: |
+          if git diff --quiet meta/; then echo "değişiklik yok"; exit 0; fi
+          git config user.name "daeva-meta-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add meta/mb_meta.json
+          git commit -m "MetaBot verisi güncellendi ($(date +%F))"
+          git push
