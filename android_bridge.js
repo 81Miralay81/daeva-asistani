@@ -76,6 +76,8 @@ x.overrideMimeType('text/plain; charset=x-user-defined');x.send();if(x.status==2
 for(var i=0;i<s.length;i++)bin+=String.fromCharCode(s.charCodeAt(i)&255);
 d='data:'+((x.getResponseHeader('content-type')||'image/webp').split(';')[0])+';base64,'+btoa(bin);}}catch(e){}}
 out.push({label:b.getAttribute('aria-label'),icon:d,rarity:r?r[1]:''});});return JSON.stringify(out);})()`;
+  // Daevanion açık düğümleri (MetaBot'un tahta adresinden, sayfanın içinden)
+  const dvJs = key => `(function(){var k=${JSON.stringify(key || "")}.split('.');if(k.length<3)return '{}';var reg=k[0],srv=k[1],id=k.slice(2).join('.');var s=[].map.call(document.scripts,function(x){return x.textContent}).join('\\n');var re=/\\\\?"id\\\\?":(\\d+),\\\\?"name\\\\?":\\\\?"(Nezekan|Zikel|Vaizel|Triniel|Ariel|Azphel)\\\\?"/g,m,ids={};while((m=re.exec(s)))ids[m[2].toLowerCase()]=+m[1];var out={};for(var b in ids){try{var x=new XMLHttpRequest();x.open('GET','/api/aion-2/armory/daevanion?'+new URLSearchParams({region:reg,server:srv,id:id,board:String(ids[b])}),false);x.send();if(x.status==200){var j=JSON.parse(x.responseText);out[b]={id:ids[b],open:j.openNodeIds||[],stats:j.statEffects||[]};}}catch(e){}}return JSON.stringify(out);})()`;
   function mergeIcons(prof, raw) {
     let items = []; try { items = JSON.parse(raw || "[]"); } catch (e) { return; }
     const by = {};
@@ -100,15 +102,19 @@ out.push({label:b.getAttribute('aria-label'),icon:d,rarity:r?r[1]:''});});return
     const pick = choose(rows, name, server, cls);
     if (!pick.ok) return pick;
     const r = pick.row, url = `${BASE}/en${r.path}`;
-    const pg = await call("metabot_page", url, ICON_JS);
+    const EXTRA = `(function(){return JSON.stringify({i:${ICON_JS},d:${dvJs(r.key)}});})()`;
+    const pg = await call("metabot_page", url, EXTRA);
+    const splitExtra = p => { try { const o = JSON.parse(p.extra || "{}"); p.extra = o.i || "[]"; p.dv = o.d || "{}"; } catch (e) { p.dv = "{}"; } };
+    if (pg && pg.ok) splitExtra(pg);
     if (!pg || !pg.ok) return { ok: false, code: -2, error: (pg && pg.error) || "Profil sayfası açılamadı" };
     let lines = htmlLines(pg.html), prof = parseProfile(lines, pg.html);
     if (!prof.actives.length || !prof.equipment.length) { // bir kez daha dene (sayfa geç çizildiyse)
-      const pg2 = await call("metabot_page", url, ICON_JS);
-      if (pg2 && pg2.ok) { pg.html = pg2.html; pg.extra = pg2.extra; lines = htmlLines(pg.html); prof = parseProfile(lines, pg.html); }
+      const pg2 = await call("metabot_page", url, EXTRA);
+      if (pg2 && pg2.ok) { splitExtra(pg2); pg.html = pg2.html; pg.extra = pg2.extra; pg.dv = pg2.dv; lines = htmlLines(pg.html); prof = parseProfile(lines, pg.html); }
     }
     prof.diag = `sayfa ${Math.round((pg.html || "").length / 1024)} KB, ${lines.length} satır`;
     mergeIcons(prof, pg.extra);
+    try { prof.dv = JSON.parse(pg.dv || "{}"); } catch (e) { prof.dv = {}; }
     Object.assign(prof, { ok: true, name: r.name, server: r.serverName, region, classKey: r.classKey, url, via: "android" });
     if (prof.actives.length && prof.equipment.length) CACHE[key] = [Date.now(), prof]; // eksik okunanı saklama
     return prof;
