@@ -138,8 +138,9 @@ out.push({label:b.getAttribute('aria-label'),icon:d,rarity:r?r[1]:''});});return
   // Başlıkta sürüm numarası (güncellemenin geldiğini görmek için)
   call("app_version").then(v => {
     const t = document.getElementById("apptitle"); if (!t || !v || !v.code) return;
-    const b = document.createElement("span"); b.textContent = "v1.0." + v.code;
-    b.style.cssText = "font-size:11px;font-weight:600;margin-left:8px;padding:2px 6px;border-radius:6px;background:#2e3542;color:#cfd6e0;vertical-align:middle";
+    const b = document.createElement("button"); b.textContent = "v1.0." + v.code + " ⟳"; b.title = "Güncellemeleri denetle";
+    b.style.cssText = "font-size:11px;font-weight:600;margin-left:8px;padding:2px 8px;border-radius:6px;border:1px solid #3a4150;background:#2e3542;color:#cfd6e0;vertical-align:middle;cursor:pointer";
+    b.addEventListener("click", e => { e.stopPropagation(); b.textContent = "Denetleniyor…"; call("check_update").then(() => setTimeout(() => (b.textContent = "v1.0." + v.code + " ⟳"), 1500)); });
     t.appendChild(b);
   });
 })();

@@ -98,26 +98,31 @@ public class MainActivity extends Activity {
         setContentView(root);
         if (savedInstanceState != null) web.restoreState(savedInstanceState);
         else web.loadUrl("file:///android_asset/index.html");
-        if (savedInstanceState == null) pool.submit(this::checkUpdate);
+        if (savedInstanceState == null) pool.submit(() -> checkUpdate(false));
     }
+
+    private volatile long lastCheck = 0;
+    private void toast(String t) { ui.post(() -> Toast.makeText(this, t, Toast.LENGTH_LONG).show()); }
 
     // ---------------- Otomatik güncelleme (GitHub Releases) ----------------
     private int myVersion() {
         try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionCode; } catch (Exception e) { return 0; }
     }
 
-    private void checkUpdate() {
+    // manual = kullanıcı "Güncellemeleri denetle"ye bastı: sonuç her durumda bildirilir
+    private void checkUpdate(boolean manual) {
+        lastCheck = System.currentTimeMillis();
         try {
             HttpURLConnection c = (HttpURLConnection) new URL(RELEASES).openConnection();
             c.setConnectTimeout(15000);
             c.setReadTimeout(20000);
             c.setRequestProperty("Accept", "application/vnd.github+json");
-            if (c.getResponseCode() != 200) return;
+            if (c.getResponseCode() != 200) { if (manual) toast("Güncelleme kontrol edilemedi (HTTP " + c.getResponseCode() + ")"); return; }
             JSONObject rel = new JSONObject(readAll(c.getInputStream()));
             Matcher m = Pattern.compile("(\\d+)$").matcher(rel.optString("tag_name", ""));
             if (!m.find()) return;
             int latest = Integer.parseInt(m.group(1));
-            if (latest <= myVersion()) return;
+            if (latest <= myVersion()) { if (manual) toast("Güncelsin: v1.0." + myVersion()); return; }
             JSONArray assets = rel.optJSONArray("assets");
             String url = null;
             if (assets != null) for (int i = 0; i < assets.length(); i++) {
@@ -132,7 +137,7 @@ public class MainActivity extends Activity {
                     .setPositiveButton("Güncelle", (d, w) -> startDownload(apkUrl, ver))
                     .setNegativeButton("Sonra", null)
                     .show());
-        } catch (Exception ignored) { }
+        } catch (Exception e) { if (manual) toast("Güncelleme kontrol edilemedi: " + e.getMessage()); }
     }
 
     private void startDownload(String url, String ver) {
@@ -182,6 +187,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        // Uygulama arka plandan geri gelince de (en fazla 15 dakikada bir) yeni sürüme bak
+        if (pendingApk == null && System.currentTimeMillis() - lastCheck > 15 * 60 * 1000L) pool.submit(() -> checkUpdate(false));
         if (pendingApk != null && (Build.VERSION.SDK_INT < 26 || getPackageManager().canRequestPackageInstalls())) install();
     }
 
@@ -249,7 +256,7 @@ public class MainActivity extends Activity {
             case "metabot_page": return metabotPage(a.optString(0, ""), a.optString(1, "")).toString();
             case "metabot_item": return metabotItem(a.optString(0, ""), a.optString(1, ""), a.optString(2, ""), a.optString(3, ""), a.optString(4, "")).toString();
             case "app_version": return new JSONObject().put("code", myVersion()).toString();
-            case "check_update": checkUpdate(); return "null";
+            case "check_update": checkUpdate(true); return "null";
             default: return new JSONObject().put("ok", false).put("error", "Bilinmeyen işlem: " + m).toString();
         }
     }
