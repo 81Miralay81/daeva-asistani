@@ -86,7 +86,7 @@ s = re.sub(r'document\.getElementById\("exp"\)\.onclick.*?\n', '', s)
 s = re.sub(r'document\.getElementById\("imp"\)\.onclick.*?\n', '', s)
 s = re.sub(r'document\.getElementById\("impf"\)\.onchange.*?\n', '', s)
 # tabs + default
-s = s.replace('const TABS = [["akt"', 'const TABS = [["ask","💬 Asistan"],["ai","🤖 Yapay Zeka"],["kar","👤 Karakter"],["akt"').replace('let S = load(); let TAB = "akt";', 'let S = load(); let TAB = "ask";')
+s = s.replace('const TABS = [["akt"', 'const TABS = [["ask","💬 Asistan"],["kar","👤 Karakter"],["akt"').replace('let S = load(); let TAB = "akt";', 'let S = load(); let TAB = "ask";')
 s = s.replace('function save(){ try{ localStorage.setItem("templarTank", JSON.stringify(S)); }catch(e){} }', 'function save(){ try{ localStorage.setItem("templarTank", JSON.stringify(S)); }catch(e){} if(typeof cloudSave==="function") cloudSave(); }')
 s = s.replace('const R = { akt:rAkt,', 'const R = { ask:()=>"", kar:()=>rKar(), akt:rAkt,')
 s = s.replace('  document.getElementById("modes").innerHTML = Object.entries(MODES).map(([k,m])=>`<button data-m="${k}" class="${S.mode===k?"on":""}">${m.ad}</button>`).join("");',
@@ -111,7 +111,7 @@ for _k in list(icons):
     _slug = (_k[3:] if _k.startswith('st_') else _k).replace('_', '-')
     _key = _slug if _slug in _mb else next((x for x in _mb if x.startswith(_slug)), None)
     if _key: icons[_k] = _mb[_key]
-s = s.replace('/*DATA*/', re.sub(r'^const (ACTIVES|PASSIVES|STIGMAS|STIGMA_SET|MACRO|MACRO_DISI|SKILL_PRI|SKILL_KAYNAK) =', r'let \1 =', (p/'data.js').read_text(encoding='utf-8'), flags=re.M)).replace('/*ICONS*/', json.dumps(icons)).replace('/*CHAT*/', (p/'bot.js').read_text(encoding='utf-8')).replace('/*CLS*/', (p/'class_icons.js').read_text(encoding='utf-8') + (p/'classes.js').read_text(encoding='utf-8').replace('/*RAW*/', (p/'classes_full.json').read_text(encoding='utf-8'))).replace('/*V2*/', (p/'v2.js').read_text(encoding='utf-8') + (p/'gemini.js').read_text(encoding='utf-8') + (p/'char.js').read_text(encoding='utf-8') + (p/'ai_dist.js').read_text(encoding='utf-8') + (p/'dv_data.js').read_text(encoding='utf-8') + (p/'dv_v2.js').read_text(encoding='utf-8') + (p/'dae_ai.js').read_text(encoding='utf-8')).replace('/*DAE*/', (p/'dae_grid.js').read_text(encoding='utf-8') + (p/'dae.js').read_text(encoding='utf-8'))
+s = s.replace('/*DATA*/', re.sub(r'^const (ACTIVES|PASSIVES|STIGMAS|STIGMA_SET|MACRO|MACRO_DISI|SKILL_PRI|SKILL_KAYNAK) =', r'let \1 =', (p/'data.js').read_text(encoding='utf-8'), flags=re.M)).replace('/*ICONS*/', json.dumps(icons)).replace('/*CHAT*/', (p/'bot.js').read_text(encoding='utf-8')).replace('/*CLS*/', (p/'class_icons.js').read_text(encoding='utf-8') + (p/'classes.js').read_text(encoding='utf-8').replace('/*RAW*/', (p/'classes_full.json').read_text(encoding='utf-8'))).replace('/*V2*/', (p/'v2.js').read_text(encoding='utf-8') + (p/'gemini.js').read_text(encoding='utf-8') + (p/'char.js').read_text(encoding='utf-8') + (p/'ai_dist.js').read_text(encoding='utf-8') + (p/'dv_data.js').read_text(encoding='utf-8') + (p/'dv_v2.js').read_text(encoding='utf-8') + (p/'dae_ai.js').read_text(encoding='utf-8') + (p/'mb_meta.js').read_text(encoding='utf-8').replace('/*MBMETA*/', (p/'mb_meta.json').read_text(encoding='utf-8')).replace('/*MBDATE*/', '31 Ekim 2026')).replace('/*DAE*/', (p/'dae_grid.js').read_text(encoding='utf-8') + (p/'dae.js').read_text(encoding='utf-8'))
 (p/'templar-tank.html').write_text(s, encoding='utf-8')
 for k in ['exp"','imp"','<!doctype','<body','/*CHAT*/','/*DATA*/']: print(k, k in s)
 print(len(s)//1024,'KB')

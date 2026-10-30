@@ -6,11 +6,16 @@ Uygulamanın bütün kaynakları burada; bir sonraki değişiklikte buradan deva
 - `web/` — arayüzün parçaları. `python3 build_art.py` hepsini birleştirip `templar-tank.html` üretir.
   - `app.html` temel sayfa + CSS, `data.js` Templar verisi, `classes.js` + `classes_full.json` diğer sınıflar
   - `v2.js` modlar/puan, `gemini_body.js` (+ `md.js` → `gemini.js`) yapay zeka, `char.js` karakter sorgusu,
-    `ai_dist.js` dağıt / makro / yetenek çubuğu, `dv_data.js` + `dv_v2.js` Daevanion (MetaBot tahta verisi), `dae_ai.js` Daevanion planlayıcı
+    `ai_dist.js` dağıt / makro / yetenek çubuğu, `dv_data.js` + `dv_v2.js` Daevanion (MetaBot tahta verisi), `dae_ai.js` Daevanion planlayıcı,
+    `mb_meta.js` + `mb_meta.json` (`mbmeta/<sınıf>.json`) MetaBot top oyuncu dizilimi: her sekmede **Sıfırla** / **En iyi dizilim**
   - `metabot_icons.json`, `icons/` yetenek ikonları; `dvdata/` Daevanion ham verisi
 - `masaustu/` — Windows exe (pywebview). `app/index.html` = `templar-tank.html` + bağlantı yönlendirmesi. `build.bat` ile derlenir.
 - Depo kökü — Android (WebView): `web/templar-tank.html` + `android_bridge.js` → `build_assets.py` → `android/app/src/main/assets/index.html`.
   `main` dalına gönderilince GitHub Actions APK'yı derler ve Releases'a yeni sürüm koyar; telefondaki uygulama açılışta kendini günceller.
+
+## Yapay zeka
+Yapay zeka sekmesi ve düğmeleri kaldırıldı (`aiState()` hep "off"). En iyi dizilim MetaBot verisinden gelir; veriyi yenilemek için
+`metabot.gg/en/aion-2/classes/<sınıf>/build` sayfalarından Endgame PvE / PvP kartları ve "most common Daevanion build" hash'i `mbmeta/` altına yazılır.
 
 ## gemini.js üretimi
 `gemini_body.js` içindeki `/*MD*/` yerine `md.js` konur:

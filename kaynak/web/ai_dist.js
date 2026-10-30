@@ -34,14 +34,8 @@ picks = function (sk) {
   return { n: p.n, chosen, rest: pri.filter(k => !chosen.includes(k)), ai: true };
 };
 
-const aiState = () => (!GEM_READY ? "exe" : !GEM_HAS_KEY ? "key" : coolLeft(S.gemModel) ? "cool" : "ok");
-function aiHint() {
-  const st = aiState();
-  if (st === "exe") return "Yapay zeka sadece masaüstü sürümünde (exe) çalışır; burada kural tabanlı dağıtılır.";
-  if (st === "key") return "Yapay zeka için <b>🤖 Yapay Zeka</b> sekmesinden API anahtarını gir; o zamana kadar kural tabanlı dağıtılır.";
-  if (st === "cool") return `Seçili model (${esc(S.gemModel)}) beklemede: <b class="warn" data-until="${S.gemCool[S.gemModel]}">${mmss(coolLeft(S.gemModel))}</b>. Bekle ya da Yapay Zeka sekmesinden başka model seç.`;
-  return `<b>🤖 Dağıt</b>'a basınca yapay zeka (${esc(S.gemModel || "otomatik model")}) ${MODES[S.mode].ad} için güncel bilgileri araştırıp dağıtır.`;
-}
+const aiState = () => "off"; // yapay zeka kaldırıldı: dağıtım kural tabanlı, en iyi dizilim MetaBot verisinden
+function aiHint() { return `Kural tabanlı dağıtım (${MODES[S.mode].ad}). Top oyuncuların dizilimi için üstteki <b>⭐ En iyi dizilim</b> düğmesini kullan.`; }
 function aiBtn(kind, label = "Dağıt") {
   const busy = AI_BUSY === kind;
   return `<button class="btn pri" data-aid="${kind}" ${AI_BUSY ? "disabled" : ""}>${busy ? "⏳ Çalışıyor…" : AI_BUSY ? "Bekle…" : (aiState() === "ok" ? "🤖 " : "") + label}</button>`;
@@ -251,7 +245,7 @@ function aiUndo(kind) {
 // ---- görünüm ----
 const curRes = kind => { const r = AI_RES[kind]; return r && r.mode === S.mode && r.cls === CLS ? r : null; };
 function srcLine(r) {
-  return r.ai ? `🤖 <b>Yapay zeka</b> (${esc(r.model || "")}) · ${MODES[r.mode].ad}` : `<b>Kural tabanlı</b> · ${MODES[r.mode].ad}${r.err ? "" : ` <span class="mut">(${aiState() === "exe" ? "yapay zeka sadece exe'de" : aiState() === "key" ? "API anahtarı girilmemiş" : "yapay zeka kullanılmadı"})</span>`}`;
+  return r.ai ? `🤖 <b>Yapay zeka</b> (${esc(r.model || "")}) · ${MODES[r.mode].ad}` : `<b>Kural tabanlı</b> · ${MODES[r.mode].ad}`;
 }
 function rowsTable(rows, unlock) {
   if (!rows.length) return `<p class="small mut">Seviye değişikliği yok; şu anki seviyelerin bu dağıtımla aynı.</p>`;

@@ -99,15 +99,14 @@ async function daeAi(kind) {
 function daePlanCard(b) {
   const s = bsum(b), st = dstate(b), r = DAE_RES[b], bd = BOARDS.find(x => x.id === b);
   let h = `<div class="pc-head" style="margin-top:8px"><label for="dbud" class="small">Plan bütçesi</label><input type="number" min="0" id="dbud" value="${daeBudget(b)}" ${AI_BUSY ? "disabled" : ""}><span class="mut small">puan (${PARA[bd.para]})</span></div>
-    <div class="lv"><button class="btn pri" data-daeai="1" ${AI_BUSY ? "disabled" : ""}>${AI_BUSY === "dae" ? "⏳ Çalışıyor…" : AI_BUSY ? "Bekle…" : (aiState() === "ok" ? "🤖 Oto düzenle (yapay zeka)" : "Oto düzenle")}</button>
-    <button class="btn pri" data-daebest="1" ${AI_BUSY ? "disabled" : ""} title="Mevcut dizilimini yok sayıp aynı puanla, sınıfına ve seçili moda göre en iyi dizilimi baştan kurar">⭐ En iyi dizilim (sıfırdan)</button>
+    <div class="lv"><button class="btn pri" data-daeai="1" ${AI_BUSY ? "disabled" : ""}>${AI_BUSY === "dae" ? "⏳ Çalışıyor…" : AI_BUSY ? "Bekle…" : "Oto düzenle (bütçeye göre)"}</button>
     <button class="btn" id="dclear" ${st.plan.length && !AI_BUSY ? "" : "disabled"}>Planı temizle${st.plan.length ? ` (${s.plan} puan)` : ""}</button></div>
     <div class="lv"><button class="btn" data-dvreset="${b}" ${AI_BUSY ? "disabled" : ""}>🧹 ${bd.ad} tahtasını sıfırla</button><button class="btn" data-dvreset="all" ${AI_BUSY ? "disabled" : ""}>🧹 Tüm tahtaları sıfırla</button></div>`;
   if (AI_BUSY === "dae") h += progressHtml();
   else if (r && r.mode === S.mode) {
     h += doneBar(r) + (r.err ? aiErrHtml(r.err, r.model) : "") +
-      `<div class="small">${r.ai ? `🤖 <b>Yapay zeka</b> (${esc(r.model || "")})` : "<b>Kural tabanlı</b>"} · ${MODES[r.mode].ad} · ${r.plan.length} düğüm, ${r.cost} puan · artan ${r.left}</div>
-      ${r.best ? `<div class="note small">⭐ <b>${CLASS_NAME[CLS]} ${MODES[r.mode].ad} için en iyi dizilim</b> (${r.cost} puanla, sıfırdan). Sende olup bu dizilimde olmayan <b>${r.wrongN}</b> düğüm <b style="color:#ff4d4d">✕</b> ile, eksik olan <b>${r.missN}</b> düğüm <b style="color:var(--acc)">sarı</b> gösterildi.</div>` : ""}
+      `<div class="small">${r.meta ? "⭐ <b>MetaBot top oyuncu dizilimi</b>" : "<b>Kural tabanlı</b>"} · ${MODES[r.mode].ad} · ${r.plan.length} düğüm, ${r.cost} puan · artan ${r.left}</div>
+      ${r.best ? `<div class="note small">⭐ <b>${CLASS_NAME[CLS]} ${MODES[r.mode].ad} için en iyi dizilim</b> (${r.meta ? "MetaBot'ta en çok kullanılan" : r.cost + " puanla, sıfırdan"}). Sende olup bu dizilimde olmayan <b>${r.wrongN}</b> düğüm <b style="color:#ff4d4d">✕</b> ile, eksik olan <b>${r.missN}</b> düğüm <b style="color:var(--acc)">sarı</b> gösterildi.</div>` : ""}
       ${r.why ? `<p class="small">${esc(r.why)}</p>` : ""}
       ${r.dropped ? `<p class="small mut">Yapay zekanın önerdiği ${r.dropped} düğüm bağlantısız ya da bütçe dışı olduğu için alınmadı.</p>` : ""}
       ${r.topUp ? `<p class="small mut">Kalan ${r.topUp} puan kural tabanlı tamamlandı.</p>` : ""}

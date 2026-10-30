@@ -87,7 +87,7 @@ function dvBridge(b, i) {
   return [...own].some(j => !seen.has(j));
 }
 // ✕: ya bu sınıf/mod için verimsiz stat, ya da "En iyi dizilim"de olmayan alınmış düğüm
-const dvBestOf = b => { const x = (S.dvBest || {})[b]; return x && x.mode === S.mode && x.cls === CLS ? x.nodes : null; };
+const dvBestOf = b => { const x = (S.dvBest || {})[b]; return x && (x.mode === S.mode || x.mode === "*") && x.cls === CLS ? x.nodes : null; };
 function dvWrong(b, i) { const best = dvBestOf(b); if (best) return !best.includes(i); return dvScore(b, i) === 0 && !dvBridge(b, i); }
 
 // ---- Görünüm ----

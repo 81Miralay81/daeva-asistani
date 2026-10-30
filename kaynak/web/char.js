@@ -87,7 +87,7 @@ function rChar() {
   return `<div class="card chhead"><div><div class="nm" style="font-size:18px">${esc(c.name)} <span class="mut">· ${esc(c.server)} · ${esc(c.classKey)} · Lv. ${c.level}${c.legion ? " · " + esc(c.legion) : ""}</span></div>
       <div class="lvlrow"><span class="lvl on"><b>${c.combatPower.toLocaleString("tr-TR")}</b> Savaş gücü</span><span class="lvl on"><b>${c.itemLevel.toLocaleString("tr-TR")}</b> Item level</span></div>
       <p class="small">Veri: <a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.name)} — MetaBot.GG Armory</a> · ${new Date(c.at).toLocaleString("tr-TR")}</p></div>
-      <div class="lv"><button class="btn pri" id="chapply">Seviyeleri uygulamaya aktar</button><button class="btn" id="chai" ${gemApi() && GEM_HAS_KEY ? "" : "disabled"} title="Yapay Zeka sekmesinde API anahtarı gerekli">Yapay zeka ile değerlendir</button></div></div>
+      <div class="lv"><button class="btn pri" id="chapply">Seviyeleri uygulamaya aktar</button></div></div>
     <div class="card"><div class="sec" style="margin-top:0">Eksikler ve öneriler — ${MODES[S.mode].ad}</div><ul class="gaps">${charGaps(c, cls).map(g => `<li>${g}</li>`).join("")}</ul></div>
     <div class="grid2">
       <div class="card"><div class="sec" style="margin-top:0">Aktif yetenekler</div><table>${actRows}</table></div>
