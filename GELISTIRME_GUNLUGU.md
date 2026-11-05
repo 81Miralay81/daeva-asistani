@@ -108,7 +108,7 @@ Kaynak kodun nasıl derlendiği `kaynak/OKU.md` dosyasında yazıyor.
   - Yeni indirenler `KanatixDaevaAsistani.exe` alır.
 - Marka kaynakları: `marka/` (`uret.py`, `daeva-icon.svg`, `daeva-banner.svg`).
 
-### 9. Zorunlu güncelleme (5 Kasım)
+### 9. Zorunlu güncelleme — exe 1.4.5, APK 1.0.28 (5 Kasım)
 - Neden: kullanıcı Kalıp Takip dışındaki bütün programlarının güncellemeye zorlanmasını istedi.
 - Telefon (`MainActivity.java`): yeni sürüm varsa "Güncelleme gerekli" penceresi çıkar. "Sonra" düğmesi yok, pencere kapatılamaz. İndirme sırasında "Tekrar indir" düğmesi var. Kurulum ekranından vazgeçip geri dönülürse pencere yeniden açılır.
 - Bilgisayar (`kaynak/web/dps.js` → `forceAppUpdate`): exe yeni sürümü görünce ekranı kilitler, indirir, kapanıp yeni sürümle açılır. İnternet yoksa 3 denemeden sonra "şimdilik devam et" çıkar.
