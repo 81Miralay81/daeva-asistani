@@ -225,3 +225,14 @@ def test_party_filter_without_roster_shows_everyone():
     t.process(("dmg", 1000, 777, 500, 11020000, 2000, 0, 1))  # adı bilinmeyen parti üyesi
     names = {m["name"] for m in t.snapshot(party_only=True)["fight"]["members"]}
     assert names == {"Ben", "#777"}
+
+
+def test_overlay_keeps_last_boss_fight():
+    t = Tracker(DATA)
+    t.process(("self", 0, 100, "Ben", 2305, "templar", 45, 0))
+    t.process(("npc", 0, 500, 2000002, 10_000_000))
+    t.process(("dmg", 1000, 100, 500, 12010000, 5000, 0, 1))
+    t.process(("death", 2000, 500))
+    t.process(("npc", 0, 600, 0, 1000))
+    t.process(("dmg", 3000, 100, 600, 12010000, 10, 0, 1))
+    assert t.overlay_rows()["members"][0]["dmg"] == 5000

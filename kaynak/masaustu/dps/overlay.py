@@ -175,7 +175,7 @@ class Overlay:
         self.hits = []
         st = self.status() or {}
         game = st.get("game")
-        if not self.s.get("showDps") and not self.s.get("showTimers"):
+        if not self.s.get("showDps"):
             self.root.geometry("26x26")
             cv.config(width=26, height=26)
             cv.create_rectangle(1, 1, 25, 25, fill="#121824", outline=ACC)
@@ -213,7 +213,7 @@ class Overlay:
                                    fill="#fff", anchor="e", font=(F, 8))
                     y += R
             y += 4
-        if self.s.get("showTimers"):
+        if False and self.s.get("showTimers"):  # geri sayımlar oyun üstünde gösterilmez (uygulamada var)
             tl = [t for t in (self.timers() or []) if not t.get("hidden")]
             y = self._head(y, "Geri sayımlar", time.strftime("%H:%M"), "timersMin", "showTimers")
             if not self.s.get("timersMin"):

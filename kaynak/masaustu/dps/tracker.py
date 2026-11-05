@@ -559,10 +559,14 @@ class Tracker:
             return {"me": {"x": me[0], "y": me[1]} if me else None, "members": out}
 
     def overlay_rows(self, party_only=True):
-        """Oyun içi küçük pencere için: [(ad, hasar, dps, pay, ben_mi, sınıf)] ve başlık."""
+        """Oyun üstü pencere: son boss dövüşü, bir sonraki boss'a vurulana kadar ekranda kalır
+        (boss ölünce ya da arada çöplere vurunca kaybolmaz). Hiç boss dövüşü yoksa o anki dövüş."""
         with self.lock:
-            enc = self.cur if self.cur else (self.done[0] if self.done else None)
+            cur = self.cur
+            if cur and cur.boss_id is not None:
+                enc = cur
+            else:
+                enc = next((f for f in self.done if f.boss_id is not None), None) or cur or (self.done[0] if self.done else None)
             if not enc:
                 return None
-            f = self.fight_dict(enc, party_only, detail=False)
-            return f
+            return self.fight_dict(enc, party_only, detail=False)
