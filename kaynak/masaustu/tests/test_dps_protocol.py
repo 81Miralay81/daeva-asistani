@@ -230,7 +230,7 @@ def test_party_filter_without_roster_shows_everyone():
 def test_overlay_keeps_last_boss_fight():
     t = Tracker(DATA)
     t.process(("self", 0, 100, "Ben", 2305, "templar", 45, 0))
-    t.process(("npc", 0, 500, 2000002, 10_000_000))
+    t.process(("npc", 0, 500, 2000412, 10_000_000))
     t.process(("dmg", 1000, 100, 500, 12010000, 5000, 0, 1))
     t.process(("death", 2000, 500))
     t.process(("npc", 0, 600, 0, 1000))
