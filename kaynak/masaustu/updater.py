@@ -66,9 +66,14 @@ foreach ($p in @({pids})) {{ Wait-Process -Id $p -Timeout 40 }}
 for ($i = 0; $i -lt 20; $i++) {{
   try {{ Move-Item -LiteralPath '{tmp}' -Destination '{exe}' -Force -ErrorAction Stop; break }} catch {{ Start-Sleep -Milliseconds 700 }}
 }}
+$env:PYINSTALLER_RESET_ENVIRONMENT = '1'
+Get-ChildItem env: | Where-Object {{ $_.Name -like '_MEI*' -or $_.Name -like '_PYI*' }} | ForEach-Object {{ Remove-Item "env:$($_.Name)" }}
 Start-Process -FilePath '{exe}'
 Remove-Item -LiteralPath $MyInvocation.MyCommand.Path -Force
 """)
+    # Yeni exe eski exe'nin geçici klasör ayarlarını (_MEI…) miras almasın; yoksa "Failed to load Python DLL" der.
+    env = {k: v for k, v in os.environ.items() if not k.upper().startswith(("_MEI", "_PYI"))}
+    env["PYINSTALLER_RESET_ENVIRONMENT"] = "1"
     subprocess.Popen(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-WindowStyle", "Hidden", "-File", ps1],
-                     creationflags=0x08000000, close_fds=True)  # CREATE_NO_WINDOW: pencere açılmaz
+                     creationflags=0x08000000, close_fds=True, env=env)  # CREATE_NO_WINDOW: pencere açılmaz
     return {"ok": True}
