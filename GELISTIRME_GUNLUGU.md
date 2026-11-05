@@ -95,7 +95,7 @@ Kaynak kodun nasıl derlendiği `kaynak/OKU.md` dosyasında yazıyor.
 - Başlat: oyun açıksa kapatmaz ve yeniden açmaz, ölçer açık oyuna bağlanır; kapalıysa Steam'den açar (Steam uygulama no 3393110).
 - Oyunun açık olduğunu, adında "aion2" geçen çalışan bir işlem olup olmadığına bakarak anlar.
 
-### 8. Kanatix markası (5 Kasım)
+### 8. Kanatix markası — exe 1.4.4, APK 1.0.27 (5 Kasım)
 - Neden: kullanıcı bütün programları için ortak marka olarak **Kanatix**'i seçti (kanat + X logosu).
 - Ad: telefonda ve pencere başlığında **Kanatix Daeva Asistanı**. Dosyalar: `KanatixDaevaAsistani.exe`, `KanatixDaevaAsistani.apk`.
 - Simge: Kanatix kanat-X + altın kılıç rozeti. Exe: `kaynak/masaustu/icon.ico`. Android: `android/app/src/main/res/mipmap-*/ic_launcher.png`.
