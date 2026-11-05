@@ -236,3 +236,12 @@ def test_overlay_keeps_last_boss_fight():
     t.process(("npc", 0, 600, 0, 1000))
     t.process(("dmg", 3000, 100, 600, 12010000, 10, 0, 1))
     assert t.overlay_rows()["members"][0]["dmg"] == 5000
+
+
+def test_all_modules_compile():
+    """Exe'ye giren her dosya derlenebilmeli (bir girinti hatası uygulamayı hiç açılmaz yapar)."""
+    import glob
+    import py_compile
+    base = os.path.join(os.path.dirname(__file__), "..")
+    for f in glob.glob(os.path.join(base, "*.py")) + glob.glob(os.path.join(base, "dps", "*.py")):
+        py_compile.compile(f, doraise=True)

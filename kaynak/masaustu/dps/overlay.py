@@ -217,9 +217,9 @@ class Overlay:
             y += 4
         if self.s.get("showTimers"):
             try:
-            tl = [t for t in (self.timers() or []) if not t.get("hidden")]
-        except Exception:
-            tl = []
+                tl = [t for t in (self.timers() or []) if not t.get("hidden")]
+            except Exception:
+                tl = []
             y = self._head(y, "Geri sayımlar", time.strftime("%H:%M"), "timersMin", "showTimers")
             if not self.s.get("timersMin"):
                 for t in tl[:int(self.s.get("timerRows", 6))]:
