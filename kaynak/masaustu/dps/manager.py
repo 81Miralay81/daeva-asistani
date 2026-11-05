@@ -289,6 +289,28 @@ class DpsManager:
     def open_url(self, url):
         webbrowser.open(url)
 
+    def install_npcap(self):
+        """Npcap'in resmi kurulum dosyasını npcap.com'dan indirip kurulumu başlatır (Windows izin sorar)."""
+        import re
+        import tempfile
+        try:
+            req = urllib.request.Request("https://npcap.com/", headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=20) as r:
+                html = r.read().decode("utf-8", "replace")
+            m = re.search(r"(?:https://npcap\.com/)?dist/(npcap-[0-9.]+\.exe)", html)
+            if not m:
+                return {"ok": False, "error": "npcap.com'da kurulum dosyası bulunamadı"}
+            url = "https://npcap.com/dist/" + m.group(1)
+            path = os.path.join(tempfile.gettempdir(), m.group(1))
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=120) as r, open(path, "wb") as f:
+                shutil.copyfileobj(r, f)
+            if sys.platform == "win32":
+                os.startfile(path)
+            return {"ok": True, "file": m.group(1)}
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+
     def overlay_toggle(self, on):
         (self._start_overlay() if on else self._stop_overlay())
         return {"ok": True, "on": bool(self.overlay and self.overlay.alive)}

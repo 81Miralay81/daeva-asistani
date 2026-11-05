@@ -301,6 +301,9 @@ class Api:
     def dps_overlay(self, on):
         return dps().overlay_toggle(on)
 
+    def npcap_install(self):
+        return dps().install_npcap()
+
     def dps_launch(self):
         return dps().launch_game()
 

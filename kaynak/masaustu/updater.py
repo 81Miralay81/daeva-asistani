@@ -7,7 +7,7 @@ import sys
 import tempfile
 import urllib.request
 
-API = "https://api.github.com/repos/81Miralay81/daeva-asistani/releases?per_page=20"
+API = "https://api.github.com/repos/81Miralay81/daeva-asistani/releases?per_page=100"
 UA = {"User-Agent": "DaevaAsistani-Updater", "Accept": "application/vnd.github+json"}
 
 
