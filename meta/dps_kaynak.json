@@ -1,0 +1,15 @@
+{
+  "version": "2026-11-03.1",
+  "notes": "Yetenek/NPC tabloları yenilendi: skills.json, npcs.json, maps.json, skill_icons.json",
+  "files": {
+    "dot_skill_ids.json": "https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/kaynak/masaustu/dps/data/dot_skill_ids.json",
+    "healing_skill_ids.json": "https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/kaynak/masaustu/dps/data/healing_skill_ids.json",
+    "maps.json": "https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/kaynak/masaustu/dps/data/maps.json",
+    "npcs.json": "https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/kaynak/masaustu/dps/data/npcs.json",
+    "servers.json": "https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/kaynak/masaustu/dps/data/servers.json",
+    "skill_icons.json": "https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/kaynak/masaustu/dps/data/skill_icons.json",
+    "skills.json": "https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/kaynak/masaustu/dps/data/skills.json"
+  },
+  "opcodes": {},
+  "heartbeats": []
+}
