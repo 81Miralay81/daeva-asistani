@@ -282,6 +282,43 @@ class Api:
     def harita(self):
         return _harita()
 
+    def harita_live(self, map_name):
+        """aion2-interactive-map'in canlı verisi (toplama malzemeleri dahil) bu bilgisayardan çekilir."""
+        import re as _re
+        import yaml
+        base = "https://aion2.tc-imba.com/api/v1/export/"
+
+        def get(rel):
+            req = urllib.request.Request(base + rel, headers={"User-Agent": "DaevaAsistani"})
+            with urllib.request.urlopen(req, timeout=30) as r:
+                return yaml.safe_load(r.read().decode("utf-8"))
+        try:
+            mk = (get(f"data/markers/{map_name}.yaml") or {}).get("markers") or []
+            try:
+                loc = get(f"locales/en/markers/{map_name}.yaml") or {}
+            except Exception:
+                loc = {}
+            try:
+                types = get("data/types.yaml") or {}
+                tloc = (get("locales/en/types.yaml") or {}).get("subtypes") or {}
+            except Exception:
+                types, tloc = {}, {}
+            cjk = _re.compile(r"[\u3000-\u9fff\uac00-\ud7af]")
+            out = []
+            for m in mk:
+                nm = (loc.get(m.get("id")) or {}).get("name") or str(m.get("name", ""))
+                if cjk.search(nm) or nm.isdigit():
+                    nm = ""
+                out.append([m.get("subtype", ""), nm, "", round(m.get("x", 0)), round(m.get("y", 0))])
+            tt = {}
+            for c in types.get("categories", []):
+                for st in c.get("subtypes", []):
+                    tt[st["name"]] = {"cat": c["name"], "name": (tloc.get(st["name"]) or {}).get("name") or st["name"],
+                                      "icon": ("https://raw.githubusercontent.com/aion2-interactive-map/aion2-interactive-map/main/public/" + st["icon"]) if st.get("icon") else ""}
+            return {"ok": True, "markers": out, "types": tt}
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+
     # ---------------- DPS ölçer / zamanlayıcı
     def dps_settings(self, upd=None):
         return dps().settings(upd)

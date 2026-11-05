@@ -3644,11 +3644,25 @@ async function hLive() {  // güncel harita verisi (toplama noktaları dahil) Gi
   try { const r = await fetch("https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/kaynak/masaustu/harita/harita.json", { cache: "no-cache" });
     if (r.ok) { const j = await r.json(); if (j && j.maps) { Object.assign(HARITA, j); if (TAB === "har") hRerender(); } } } catch (e) {}
 }
+const HLIVEMAP = {};
+async function hLiveMap(name) {  // bilgisayar sürümü: canlı veriyle toplama malzemelerini ekle
+  const a = DAPI(); if (!a || !a.harita_live || HLIVEMAP[name]) return; HLIVEMAP[name] = 1;
+  try { const r = await a.harita_live(name); const m = HARITA.maps[name];
+    if (r && r.ok && m && r.markers.length > m.markers.length) {
+      const ref = m.markers.filter(x => x[2]);
+      r.markers.forEach(x => { if (!x[2] && ref.length) { let b = ref[0], bd = 1e18; for (const q of ref) { const d = (q[3] - x[3]) ** 2 + (q[4] - x[4]) ** 2; if (d < bd) { bd = d; b = q; } } x[2] = b[2]; } if (!x[1]) x[1] = x[2] || ((r.types[x[0]] || {}).name) || x[0]; });
+      m.markers = r.markers; HARITA.types = Object.assign({}, r.types, HARITA.types); Object.keys(r.types).forEach(k => { if (!HARITA.types[k].icon) HARITA.types[k] = r.types[k]; });
+      HARITA.cats = Object.assign({ gathering: "Toplama malzemeleri", creature: "Petler", quest: "Görevler" }, HARITA.cats || {});
+      Object.keys(hSel()).filter(k => k.startsWith(name + ":")).forEach(k => delete hSel()[k]);
+      if (TAB === "har" && HMAP === name) hRerender();
+    } } catch (e) {}
+}
 function rHar() {
   hLive();
   const race = (S.prof && S.prof.race) || "Elyos", maps = Object.entries(HARITA.maps || {}).filter(([, m]) => m.visible !== false || m.markers.length);
   if (!HMAP || !HARITA.maps[HMAP]) HMAP = (maps.find(([, m]) => m.race === race && m.markers.length) || maps[0] || [""])[0];
   const m = HARITA.maps[HMAP]; if (!m) return `<div class="card">Harita verisi yok.</div>`;
+  hLiveMap(HMAP);
   const sel = hSel(), q = HQ.toLowerCase(), raceTr = { Elyos: "Elyos", Asmodian: "Asmodian", Abyss: "Abyss (Reshanta)" };
   const bySub = {}; m.markers.forEach((x, i) => (bySub[x[0]] = bySub[x[0]] || []).push(i));
   const cats = {}; Object.keys(bySub).forEach(t => (cats[htype(t).cat] = cats[htype(t).cat] || []).push(t));
