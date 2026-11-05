@@ -108,6 +108,12 @@ Kaynak kodun nasıl derlendiği `kaynak/OKU.md` dosyasında yazıyor.
   - Yeni indirenler `KanatixDaevaAsistani.exe` alır.
 - Marka kaynakları: `marka/` (`uret.py`, `daeva-icon.svg`, `daeva-banner.svg`).
 
+### 9. Zorunlu güncelleme (5 Kasım)
+- Neden: kullanıcı Kalıp Takip dışındaki bütün programlarının güncellemeye zorlanmasını istedi.
+- Telefon (`MainActivity.java`): yeni sürüm varsa "Güncelleme gerekli" penceresi çıkar. "Sonra" düğmesi yok, pencere kapatılamaz. İndirme sırasında "Tekrar indir" düğmesi var. Kurulum ekranından vazgeçip geri dönülürse pencere yeniden açılır.
+- Bilgisayar (`kaynak/web/dps.js` → `forceAppUpdate`): exe yeni sürümü görünce ekranı kilitler, indirir, kapanıp yeni sürümle açılır. İnternet yoksa 3 denemeden sonra "şimdilik devam et" çıkar.
+- Not: 1.0.27 / 1.4.4 ve öncesi kurulu olanlar bu sürümü bir kez eski usulle (öneriyle) alır; bundan sonraki her sürüm zorunludur.
+
 ## Bekleyen / sıradaki işler
 1. Kullanıcı gerçek oyunda denesin:
    - DPS sayıları doğru mu?

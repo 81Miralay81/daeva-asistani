@@ -2898,7 +2898,7 @@ function updBanner() {
   el.innerHTML = d.done ? `✅ DPS kaynağı güncellendi (sürüm ${esc(d.done)}). <button class="btn" id="dupdx">Tamam</button>`
     : d.err ? `⚠ Güncelleme olmadı: ${esc(d.err)} <button class="btn" id="dupdx">Kapat</button>`
     : `${d.data ? `🔔 <b>Yeni DPS kaynağı var</b> (${esc(d.local)} → ${esc(d.remote)}). ${esc(d.notes || "")} <button class="btn pri" id="dupd">Güncelle</button> ` : ""}
-       ${d.app && d.app.new ? `🔔 <b>Daeva Asistanı ${esc(d.app.version)} çıktı</b> (sende ${esc(d.app.current)}). ${d.app.canAuto ? `<button class="btn pri" id="appupd">Güncelle ve yeniden aç</button>` : `<a class="btn pri" href="${esc(d.app.page)}" target="_blank" rel="noopener">İndir</a>`} ` : ""}<button class="btn" id="dupdx">Sonra</button>`;
+       ${d.app && d.app.new ? `🔔 <b>Kanatix Daeva Asistanı ${esc(d.app.version)} çıktı</b> (sende ${esc(d.app.current)}). ${d.app.canAuto ? `<button class="btn pri" id="appupd">Güncelle ve yeniden aç</button>` : `<a class="btn pri" href="${esc(d.app.page)}" target="_blank" rel="noopener">İndir</a>`} ` : ""}<button class="btn" id="dupdx">Sonra</button>`;
 }
 
 // ---------------- Geri sayım (Türkiye saati)
@@ -3013,9 +3013,30 @@ window.addEventListener("pywebviewready", async () => {
   try { DSET = await a.dps_settings(S.prof ? { race: S.prof.race, region: S.prof.region, serverId: S.prof.serverId, serverName: S.prof.serverName, customTimers: S.customTimers || [], hiddenTimers: S.hiddenTimers || [] } : null); } catch (e) {}
   let u = {}; try { u = await a.dps_check_update() || {}; } catch (e) {}
   try { if (a.app_check) u.app = await a.app_check(); } catch (e) {}
+  if (u.app && u.app.new && u.app.canAuto) { forceAppUpdate(u.app); return; }
   if ((u.ok && u.data) || (u.app && u.app.new)) { DUPD = u; updBanner(); }
   if (TAB === "dps") dpsPoll();
 });
+// Zorunlu güncelleme (exe): yeni sürüm varsa ekran kilitlenir, indirilir, uygulama kapanıp yeni sürümle açılır.
+let FUPD_TRY = 0;
+async function forceAppUpdate(app) {
+  let o = document.getElementById("fupd");
+  if (!o) {
+    o = document.createElement("div"); o.id = "fupd";
+    o.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(8,11,17,.94);display:flex;align-items:center;justify-content:center;padding:20px";
+    document.body.appendChild(o);
+  }
+  FUPD_TRY++;
+  o.innerHTML = `<div class="card" style="max-width:440px;text-align:center;border-color:var(--acc)"><div class="nm" style="color:var(--acc);font-size:17px">Güncelleme gerekli</div>
+    <p>Kanatix Daeva Asistanı <b>${esc(app.version)}</b> indiriliyor (sende ${esc(app.current)}).<br>Bitince uygulama kapanıp yeni sürümle açılacak.</p><p class="mut small">Ayarların ve seviyelerin silinmez.</p></div>`;
+  let r = {}; try { r = await DAPI().app_install(app.url); } catch (e) { r = { ok: false, error: String(e) }; }
+  if (r.ok) return;
+  o.innerHTML = `<div class="card" style="max-width:440px;text-align:center;border-color:var(--bad)"><div class="nm">Güncelleme indirilemedi</div>
+    <p class="mut small">${esc(r.error || "")}</p><button class="btn pri" id="fupdre">Tekrar dene</button>
+    ${FUPD_TRY >= 3 ? '<button class="btn" id="fupdgec" style="margin-left:6px">İnternet yok, şimdilik devam et</button>' : ""}</div>`;
+  document.getElementById("fupdre").onclick = () => forceAppUpdate(app);
+  const g = document.getElementById("fupdgec"); if (g) g.onclick = () => o.remove();
+}
 setTimeout(() => { if (!profOk()) showProf(true); }, 400);
 
 { const c0 = S.cls || "templar"; S.cls = null; applyClass(c0); }

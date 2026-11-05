@@ -130,14 +130,34 @@ public class MainActivity extends Activity {
                 if (a.optString("name").endsWith(".apk")) { url = a.optString("browser_download_url"); break; }
             }
             if (url == null) return;
-            final String apkUrl = url, ver = rel.optString("tag_name").replaceFirst("^v", "");
-            ui.post(() -> new AlertDialog.Builder(this)
-                    .setTitle("Yeni sürüm var")
-                    .setMessage("Kanatix Daeva Asistanı " + ver + " hazır. Şimdi güncellensin mi?\n\nAyarların ve seviyelerin silinmez.")
-                    .setPositiveButton("Güncelle", (d, w) -> startDownload(apkUrl, ver))
-                    .setNegativeButton("Sonra", null)
-                    .show());
+            reqUrl = url;
+            reqVer = rel.optString("tag_name").replaceFirst("^v", "");
+            ui.post(this::showForcedUpdate);
         } catch (Exception e) { if (manual) toast("Güncelleme kontrol edilemedi: " + e.getMessage()); }
+    }
+
+    // Zorunlu güncelleme: yeni sürüm varsa "Sonra" yok; kurulmadan geri dönülürse pencere yeniden açılır
+    private volatile String reqUrl, reqVer;
+    private boolean downloading = false;
+    private AlertDialog updDialog;
+
+    private void showForcedUpdate() {
+        if (reqUrl == null || isFinishing()) return;
+        if (updDialog != null && updDialog.isShowing()) return;
+        if (downloading) {
+            updDialog = new AlertDialog.Builder(this).setTitle("Güncelleniyor")
+                    .setMessage("Kanatix Daeva Asistanı " + reqVer + " indiriliyor…\nBitince kurulum ekranı açılacak.")
+                    .setCancelable(false)
+                    .setNeutralButton("Tekrar indir", (d, w) -> { downloading = false; showForcedUpdate(); })
+                    .show();
+            return;
+        }
+        updDialog = new AlertDialog.Builder(this)
+                .setTitle("Güncelleme gerekli")
+                .setMessage("Kanatix Daeva Asistanı " + reqVer + " çıktı. Devam etmek için güncellemen gerekiyor.\n\nAyarların ve seviyelerin silinmez.")
+                .setCancelable(false)
+                .setPositiveButton("Güncelle", (d, w) -> { downloading = true; startDownload(reqUrl, reqVer); showForcedUpdate(); })
+                .show();
     }
 
     private void startDownload(String url, String ver) {
@@ -154,7 +174,9 @@ public class MainActivity extends Activity {
                     @Override public void onReceive(Context ctx, Intent in) {
                         if (in.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -2) != dlId) return;
                         Uri u = dm.getUriForDownloadedFile(dlId);
-                        if (u == null) { Toast.makeText(MainActivity.this, "İndirme başarısız", Toast.LENGTH_LONG).show(); return; }
+                        downloading = false;
+                        if (updDialog != null) { try { updDialog.dismiss(); } catch (Exception ignored) { } }
+                        if (u == null) { Toast.makeText(MainActivity.this, "İndirme başarısız, tekrar deneniyor", Toast.LENGTH_LONG).show(); showForcedUpdate(); return; }
                         pendingApk = u.toString();
                         install();
                     }
@@ -190,6 +212,8 @@ public class MainActivity extends Activity {
         // Uygulama arka plandan geri gelince de (en fazla 15 dakikada bir) yeni sürüme bak
         if (pendingApk == null && System.currentTimeMillis() - lastCheck > 15 * 60 * 1000L) pool.submit(() -> checkUpdate(false));
         if (pendingApk != null && (Build.VERSION.SDK_INT < 26 || getPackageManager().canRequestPackageInstalls())) install();
+        // Kurulum ekranından vazgeçilip geri dönüldüyse ve sürüm hâlâ eskiyse: zorunlu güncelleme penceresi yeniden
+        else if (pendingApk == null && reqUrl != null) ui.postDelayed(this::showForcedUpdate, 600);
     }
 
     @Override
