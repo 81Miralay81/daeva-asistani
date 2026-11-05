@@ -17,7 +17,7 @@ import yaml
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "kaynak", "masaustu", "harita", "harita.json")
 LIVE = "https://aion2.tc-imba.com/api/v1/export/"
-REPO_RAW = "https://raw.githubusercontent.com/aion2-interactive-map/aion2-interactive-map/main/public/"
+REPO_RAW = "https://raw.githubusercontent.com/aion2-interactive-map/aion2-interactive-map/master/public/"
 CJK = re.compile(r"[　-鿿가-힯]")
 CAT_TR = {"location": "Konumlar", "collection": "Toplanabilirler", "gathering": "Toplama malzemeleri", "creature": "Petler", "quest": "Görevler"}
 TR = {"teleport": "Işınlanma", "hiddenCube": "Gizli küp", "monolithMaterial": "Empyrean Trace", "seal": "Mühür (keşif)",

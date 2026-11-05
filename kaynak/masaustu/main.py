@@ -314,7 +314,7 @@ class Api:
             for c in types.get("categories", []):
                 for st in c.get("subtypes", []):
                     tt[st["name"]] = {"cat": c["name"], "name": (tloc.get(st["name"]) or {}).get("name") or st["name"],
-                                      "icon": ("https://raw.githubusercontent.com/aion2-interactive-map/aion2-interactive-map/main/public/" + st["icon"]) if st.get("icon") else ""}
+                                      "icon": ("https://raw.githubusercontent.com/aion2-interactive-map/aion2-interactive-map/master/public/" + st["icon"]) if st.get("icon") else ""}
             return {"ok": True, "markers": out, "types": tt}
         except Exception as e:
             return {"ok": False, "error": str(e)}
