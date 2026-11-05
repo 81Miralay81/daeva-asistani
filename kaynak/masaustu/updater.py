@@ -69,7 +69,7 @@ for ($i = 0; $i -lt 20; $i++) {{
 Start-Sleep -Seconds 2
 # Yeni sürümü Windows Gezgini başlatsın: Gezgin'in kendi temiz ortamı kullanılır, eski exe'nin
 # geçici klasör (_MEI) ayarları hiçbir şekilde taşınmaz ("Failed to load Python DLL" bu yüzdendi).
-Start-Process -FilePath "$env:WINDIR\explorer.exe" -ArgumentList ('"' + '{exe}' + '"')
+Start-Process -FilePath "$env:WINDIR\\explorer.exe" -ArgumentList ('"' + '{exe}' + '"')
 Remove-Item -LiteralPath $MyInvocation.MyCommand.Path -Force
 """)
     # Yeni exe eski exe'nin geçici klasör ayarlarını (_MEI…) miras almasın; yoksa "Failed to load Python DLL" der.
