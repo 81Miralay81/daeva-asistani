@@ -1,0 +1,23 @@
+name: DPS kaynağı
+on:
+  schedule:
+    - cron: "41 4 * * *"   # her gün 07:41 (Türkiye)
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: python tools/dps_data.py
+      - name: Değiştiyse kaydet
+        run: |
+          if git diff --quiet meta/ kaynak/masaustu/dps/data/; then echo "değişiklik yok"; exit 0; fi
+          git config user.name "daeva-meta-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add meta/dps_kaynak.json kaynak/masaustu/dps/data/
+          git commit -m "DPS kaynağı güncellendi ($(date +%F)) [skip exe]"
+          git push

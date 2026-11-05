@@ -36,17 +36,18 @@ function rKar2() {
   const desk = !!gemApi();
   const reg = S.chRegion || S.region || "eu";
   let h = `<div class="card"><div class="nm">Karakterimi sorgula</div>
-    <p class="mut small">Nick, bölge ve sınıfını gir; güncel ekipman, statlar, yetenek ve stigma seviyeleri ile Daevanion ilerlemen gelir. Veriler <a href="https://metabot.gg/en/aion-2/armory" target="_blank" rel="noopener">MetaBot.GG</a>'nin resmi karakter verisinden okunur.</p>
+    <p class="mut small">Nick, bölge ve sunucunu gir; ekipman (silah, zırh, takı, Arcana ayrı), statlar, yetenekler, stigmalar, unvan, sıralama ve Daevanion gelir. Veriler <b>NCSOFT'un resmi karakter sayfasından</b> (aion2.plaync.com) okunur; öneriler MetaBot top oyuncu verisinden. NCSOFT cevap vermezse MetaBot'a geçilir.</p>
     <div class="chform">
       <label>Nick<input id="chname" value="${esc(S.chName || "")}" placeholder="Miralay"></label>
       <label>Bölge<select id="chreg">${REGIONS.map(([k, a]) => `<option value="${k}" ${reg === k ? "selected" : ""}>${a}</option>`).join("")}</select></label>
       <label>Sunucu<select id="chsrv"><option value="">Tümü</option>${AION_SERVERS.map(n => `<option ${S.chServer === n ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+      <label>Kaynak<select id="chsrc"><option value="ncsoft" ${S.chSrc !== "metabot" ? "selected" : ""}>NCSOFT (resmi)</option><option value="metabot" ${S.chSrc === "metabot" ? "selected" : ""}>MetaBot</option></select></label>
       <label>Sınıf<select id="chcls">${CLASSES.map(([k, a]) => `<option value="${k}" ${(S.chCls || CLS) === k ? "selected" : ""}>${a}</option>`).join("")}</select></label>
       <button class="btn pri" id="chgo" ${desk && !CH_BUSY ? "" : "disabled"}>${CH_BUSY ? "Sorgulanıyor…" : "Sorgula"}</button>
     </div>
     ${desk ? "" : `<p class="note small">Sorgulama <b>masaüstü sürümünde (DaevaAsistani.exe)</b> çalışır. Bu sayfa dış sitelere bağlanamaz; aşağıdaki bağlantılardan elle bakabilirsin.</p>`}
     ${CH_ERR ? chErrHtml(CH_ERR) : ""}
-    ${CH_MATCH ? `<div class="chips">${CH_MATCH.map((m, i) => `<button class="chip" data-chm="${i}"><b>${esc(m.serverName)}</b>${esc(m.classKey)} · Lv. ${m.level}</button>`).join("")}</div>` : ""}</div>`;
+    ${CH_MATCH ? `<div class="chips">${CH_MATCH.map((m, i) => `<button class="chip" data-chm="${i}"><b>${esc(m.serverName)}</b>${esc(m.name || m.classKey || "")} · Lv. ${m.level}</button>`).join("")}</div>` : ""}</div>`;
   if (CH) h += rChar();
   return h + rKar();
 }
@@ -73,27 +74,33 @@ function rChar() {
     const ok = !mine || !mine.length || rec.every(k => mine.includes(k));
     return ks.length ? `<div class="spec-sum">${ks.map(k => `<span class="chip c-${k} small" title="${esc(ca.opts[k])}"><b>${RENK[k]}</b></span>`).join("")}<span class="mut small">${mine && mine.length ? (ok ? " takılı ✅" : " takılı ⚠") : " önerilen ⭐"}</span></div>` : ""; };
   const actRows = c.actives.map((a, i) => { const n = slots(a.level), nx = T3.find(v => v > a.level);
-    return `<tr class="clk" data-chsk="actives:${i}" title="Özellikleri gör"><td>${chImg(nameIcon(a.name, cls), a.name)}</td><td>${esc(a.name)}${specSum(a)}</td><td><b>${a.level}</b></td><td class="nowrap">${n}/3 yuva${nx ? `<div class="mut small">+${nx - a.level} → ${nx}</div>` : " ✅"}</td></tr>`; }).join("");
-  const pasRows = c.passives.map((a, i) => { return `<tr class="clk" data-chsk="passives:${i}" title="Özellikleri gör"><td>${chImg(nameIcon(a.name, cls), a.name)}</td><td>${esc(a.name)}</td><td><b>${a.level}</b></td></tr>`; }).join("");
-  const stRows = c.stigmas.map((s, i) => `<tr class="clk ${s.equipped ? "" : "dim"}" data-chsk="stigmas:${i}" title="Özellikleri gör"><td>${chImg(nameIcon(s.name, cls), s.name)}</td><td>${esc(s.name)}</td><td><b>${s.level}</b></td><td>${s.equipped ? '<span class="chip c-y small">takılı</span>' : '<span class="mut small">takılı değil</span>'}</td></tr>`).join("");
+    return `<tr class="clk" data-chsk="actives:${i}" title="Özellikleri gör"><td>${chImg(a.icon || nameIcon(a.name, cls), a.name)}</td><td>${esc(a.name)}${specSum(a)}</td><td><b>${a.level}</b></td><td class="nowrap">${n}/3 yuva${nx ? `<div class="mut small">+${nx - a.level} → ${nx}</div>` : " ✅"}</td></tr>`; }).join("");
+  const pasRows = c.passives.map((a, i) => { return `<tr class="clk" data-chsk="passives:${i}" title="Özellikleri gör"><td>${chImg(a.icon || nameIcon(a.name, cls), a.name)}</td><td>${esc(a.name)}</td><td><b>${a.level}</b></td></tr>`; }).join("");
+  const stRows = c.stigmas.map((s, i) => `<tr class="clk ${s.equipped ? "" : "dim"}" data-chsk="stigmas:${i}" title="Özellikleri gör"><td>${chImg(s.icon || nameIcon(s.name, cls), s.name)}</td><td>${esc(s.name)}</td><td><b>${s.level}</b></td><td>${s.equipped ? '<span class="chip c-y small">takılı</span>' : '<span class="mut small">takılı değil</span>'}</td></tr>`).join("");
   const eqRows = c.equipment.map((e, ei) => { const k = String(e.slot).toLowerCase(), q = e.enchant >= 10 ? "ok" : e.enchant ? "warn" : "bad";
     const rc = /^#[0-9a-f]{3,8}$/i.test(e.rarity || "") ? e.rarity : "#39404d";
     const pic = e.icon ? `<span class="eqic" style="--rc:${rc}"><img src="${esc(e.icon)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><b class="eqen">${e.enchant ? "+" + e.enchant : ""}</b></span>`
       : `<span class="eqic noimg" style="--rc:${rc}"><b class="eqen">${e.enchant ? "+" + e.enchant : ""}</b></span>`;
-    return `<tr class="clk" data-cheq="${ei}" title="Özellikleri gör"><td>${pic}</td><td><div>${esc(e.item)}</div><div class="mut small">${esc(SLOT_TR[k] || e.slot)}</div></td><td class="${q}"><b>${e.enchant ? "+" + e.enchant : "—"}</b></td></tr>`; }).join("");
+    return [eqGroup(e), `<tr class="clk" data-cheq="${ei}" title="Özellikleri gör"><td>${pic}</td><td><div style="color:${e.rarity || "inherit"}">${esc(e.item)}</div><div class="mut small">${esc(e.slotTr || SLOT_TR[k] || e.slot)}${e.gradeTr ? " · " + esc(e.gradeTr) : ""}</div></td><td class="${q}"><b>${e.enchant ? "+" + e.enchant : "—"}</b>${e.exceed ? `<div class="small" style="color:var(--s16)">★${e.exceed} aşım</div>` : ""}</td></tr>`]; });
+  const EQG = [["weapon", "⚔ Silahlar"], ["armor", "🛡 Zırhlar"], ["acc", "💍 Takılar"], ["arcana", "🃏 Arcana"], ["other", "Diğer"]];
+  const arcN = eqRows.filter(r => r[0] === "arcana").length;
+  const eqHtml = EQG.map(([g, t]) => { const rr = eqRows.filter(r => r[0] === g).map(r => r[1]); if (g === "arcana") for (let i = arcN; i < 5; i++) rr.push(`<tr class="dim"><td><span class="eqic noimg" style="--rc:#39404d"></span></td><td class="mut">Boş Arcana yuvası</td><td></td></tr>`);
+    return rr.length ? `<div class="card"><div class="sec" style="margin-top:0">${t}</div><table>${rr.join("")}</table></div>` : ""; }).join("")
+    + ((c.wing || c.pet || (c.skins && c.skins.length)) ? `<div class="card"><div class="sec" style="margin-top:0">🪽 Kanat, pet ve görünüm</div><table>${[c.wing && ["Kanat", c.wing], c.wingSkin && ["Kanat görünümü", c.wingSkin], c.pet && ["Pet", c.pet]].filter(Boolean).map(([l, w]) => `<tr><td><span class="eqic" style="--rc:${w.rarity || "#39404d"}">${w.icon ? `<img src="${esc(w.icon)}" alt="" loading="lazy">` : ""}</span></td><td><div style="color:${w.rarity || "inherit"}">${esc(w.name)}</div><div class="mut small">${l}${w.level ? " · Lv " + w.level : ""}</div></td><td>${w.enchant ? "+" + w.enchant : ""}</td></tr>`).join("")}${(c.skins || []).map(k => `<tr><td><span class="eqic" style="--rc:${k.rarity || "#39404d"}">${k.icon ? `<img src="${esc(k.icon)}" alt="" loading="lazy">` : ""}</span></td><td>${esc(k.item)}<div class="mut small">Görünüm · ${esc(k.slotTr)}</div></td><td></td></tr>`).join("")}</table></div>` : "");
   const dvRows = Object.entries(c.daevanion).map(([b, d]) => `<tr><td>${b[0].toUpperCase() + b.slice(1)}</td><td><div class="bar"><i style="width:${Math.round(d.open / d.total * 100)}%"></i></div></td><td>${d.open}/${d.total}</td></tr>`).join("");
   const deity = Object.entries(c.deity).map(([k, v]) => `<tr><td>${esc(k)}</td><td><b>${v.value}</b></td><td class="mut small">${esc(v.effect)}</td></tr>`).join("");
-  const prim = Object.entries(c.primary).map(([k, v]) => `<span class="lvl on"><b>${v}</b> ${esc(k)}</span>`).join("");
+  const prim = Object.entries(c.primary).map(([k, v]) => `<span class="lvl on" title="${esc(((c.statInfo || {})[k] || {}).effect || "")}"><b>${v}</b> ${esc(k)}</span>`).join("");
   return `<div class="card chhead"><div><div class="nm" style="font-size:18px">${esc(c.name)} <span class="mut">· ${esc(c.server)} · ${esc(c.classKey)} · Lv. ${c.level}${c.legion ? " · " + esc(c.legion) : ""}</span></div>
       <div class="lvlrow"><span class="lvl on"><b>${c.combatPower.toLocaleString("tr-TR")}</b> Savaş gücü</span><span class="lvl on"><b>${c.itemLevel.toLocaleString("tr-TR")}</b> Item level</span></div>
-      <p class="small">Veri: <a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.name)} — MetaBot.GG Armory</a> · ${new Date(c.at).toLocaleString("tr-TR")}</p></div>
+      ${c.title && c.title.name ? `<div class="small">🏷 ${esc(c.title.name)}${c.race ? " · " + esc(c.race) : ""}</div>` : ""}${(c.rankings || []).length ? `<div class="small">🏆 ${c.rankings.map(r => `${esc(r.name)} #${r.rank}`).join(" · ")}</div>` : ""}
+      <p class="small">Veri: <a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.name)} — ${c.via === "ncsoft" ? "NCSOFT resmi karakter verisi" : "MetaBot.GG Armory"}</a> · ${new Date(c.at).toLocaleString("tr-TR")}</p></div>
       <div class="lv"><button class="btn pri" id="chapply">Seviyeleri uygulamaya aktar</button></div></div>
     <div class="card"><div class="sec" style="margin-top:0">Eksikler ve öneriler — ${MODES[S.mode].ad}</div><ul class="gaps">${charGaps(c, cls).map(g => `<li>${g}</li>`).join("")}</ul></div>
     <div class="grid2">
       <div class="card"><div class="sec" style="margin-top:0">Aktif yetenekler</div><table>${actRows}</table></div>
       <div class="card"><div class="sec" style="margin-top:0">Pasifler</div><table>${pasRows}</table>
         <div class="sec">Stigmalar</div><table>${stRows}</table></div>
-      <div class="card"><div class="sec" style="margin-top:0">Ekipman</div><table>${eqRows}</table></div>
+      ${eqHtml}
       <div class="card"><div class="sec" style="margin-top:0">Statlar</div><div class="lvlrow">${prim}</div><table style="margin-top:8px">${deity}</table>
         <div class="sec">Daevanion</div><table>${dvRows}</table></div>
     </div>`;
@@ -151,11 +158,11 @@ function applyChar() {
 async function charLookup(pick) {
   const api = gemApi(); if (!api) return;
   S.chName = (document.getElementById("chname") || {}).value?.trim() || S.chName; S.chRegion = (document.getElementById("chreg") || {}).value || S.chRegion;
-  S.chServer = (document.getElementById("chsrv") || {}).value ?? S.chServer; if (S.chServer && !AION_SERVERS.includes(S.chServer)) S.chServer = AION_SERVERS.find(n => n.toLowerCase() === S.chServer.toLowerCase()) || ""; S.chCls = (document.getElementById("chcls") || {}).value || S.chCls; save();
+  S.chServer = (document.getElementById("chsrv") || {}).value ?? S.chServer; if (S.chServer && !AION_SERVERS.includes(S.chServer)) S.chServer = AION_SERVERS.find(n => n.toLowerCase() === S.chServer.toLowerCase()) || ""; S.chCls = (document.getElementById("chcls") || {}).value || S.chCls; S.chSrc = (document.getElementById("chsrc") || {}).value || S.chSrc || "ncsoft"; save();
   if (!S.chName) { CH_ERR = "Nick gir"; render(); return; }
   CH_BUSY = true; CH_ERR = null; render();
   try {
-    const r = await api.lookup_character(S.chName, S.chRegion || "eu", pick ? pick.serverName : (S.chServer || ""), CLASS_KEY[S.chCls] || "");
+    const r = await api.lookup_character(S.chName, S.chRegion || "eu", pick ? pick.serverName : (S.chServer || ""), CLASS_KEY[S.chCls] || "", S.chSrc || "ncsoft");
     if (r && r.ok) { CH = Object.assign(r, { at: Date.now() }); CH_MATCH = null; S.chLast = CH; save(); }
     else { CH_ERR = { code: r && r.code, error: (r && r.error) || "Sorgu başarısız", detail: r && r.detail }; CH_MATCH = r && r.matches && r.matches.length ? r.matches : null; }
   } catch (e) { CH_ERR = { code: 0, error: String(e.message || e) }; }
@@ -343,7 +350,19 @@ function popItem(i) {
   const e = CH.equipment[i]; if (!e) return "";
   const k = String(e.slot).toLowerCase(), rc = /^#[0-9a-f]{3,8}$/i.test(e.rarity || "") ? e.rarity : "#39404d";
   let h = `<div class="pop-head"><span class="eqic" style="--rc:${rc}">${e.icon ? `<img src="${esc(e.icon)}" alt="">` : ""}<b class="eqen">${e.enchant ? "+" + e.enchant : ""}</b></span><div><div class="nm" style="font-size:17px;color:${rc}">${esc(e.item)}</div><div class="mut small">${esc(SLOT_TR[k] || e.slot)}${e.enchant ? ` · +${e.enchant}` : ""}</div></div></div>`;
-  const key = CH.url + "|" + i, d = ITEM_CACHE[key];
+  const key = CH.url + "|" + (CH.characterId || "") + "|" + i, d = ITEM_CACHE[key];
+  if (CH.via === "ncsoft") {
+    if (!d) return h + `<div class="prog"><div class="small">⏳ Eşya detayları NCSOFT'tan okunuyor…</div><div class="prog-bar"><i style="width:60%"></i></div></div>`;
+    if (!d.ok) return h + `<p class="bad small">⚠ ${esc(d.error || "Detay okunamadı")}</p>`;
+    const li = (a, f) => a && a.length ? `<ul class="pop-list">${a.map(f).join("")}</ul>` : "";
+    h += `<p class="small mut">${esc(d.category || "")}${d.level ? ` · Eşya sv ${d.level}` : ""}${d.maxEnchant ? ` · güçlendirme ${d.enchant}/${d.maxEnchant}` : ""}${d.maxExceed ? ` · aşım en fazla ${d.maxExceed}` : ""}${d.soulBind ? ` · ruh bağlama %${esc(d.soulBind)}` : ""}</p>`;
+    if (d.main.length) h += `<div class="sec">Ana statlar</div>` + li(d.main, x => `<li>${esc(trItem(x.name))} <b>${esc(x.min ? x.min + " ~ " + x.value : x.value)}</b>${x.extra && x.extra !== "0" ? ` <span class="ok">(+${esc(x.extra)})</span>` : ""}</li>`);
+    if (d.sub.length) h += `<div class="sec">Ek statlar</div>` + li(d.sub, x => `<li>${esc(trItem(x.name))} <b>${esc(x.value)}</b></li>`);
+    if (d.skills.length) h += `<div class="sec">Eşya yetenekleri</div>` + li(d.skills, x => `<li>${x.icon ? `<img src="${esc(x.icon)}" style="width:20px;vertical-align:middle"> ` : ""}${esc(x.name)} <b>+${x.level}</b></li>`);
+    if (d.stones.length || d.stoneSlots) h += `<div class="sec">Manataşları ${d.stones.length}/${d.stoneSlots || d.stones.length}</div>` + li(d.stones, x => `<li>${esc(trItem(x.name))} <b>${esc(x.value)}</b> <span class="mut small">${esc(x.grade || "")}</span></li>`);
+    if (d.god.length) h += `<div class="sec">Tanrı taşı</div>` + li(d.god, x => `<li><b>${esc(x.name)}</b> ${esc(x.desc || "")}</li>`);
+    return h + `<p class="small mut">Değerler NCSOFT'un resmi karakter verisinden.</p>`;
+  }
   if (!d) h += `<div class="prog"><div class="small">⏳ Eşya detayları MetaBot'tan okunuyor…</div><div class="prog-bar"><i style="width:60%"></i></div></div>`;
   else if (!d.ok) h += `<p class="bad small">⚠ ${esc(d.error || "Detay okunamadı")}</p>`;
   else h += itemDetailHtml(e, d.lines) || `<pre class="small">${esc(d.lines.join("\n"))}</pre>`;
@@ -351,8 +370,13 @@ function popItem(i) {
   return h;
 }
 async function loadItem(i) {
-  const e = CH.equipment[i], key = CH.url + "|" + i, api = window.pywebview && window.pywebview.api;
+  const e = CH.equipment[i], key = CH.url + "|" + (CH.characterId || "") + "|" + i, api = window.pywebview && window.pywebview.api;
   if (ITEM_CACHE[key]) return;
+  if (CH.via === "ncsoft") {
+    if (!api || !api.nc_item) { ITEM_CACHE[key] = { ok: false, error: "Eşya detayı bu sürümde okunamıyor." }; return; }
+    try { ITEM_CACHE[key] = await api.nc_item(CH.region, CH.serverId, CH.characterId, e.id, e.enchant, e.slotPos); } catch (x) { ITEM_CACHE[key] = { ok: false, error: String(x) }; }
+    return;
+  }
   if (!api || !api.item_detail) { ITEM_CACHE[key] = { ok: false, error: "Eşya detayları sadece uygulamada (bilgisayar/telefon) okunabilir." }; return; }
   const label = e.label || `${e.slot}: ${e.item}${e.enchant ? " +" + e.enchant : ""} — details`;
   try { ITEM_CACHE[key] = await api.item_detail(CH.url, label); } catch (x) { ITEM_CACHE[key] = { ok: false, error: String(x) }; }
@@ -379,3 +403,14 @@ document.addEventListener("click", e => {
   save(); const box = document.querySelector(".pop-box"), y = box ? box.scrollTop : 0; showPop(); const nb = document.querySelector(".pop-box"); if (nb) nb.scrollTop = y;
   const row = document.querySelector(`[data-chsk="actives:${CH.actives.indexOf(c)}"]`); if (row) { const y2 = window.scrollY; render(); window.scrollTo(0, y2); }
 });
+
+// ekipman grubu (NCSOFT verisinde hazır; MetaBot'ta slot adından)
+function eqGroup(e) {
+  if (e.group) return e.group;
+  const k = String(e.slot).toLowerCase();
+  if (/main hand|off-hand|weapon/.test(k)) return "weapon";
+  if (/arcana/.test(k)) return "arcana";
+  if (/helmet|shoulder|chest|legs|gloves|boots|cape/.test(k)) return "armor";
+  if (/necklace|earring|ring|bracelet|belt|amulet|rune/.test(k)) return "acc";
+  return "other";
+}

@@ -17,7 +17,7 @@ CRIT, PARRY, PERFECT, DOUBLE, HEAVY, BACK, FRONT, DOT, MULTI = 1, 2, 4, 8, 16, 3
 OPCODES = {
     "heartbeat": 0x0036, "self": 0x3336, "player": 0x4536, "player_old": 0x4436, "spawn": 0x4136,
     "death": 0x4236, "map": 0x2136, "cast": 0x0238, "hit": 0x0338, "damage": 0x0438, "dot": 0x0538,
-    "remain_hp": 0x008D, "kill": 0x048D, "hpmp": 0x1B92, "roster": 0x0297,
+    "remain_hp": 0x008D, "fieldboss": 0x0191, "kill": 0x048D, "hpmp": 0x1B92, "roster": 0x0297,
 }
 HEARTBEATS = [b"\x0e\x00\x36", b"\x06\x00\x36"]
 
@@ -397,7 +397,7 @@ class PacketParser:
             O["heartbeat"]: self._hb, O["damage"]: self._damage, O["dot"]: self._dot,
             O["self"]: self._self, O["roster"]: self._roster, O["player"]: self._player,
             O["player_old"]: self._player, O["spawn"]: self._spawn, O["death"]: self._death,
-            O["map"]: self._map, O["remain_hp"]: self._remain_hp, O["hpmp"]: self._hpmp, O["kill"]: self._kill,
+            O["map"]: self._map, O["remain_hp"]: self._remain_hp, O["fieldboss"]: self._fieldboss, O["hpmp"]: self._hpmp, O["kill"]: self._kill,
         }
 
     def handle(self, op, body):
@@ -863,6 +863,54 @@ class PacketParser:
             return None
         v, _ = varint(b, i + len(_SPIRIT_ANCHOR))
         return v if is_entity(v) else None
+
+    # ---- saha boss listesi (01 91): oyun içi haritada boss listesi açılınca gelir
+    def _fieldboss(self, b):
+        """u16 0, harita u32, adet u8, adet × {canlı u8, slot varint, [canlıysa x y z f32], [bazen u8], zaman u64 ms}"""
+        if len(b) < 7:
+            return
+        mp, cnt, o, slots = u32(b, 2), b[6], 7, []
+        for n in range(cnt):
+            r = self._fb_slot(b, o, mp, n == cnt - 1)
+            if r is None:
+                break
+            o, slot = r
+            slots.append(slot)
+        if slots:
+            self._emit("fieldboss", self.t, mp, cnt, slots)
+
+    @staticmethod
+    def _fb_head(b, o, mp):
+        if o >= len(b) or b[o] > 1:
+            return None
+        v, nxt = varint(b, o + 1)
+        if v is None or not mp * 100 < v < mp * 100 + 100:
+            return None
+        return b[o] == 1, v, nxt
+
+    def _fb_slot(self, b, o, mp, last):
+        h = self._fb_head(b, o, mp)
+        if h is None:
+            return None
+        alive, sid, at = h
+        xyz = (0.0, 0.0, 0.0)
+        if alive:
+            if at + 12 > len(b):
+                return None
+            xyz = struct.unpack_from("<fff", b, at)
+            at += 12
+        for extra in (0, 1):
+            t = at + extra
+            if t + 8 > len(b):
+                break
+            tm = struct.unpack_from("<q", b, t)[0]
+            if tm != 0 and not 1_600_000_000_000 <= tm <= 2_600_000_000_000:
+                continue
+            end = t + 8
+            fits = (not any(b[end:]) and len(b) - end <= 8) if last else self._fb_head(b, end, mp) is not None
+            if fits:
+                return end, {"slot": sid, "alive": alive, "at": tm, "x": xyz[0], "y": xyz[1]}
+        return None
 
     # ---- ölüm, can, bölge
     def _death(self, b):

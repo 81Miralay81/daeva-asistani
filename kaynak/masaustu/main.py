@@ -18,7 +18,10 @@ import webbrowser
 import webview
 
 import armory
+import ncsoft
+from dps.manager import DpsManager
 
+APP_VERSION = "1.4.0"
 API = "https://generativelanguage.googleapis.com/v1beta"
 DATA_DIR = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "DaevaAsistani")
 KEY_FILE = os.path.join(DATA_DIR, "gemini_key.txt")
@@ -227,10 +230,109 @@ def _item_detail(url, label):
 
 
 _CH_CACHE = {}
+_DPS = None
+
+
+def dps():
+    global _DPS
+    if _DPS is None:
+        _DPS = DpsManager(DATA_DIR, resource(os.path.join("dps", "data")), APP_VERSION)
+    return _DPS
+
+
+def _harita():
+    try:
+        with open(resource(os.path.join("harita", "harita.json")), encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {"maps": {}}
+
+
+def _safe(fn):
+    try:
+        return fn()
+    except urllib.error.HTTPError as e:
+        return {"ok": False, "code": e.code, "error": f"NCSOFT cevap vermedi (HTTP {e.code})"}
+    except Exception as e:
+        return {"ok": False, "code": 0, "error": str(e)}
 
 
 class Api:
-    def lookup_character(self, name, region, server="", cls=""):
+    # ---------------- NCSOFT resmi karakter verisi
+    def nc_lookup(self, name, region, server=""):
+        return _safe(lambda: ncsoft.lookup(name, region, server))
+
+    def nc_lookup_id(self, region, server_id, char_id):
+        return _safe(lambda: ncsoft.lookup_id(region, server_id, char_id))
+
+    def nc_item(self, region, server_id, char_id, item_id, enchant, slot_pos):
+        return _safe(lambda: ncsoft.item_lines(region, server_id, char_id, item_id, enchant, slot_pos))
+
+    def item_search(self, q):
+        return _safe(lambda: {"ok": True, "items": ncsoft.item_search(q)})
+
+    def item_info(self, item_id, region="eu"):
+        return _safe(lambda: ncsoft.item_info(item_id, region))
+
+    def servers(self):
+        d = dps().data.servers
+        return [{"id": k, "name": v, "race": "Elyos" if k < 2000 else "Asmodian"} for k, v in sorted(d.items())]
+
+    def harita(self):
+        return _harita()
+
+    # ---------------- DPS ölçer / zamanlayıcı
+    def dps_settings(self, upd=None):
+        return dps().settings(upd)
+
+    def dps_start(self, launch=None):
+        return dps().start(launch)
+
+    def dps_stop(self):
+        return dps().stop()
+
+    def dps_reset(self):
+        return dps().reset()
+
+    def dps_snapshot(self, party_only=None, fight_id=None):
+        return dps().snapshot(party_only, fight_id)
+
+    def dps_overlay(self, on):
+        return dps().overlay_toggle(on)
+
+    def dps_launch(self):
+        return dps().launch_game()
+
+    def dps_check_update(self):
+        return dps().check_update()
+
+    def dps_apply_update(self):
+        return dps().apply_update()
+
+    def timers(self):
+        return {"timers": dps().timers(), "game": dps().game_live(), "running": dps().running()}
+
+    def pick_file(self):
+        try:
+            r = webview.windows[0].create_file_dialog(webview.OPEN_DIALOG, file_types=("Program (*.exe;*.lnk;*.url)", "Tümü (*.*)"))
+            return r[0] if r else ""
+        except Exception:
+            return ""
+
+    def app_version(self):
+        return APP_VERSION
+
+    def lookup_character(self, name, region, server="", cls="", source="ncsoft"):
+        """NCSOFT resmi verisi önce; olmazsa MetaBot."""
+        if source != "metabot":
+            r = self.nc_lookup(name, region, server)
+            if r.get("ok") or r.get("code") in (300,):
+                return r
+            if r.get("code") == 404 and r.get("matches") is not None:
+                return r
+        return self._mb_lookup(name, region, server, cls)
+
+    def _mb_lookup(self, name, region, server="", cls=""):
         """Önce doğrudan, site engellerse (403) gizli tarayıcı penceresiyle dener. Aynı sorgu 10 dk önbellekte."""
         key = (name.lower(), region, server.lower(), cls.lower())
         hit = _CH_CACHE.get(key)
@@ -329,6 +431,12 @@ def main():
 
     def on_closed(*_):
         # Ana pencere kapanınca gizli MetaBot penceresini de kapat ve işlemi tamamen sonlandır
+        try:
+            if _DPS is not None:
+                _DPS.stop()
+                _DPS._stop_overlay()
+        except Exception:
+            pass
         try:
             if _HW is not None:
                 _HW.destroy()

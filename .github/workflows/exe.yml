@@ -1,0 +1,40 @@
+name: Windows exe derle
+
+on:
+  push:
+    branches: [main]
+    paths: ["kaynak/masaustu/**", "kaynak/web/**", ".github/workflows/exe.yml", "!kaynak/masaustu/dps/data/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  exe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Paketler
+        run: python -m pip install pywebview pyinstaller pytest
+      - name: Testler
+        working-directory: kaynak/masaustu
+        run: python -m pytest -q tests
+      - name: Arayüzü derle
+        run: python kaynak/build_all.py
+      - name: Sürüm
+        id: v
+        shell: bash
+        run: echo "ver=$(grep -oP 'APP_VERSION = \"\K[^\"]+' kaynak/masaustu/main.py)" >> $GITHUB_OUTPUT
+      - name: Exe
+        working-directory: kaynak/masaustu
+        run: python -m PyInstaller --noconfirm --onefile --windowed --name DaevaAsistani --icon icon.ico --add-data "app;app" --add-data "dps\data;dps\data" --add-data "harita;harita" --hidden-import tkinter main.py
+      - name: Yayınla
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: exe-v${{ steps.v.outputs.ver }}
+          name: Daeva Asistanı (bilgisayar) ${{ steps.v.outputs.ver }}
+          body: "DaevaAsistani.exe dosyasını indirip çalıştır. DPS ölçer için Npcap gerekir: https://npcap.com"
+          files: kaynak/masaustu/dist/DaevaAsistani.exe
+          make_latest: false

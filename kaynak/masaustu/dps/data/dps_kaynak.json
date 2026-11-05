@@ -1,6 +1,6 @@
 {
-  "version": "2026-11-03.1",
-  "notes": "Yetenek/NPC tabloları yenilendi: skills.json, npcs.json, maps.json, skill_icons.json",
+  "version": "2026-11-05.1",
+  "notes": "Yetenek/NPC tabloları yenilendi: npcs.json",
   "files": {
     "dot_skill_ids.json": "https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/kaynak/masaustu/dps/data/dot_skill_ids.json",
     "healing_skill_ids.json": "https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/kaynak/masaustu/dps/data/healing_skill_ids.json",
@@ -11,5 +11,10 @@
     "skills.json": "https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/kaynak/masaustu/dps/data/skills.json"
   },
   "opcodes": {},
-  "heartbeats": []
+  "heartbeats": [],
+  "app": {
+    "version": "1.4.0",
+    "url": "https://github.com/81Miralay81/daeva-asistani/releases/tag/exe-v1.4.0",
+    "notes": "DPS ölçer, geri sayım, harita, eşya arama"
+  }
 }

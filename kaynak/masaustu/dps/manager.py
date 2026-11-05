@@ -13,6 +13,7 @@ from . import capture as C
 from . import protocol as P
 from .overlay import Overlay
 from .tracker import GameData, Tracker
+from . import timers as TM
 
 MANIFEST_URL = "https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/meta/dps_kaynak.json"
 RELEASES = "https://github.com/81Miralay81/daeva-asistani/releases/latest"
@@ -36,8 +37,10 @@ class DpsManager:
         self.app_version = app_version
         self.set_path = os.path.join(data_dir, "dps_ayarlar.json")
         self.s = {"launcher": "steam", "gamePath": "", "partyOnly": True, "overlay": True,
-                  "overlayAlpha": 0.72, "overlayX": 12, "overlayY": 12, "overlayRows": 8, "overlayLocked": True,
-                  "launchGame": True, "skipVersion": ""}
+                  "overlayAlpha": 0.75, "overlayX": 12, "overlayY": 12, "overlayRows": 8,
+                  "showDps": True, "showTimers": True, "dpsMin": False, "timersMin": False, "timerRows": 6,
+                  "hiddenTimers": [], "customTimers": [], "race": "", "serverId": 0, "serverName": "", "region": "eu",
+                  "launchGame": True}
         try:
             with open(self.set_path, encoding="utf-8") as f:
                 self.s.update(json.load(f))
@@ -50,6 +53,7 @@ class DpsManager:
         self.log_lines = []
         self.started_at = 0
         self.update_info = None
+        self.tracker = Tracker(self.data)
         self._ticker = None
         self._reload_data()
 
@@ -98,7 +102,7 @@ class DpsManager:
             self._save()
             if self.overlay:
                 self.overlay.update_settings(self._ov_settings())
-            if "overlay" in upd and self.running():
+            if "overlay" in upd:
                 (self._start_overlay() if upd["overlay"] else self._stop_overlay())
         ok, msg = C.npcap_status()
         return dict(self.s, npcap=ok, npcapMsg=msg, appVersion=self.app_version,
@@ -111,7 +115,6 @@ class DpsManager:
     def start(self, launch=None):
         if self.running():
             return {"ok": True, "already": True}
-        self.tracker = self.tracker or Tracker(self.data)
         self.cap = C.Capture(self.tracker.process, self.data, log=self.log)
         if not self.cap.start():
             err = self.cap.error
@@ -131,7 +134,6 @@ class DpsManager:
         if self.cap:
             self.cap.stop()
             self.cap = None
-        self._stop_overlay()
         return {"ok": True}
 
     def _tick_loop(self):
@@ -147,18 +149,27 @@ class DpsManager:
 
     # ------------------------------------------------------------ overlay
     def _ov_settings(self):
-        return {"x": self.s["overlayX"], "y": self.s["overlayY"], "alpha": self.s["overlayAlpha"],
-                "rows": self.s["overlayRows"], "locked": self.s["overlayLocked"], "hidden": False}
+        return {"x": self.s["overlayX"], "y": self.s["overlayY"], "alpha": self.s["overlayAlpha"], "rows": self.s["overlayRows"],
+                "showDps": self.s["showDps"], "showTimers": self.s["showTimers"], "dpsMin": self.s["dpsMin"],
+                "timersMin": self.s["timersMin"], "timerRows": self.s["timerRows"], "hidden": list(self.s["hiddenTimers"])}
+
+    def game_live(self):
+        return bool(self.cap and self.cap.running and self.cap.pipeline.game_servers()
+                    and time.time() * 1000 - self.cap.pipeline.last_game_ms < 10_000)
+
+    def timers(self):
+        return TM.all_timers(self.tracker, self.s.get("customTimers"), self.s.get("race"), set(self.s.get("hiddenTimers") or []))
 
     def _start_overlay(self):
         if self.overlay and self.overlay.alive:
             return
 
-        def moved(x, y):
-            self.s["overlayX"], self.s["overlayY"] = x, y
+        def changed(o):
+            self.s.update(overlayX=o["x"], overlayY=o["y"], showDps=o["showDps"], showTimers=o["showTimers"],
+                          dpsMin=o["dpsMin"], timersMin=o["timersMin"], hiddenTimers=list(o.get("hidden") or []))
             self._save()
         self.overlay = Overlay(lambda: self.tracker.overlay_rows(self.s.get("partyOnly", True)) if self.tracker else None,
-                               self._ov_settings(), moved)
+                               self.timers, lambda: {"game": self.game_live()}, self._ov_settings(), changed)
         if not self.overlay.start():
             self.log("overlay açılamadı (tkinter yok)")
 
@@ -203,6 +214,7 @@ class DpsManager:
         snap["uptime"] = int(time.time() - self.started_at) if self.running() else 0
         snap["partyOnly"] = po
         snap["log"] = self.log_lines[-8:]
+        snap["game"] = self.game_live()
         return snap
 
     # ------------------------------------------------------------ güncelleme
@@ -262,3 +274,7 @@ class DpsManager:
 
     def open_url(self, url):
         webbrowser.open(url)
+
+    def overlay_toggle(self, on):
+        (self._start_overlay() if on else self._stop_overlay())
+        return {"ok": True, "on": bool(self.overlay and self.overlay.alive)}

@@ -22,6 +22,7 @@ class GameData:
     def __init__(self, dirs):
         self.skills, self.icons, self.npcs, self.maps, self.servers = {}, {}, {}, {}, {}
         self.dots, self.heals = set(), set()
+        self.fb_maps = {}
         for d in dirs:  # sonraki klasör öncekinin üstüne yazar
             self._load(d)
 
@@ -48,6 +49,10 @@ class GameData:
         self.maps.update({int(k): (v.get("name") if isinstance(v, dict) else v) for k, v in j.items() if k.isdigit()})
         j = self._read(os.path.join(d, "servers.json")) or {}
         self.servers.update({int(k): v for k, v in j.items() if k.isdigit() and v})
+        j = self._read(os.path.join(d, "field_boss_maps.json")) or {}
+        for k, v in (j.get("maps") or {}).items():
+            if k.isdigit():
+                self.fb_maps[int(k)] = v
         j = self._read(os.path.join(d, "dot_skill_ids.json"))
         if isinstance(j, list) and j:
             self.dots = set(int(x) for x in j)
@@ -89,6 +94,9 @@ class GameData:
 
     def npc(self, code):
         return self.npcs.get(code) or {}
+
+    def bosses_in_block(self, block):
+        return sorted(c for c, n in self.npcs.items() if n.get("isBoss") and not n.get("isDummy") and c // 1000 == block)
 
     def map_name(self, mid):
         if mid in self.maps:
@@ -177,6 +185,8 @@ class Tracker:
         self.cur = None
         self.done = []
         self.last_event = 0
+        self.fieldboss = {}    # harita -> {"t": alındığı an, "slots": [...]}
+        self.kills = {}        # npc kodu -> ölüm zamanı (açık dünya bossları)
         self.events = 0
 
     # ---------------------------------------------------------------- giriş
@@ -246,12 +256,24 @@ class Tracker:
                         n["boss"] = True
                 if self.cur and self.cur.active and self.cur.boss_id == nid:
                     self._boss_info(self.cur, nid)
+            elif k == "fieldboss":
+                _, t, mp, cnt, slots = e
+                info = self.data.fb_maps.get(mp) or {}
+                codes = self.data.bosses_in_block(info.get("block", 0)) if info.get("block") else []
+                for sl in slots:
+                    place = sl["slot"] - mp * 100
+                    code = codes[place - 1] if len(codes) == cnt and 1 <= place <= len(codes) else 0
+                    sl["code"] = code
+                    sl["name"] = (self.data.npc(code).get("name") if code else "") or f"Boss {place}"
+                self.fieldboss[mp] = {"t": t, "map": info.get("en") or self.data.map_name(mp), "slots": slots}
             elif k == "hp":
                 self._hp(e)
             elif k == "death":
                 n = self.npcs.get(e[2])
                 if n:
                     n["hp"] = 0
+                    if n.get("boss") and n.get("code") and not 600_000 <= self.map_id < 700_000:
+                        self.kills[n["code"]] = e[1]
                 if self.cur and self.cur.active and self.cur.boss_id == e[2]:
                     self.cur.boss_hp = 0
                     self._finish("kill", max(e[1], self.cur.last))

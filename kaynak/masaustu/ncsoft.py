@@ -240,3 +240,28 @@ def item_lines(region, server_id, char_id, item_id, enchant, slot_pos):
                    for s in d.get("godStoneStat") or []],
            "set": d.get("setInfo") or d.get("set") or None, "sources": d.get("sources") or []}
     return out
+
+
+# ---------------------------------------------------------------- eşya / pet arama
+DICT = "https://tw.ncsoft.com/aion2_tw/v2.0/dict/search/item"  # NC'nin eşya sözlüğü (Global'de yok; TW, İngilizce)
+
+
+def item_search(q, size=30):
+    """İsme göre eşya/pet ara: [{id, name, icon, grade, category, options}]"""
+    url = f"{DICT}?{urllib.parse.urlencode({'searchKeyword': q, 'page': 1, 'size': size, 'locale': 'en-US'})}"
+    d = _get(url, ttl=3600)
+    return [{"id": x.get("id"), "name": x.get("name"), "icon": x.get("image"), "grade": x.get("grade"),
+             "gradeTr": GRADE_TR.get(x.get("grade"), x.get("grade")), "rarity": GRADE_COLOR.get(x.get("grade"), ""),
+             "category": x.get("categoryName"), "options": x.get("options") or [], "tradable": x.get("tradable")}
+            for x in d.get("contents") or []]
+
+
+def item_info(item_id, region="eu"):
+    """Eşyanın resmi bilgisi; 'sources' = NC'nin söylediği elde etme yolları (ör. Crafting, Dungeon)."""
+    d = _get(f"{SITE}/en-us/api/gameconst/item?{urllib.parse.urlencode({'lang': LANG, 'region': shard(region), 'id': item_id, 'enchantLevel': 0})}", ttl=86400)
+    return {"ok": True, "id": item_id, "name": d.get("name"), "icon": d.get("icon"), "grade": d.get("grade"),
+            "gradeTr": GRADE_TR.get(d.get("grade"), d.get("grade")), "category": d.get("categoryName"),
+            "level": d.get("equipLevel") or d.get("level"), "classes": d.get("classNames") or [],
+            "sources": d.get("sources") or [], "tradable": d.get("tradable"),
+            "main": [{"name": s.get("name"), "value": s.get("value")} for s in d.get("mainStats") or []],
+            "desc": d.get("desc") or d.get("description") or ""}
