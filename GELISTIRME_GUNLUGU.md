@@ -134,3 +134,10 @@ DPS kısmı GPL-3.0 projelerden aktarıldı (`kaynak/masaustu/dps/LICENSE`). Bu 
 - NC uçları: [nuriland/aion2-api](https://github.com/nuriland/aion2-api)
 - Program saatleri: [jackships/aion2-data](https://github.com/jackships/aion2-data) (CC BY 4.0), aion2hub.com
 - Harita: [aion2-interactive-map](https://github.com/aion2-interactive-map/aion2-interactive-map) (CC BY-NC 4.0)
+
+### 8. 1.4.12 (5 Kasım akşam)
+- Harita: gerçek harita resmi (harita_img/, aion2-interactive-map karolarından birleştirildi), fare tekerleğiyle yakınlaştırma/sürükleme, sağda türe göre seçmeli liste (varsayılan hiçbiri görünmez), Çince adlar İngilizce bölge adıyla değiştirildi.
+- DPS sekmesi: üyeler yan yana sütun, skiller büyükten küçüğe alt alta; Theostone gibi ikonu olmayan skiller için yedek ikon.
+- Oyun üstü geri sayımlar geri geldi ama varsayılan kapalı: uygulamada "üstte göster" denenler görünür.
+- Eşya arama: NC 404 = Global'de yok mesajı; her eşyada düşme/toplama yeri için web araması bağlantısı (açık lisanslı düşme/toplama verisi bulunamadı).
+- Training Scarecrow gibi kuklalar saha bossu sayacına girmez.

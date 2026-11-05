@@ -38,8 +38,8 @@ class DpsManager:
         self.set_path = os.path.join(data_dir, "dps_ayarlar.json")
         self.s = {"launcher": "steam", "gamePath": "", "partyOnly": True, "overlay": True,
                   "overlayAlpha": 0.75, "overlayX": 12, "overlayY": 12, "overlayRows": 8,
-                  "showDps": True, "showTimers": True, "dpsMin": False, "timersMin": False, "timerRows": 6,
-                  "hiddenTimers": [], "customTimers": [], "race": "", "serverId": 0, "serverName": "", "region": "eu",
+                  "showDps": True, "showTimers": False, "dpsMin": False, "timersMin": False, "timerRows": 6,
+                  "hiddenTimers": [], "ovTimers": [], "customTimers": [], "race": "", "serverId": 0, "serverName": "", "region": "eu",
                   "launchGame": True}
         try:
             with open(self.set_path, encoding="utf-8") as f:
@@ -151,14 +151,18 @@ class DpsManager:
     def _ov_settings(self):
         return {"x": self.s["overlayX"], "y": self.s["overlayY"], "alpha": self.s["overlayAlpha"], "rows": self.s["overlayRows"],
                 "showDps": self.s["showDps"], "showTimers": self.s["showTimers"], "dpsMin": self.s["dpsMin"],
-                "timersMin": self.s["timersMin"], "timerRows": self.s["timerRows"], "hidden": list(self.s["hiddenTimers"])}
+                "timersMin": self.s["timersMin"], "timerRows": self.s["timerRows"], "hidden": []}
 
     def game_live(self):
         return bool(self.cap and self.cap.running and self.cap.pipeline.game_servers()
                     and time.time() * 1000 - self.cap.pipeline.last_game_ms < 10_000)
 
     def timers(self):
-        return TM.all_timers(self.tracker, self.s.get("customTimers"), self.s.get("race"), set(self.s.get("hiddenTimers") or []))
+        out = TM.all_timers(self.tracker, self.s.get("customTimers"), self.s.get("race"), set())
+        shown = set(self.s.get("ovTimers") or [])
+        for t in out:
+            t["hidden"] = t["id"] not in shown  # oyun üstünde sadece seçilenler (varsayılan hepsi gizli)
+        return out
 
     def _start_overlay(self):
         if self.overlay and self.overlay.alive:
@@ -166,7 +170,8 @@ class DpsManager:
 
         def changed(o):
             self.s.update(overlayX=o["x"], overlayY=o["y"], showDps=o["showDps"], showTimers=o["showTimers"],
-                          dpsMin=o["dpsMin"], timersMin=o["timersMin"], hiddenTimers=list(o.get("hidden") or []))
+                          dpsMin=o["dpsMin"], timersMin=o["timersMin"],
+                          ovTimers=[i for i in self.s.get("ovTimers", []) if i not in (o.get("hidden") or [])])
             self._save()
         self.overlay = Overlay(lambda: self.tracker.overlay_rows(self.s.get("partyOnly", True)) if self.tracker else None,
                                self.timers, lambda: {"game": self.game_live()}, self._ov_settings(), changed)

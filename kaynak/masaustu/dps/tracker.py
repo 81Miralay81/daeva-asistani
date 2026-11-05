@@ -276,7 +276,7 @@ class Tracker:
                 n = self.npcs.get(e[2])
                 if n:
                     n["hp"] = 0
-                    if n.get("boss") and n.get("code") and not 600_000 <= self.map_id < 700_000:
+                    if n.get("boss") and n.get("code") and not self.data.npc(n["code"]).get("isDummy") and not 600_000 <= self.map_id < 700_000:
                         self.kills[n["code"]] = e[1]
                 if self.cur and self.cur.active and self.cur.boss_id == e[2]:
                     self.cur.boss_hp = 0
