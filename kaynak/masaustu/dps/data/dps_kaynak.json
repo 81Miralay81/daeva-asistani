@@ -13,8 +13,8 @@
   "opcodes": {},
   "heartbeats": [],
   "app": {
-    "version": "1.4.0",
-    "url": "https://github.com/81Miralay81/daeva-asistani/releases/tag/exe-v1.4.0",
-    "notes": "DPS ölçer, geri sayım, harita, eşya arama"
+    "version": "1.4.2",
+    "url": "https://github.com/81Miralay81/daeva-asistani/releases",
+    "notes": "Otomatik güncelleme ve parti radarı"
   }
 }

@@ -16,7 +16,7 @@ CRIT, PARRY, PERFECT, DOUBLE, HEAVY, BACK, FRONT, DOT, MULTI = 1, 2, 4, 8, 16, 3
 # Kaynak güncellemesiyle (dps_kaynak.json) değiştirilebilir.
 OPCODES = {
     "heartbeat": 0x0036, "self": 0x3336, "player": 0x4536, "player_old": 0x4436, "spawn": 0x4136,
-    "death": 0x4236, "map": 0x2136, "cast": 0x0238, "hit": 0x0338, "damage": 0x0438, "dot": 0x0538,
+    "death": 0x4236, "map": 0x2136, "pos": 0x2336, "cast": 0x0238, "hit": 0x0338, "damage": 0x0438, "dot": 0x0538,
     "remain_hp": 0x008D, "fieldboss": 0x0191, "kill": 0x048D, "hpmp": 0x1B92, "roster": 0x0297,
 }
 HEARTBEATS = [b"\x0e\x00\x36", b"\x06\x00\x36"]
@@ -397,7 +397,7 @@ class PacketParser:
             O["heartbeat"]: self._hb, O["damage"]: self._damage, O["dot"]: self._dot,
             O["self"]: self._self, O["roster"]: self._roster, O["player"]: self._player,
             O["player_old"]: self._player, O["spawn"]: self._spawn, O["death"]: self._death,
-            O["map"]: self._map, O["remain_hp"]: self._remain_hp, O["fieldboss"]: self._fieldboss, O["hpmp"]: self._hpmp, O["kill"]: self._kill,
+            O["map"]: self._map, O["pos"]: self._pos, O["remain_hp"]: self._remain_hp, O["fieldboss"]: self._fieldboss, O["hpmp"]: self._hpmp, O["kill"]: self._kill,
         }
 
     def handle(self, op, body):
@@ -960,6 +960,15 @@ class PacketParser:
         mx, o = varint(b, o) if hp is not None else (None, o)
         if mx and hp <= mx:
             self._emit("hp", self.t, eid, hp, mx, False)
+
+    def _pos(self, b):
+        """23 36: varlık id varint (0 = kendin, bölge yüklemesi), sonra x y z f32. Deneysel."""
+        eid, o = varint(b, 0)
+        if eid is None or o + 12 > len(b):
+            return
+        x, y, z = struct.unpack_from("<fff", b, o)
+        if all(v == v and abs(v) < 1e7 for v in (x, y, z)):
+            self._emit("pos", self.t, eid, x, y, z)
 
     def _map(self, b):
         if len(b) < 8:

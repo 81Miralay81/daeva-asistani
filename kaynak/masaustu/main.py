@@ -19,9 +19,10 @@ import webview
 
 import armory
 import ncsoft
+import updater
 from dps.manager import DpsManager
 
-APP_VERSION = "1.4.0"
+APP_VERSION = "1.4.0"  # GitHub Actions derlerken 1.4.<çalıştırma no> yazar
 API = "https://generativelanguage.googleapis.com/v1beta"
 DATA_DIR = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "DaevaAsistani")
 KEY_FILE = os.path.join(DATA_DIR, "gemini_key.txt")
@@ -321,6 +322,15 @@ class Api:
 
     def app_version(self):
         return APP_VERSION
+
+    def app_check(self):
+        return updater.check(APP_VERSION)
+
+    def app_install(self, url):
+        r = updater.install(url)
+        if r.get("ok"):
+            threading.Timer(1.0, lambda: os._exit(0)).start()  # betik eski exe kapanınca yenisini koyup açar
+        return r
 
     def lookup_character(self, name, region, server="", cls="", source="ncsoft"):
         """NCSOFT resmi verisi önce; olmazsa MetaBot."""

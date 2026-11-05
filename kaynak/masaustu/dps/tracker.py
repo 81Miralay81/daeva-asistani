@@ -186,6 +186,7 @@ class Tracker:
         self.done = []
         self.last_event = 0
         self.fieldboss = {}    # harita -> {"t": alındığı an, "slots": [...]}
+        self.pos = {}          # id -> (x, y, z, t)
         self.kills = {}        # npc kodu -> ölüm zamanı (açık dünya bossları)
         self.events = 0
 
@@ -256,6 +257,9 @@ class Tracker:
                         n["boss"] = True
                 if self.cur and self.cur.active and self.cur.boss_id == nid:
                     self._boss_info(self.cur, nid)
+            elif k == "pos":
+                _, t, pid, x, y, z = e
+                self.pos[self.self_id if pid == 0 and self.self_id else pid] = (x, y, z, t)
             elif k == "fieldboss":
                 _, t, mp, cnt, slots = e
                 info = self.data.fb_maps.get(mp) or {}
@@ -535,6 +539,22 @@ class Tracker:
                     "party": [dict(m, inMeter=any(c.name == m["name"] for c in (enc.cbt.values() if enc else []))) for m in self.roster],
                     "zone": self.zone, "known": len(self.players), "events": self.events,
                     "selfName": me.get("name", "")}
+
+    def radar(self, max_age_ms=15_000):
+        """Parti üyelerinin sana göre konumu (oyun sadece yakındaki oyuncuların konumunu gönderir)."""
+        with self.lock:
+            me = self.pos.get(self.self_id)
+            now = max([p[3] for p in self.pos.values()] or [0])
+            out = []
+            for pid, (x, y, z, t) in self.pos.items():
+                p = self.players.get(pid)
+                if not p or pid == self.self_id or now - t > max_age_ms:
+                    continue
+                if p["name"] not in self.roster_names:
+                    continue
+                out.append({"name": p["name"], "cls": p["cls"], "x": x, "y": y, "z": z, "age": now - t,
+                            "dx": (x - me[0]) if me else None, "dy": (y - me[1]) if me else None})
+            return {"me": {"x": me[0], "y": me[1]} if me else None, "members": out}
 
     def overlay_rows(self, party_only=True):
         """Oyun içi küçük pencere için: [(ad, hasar, dps, pay, ben_mi, sınıf)] ve başlık."""

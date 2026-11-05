@@ -18,6 +18,9 @@ jobs:
         with: { python-version: "3.12" }
       - name: Paketler
         run: python -m pip install pywebview pyinstaller pytest
+      - name: Sürüm numarası (1.4.<çalıştırma>)
+        shell: bash
+        run: sed -i "s/^APP_VERSION = \"[0-9.]*\"/APP_VERSION = \"1.4.${{ github.run_number }}\"/" kaynak/masaustu/main.py && grep APP_VERSION kaynak/masaustu/main.py | head -1
       - name: Testler
         working-directory: kaynak/masaustu
         run: python -m pytest -q tests
@@ -35,6 +38,6 @@ jobs:
         with:
           tag_name: exe-v${{ steps.v.outputs.ver }}
           name: Daeva Asistanı (bilgisayar) ${{ steps.v.outputs.ver }}
-          body: "DaevaAsistani.exe dosyasını indirip çalıştır. DPS ölçer için Npcap gerekir: https://npcap.com"
+          body: "Uygulama kuruluysa açılışta bu sürümü kendisi önerir ve günceller. İlk kurulum: DaevaAsistani.exe dosyasını indir. DPS ölçer için Npcap gerekir: https://npcap.com"
           files: kaynak/masaustu/dist/DaevaAsistani.exe
           make_latest: false

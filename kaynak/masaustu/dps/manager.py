@@ -215,6 +215,7 @@ class DpsManager:
         snap["partyOnly"] = po
         snap["log"] = self.log_lines[-8:]
         snap["game"] = self.game_live()
+        snap["radar"] = self.tracker.radar() if self.tracker else None
         return snap
 
     # ------------------------------------------------------------ güncelleme
