@@ -56,7 +56,7 @@ function rDps() {
   if (!DESK()) return `<div class="card"><div class="nm">📊 DPS Ölçer</div><p class="note small">DPS ölçer sadece <b>bilgisayar sürümünde (DaevaAsistani.exe)</b> çalışır: oyunun ağ trafiğini bilgisayarda okur. Telefonda çalışmaz.</p></div>`;
   const s = DSNAP, set = DSET || {}, [ic, txt, cls] = dpsStatus(s), run = s && s.running;
   let h = `<div class="card chhead"><div><div class="nm">📊 DPS Ölçer <span class="${cls} small">${ic} ${esc(txt)}</span></div>
-    <div class="small mut">${set.npcap === false ? '<span class="bad">⚠ Npcap kurulu değil</span> (DPS ölçer için bir kerelik gerekli). <button class="btn pri" id="npcapgo">Npcap'i indir ve kur</button>' : "Pasif ölçüm: oyuna dokunmaz, sadece gelen trafiği okur."}</div></div>
+    <div class="small mut">${set.npcap === false ? '<span class="bad">⚠ Npcap kurulu değil</span> (DPS ölçer için bir kerelik gerekli). <button class="btn pri" id="npcapgo">Npcap\'i indir ve kur</button>' : "Pasif ölçüm: oyuna dokunmaz, sadece gelen trafiği okur."}</div></div>
     <div class="lv">${run ? '<button class="btn" id="dstop">⏹ Durdur</button><button class="btn" id="dreset">↻ Sıfırla</button>' : '<button class="btn pri" id="dstart">▶ Başlat</button><button class="btn" id="dstart2">Sadece ölç</button>'}
     <label class="small"><input type="checkbox" id="dparty" ${set.partyOnly !== false ? "checked" : ""}> Sadece parti</label>
     <label class="small"><input type="checkbox" id="dov" ${set.overlay !== false ? "checked" : ""}> Oyun üstü pencere</label></div></div>`;
