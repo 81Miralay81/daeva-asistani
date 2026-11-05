@@ -179,7 +179,21 @@ class DpsManager:
             self.overlay = None
 
     # ------------------------------------------------------------ oyun
+    @staticmethod
+    def game_running():
+        """Aion 2 açık mı? (işlem adında 'aion2' geçen bir program var mı)"""
+        if sys.platform != "win32":
+            return False
+        try:
+            out = subprocess.run(["tasklist", "/fo", "csv", "/nh"], capture_output=True, text=True, timeout=10,
+                                 creationflags=0x08000000).stdout.lower()
+            return "aion2" in out or "aion 2" in out
+        except Exception:
+            return False
+
     def launch_game(self):
+        if self.game_running():
+            return {"ok": True, "how": "already", "note": "Oyun zaten açık; yeniden açılmadı, ölçer açık oyuna bağlandı."}
         mode = self.s.get("launcher", "steam")
         path = (self.s.get("gamePath") or "").strip()
         try:
@@ -215,7 +229,6 @@ class DpsManager:
         snap["partyOnly"] = po
         snap["log"] = self.log_lines[-8:]
         snap["game"] = self.game_live()
-        snap["radar"] = self.tracker.radar() if self.tracker else None
         return snap
 
     # ------------------------------------------------------------ güncelleme

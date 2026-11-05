@@ -2838,16 +2838,15 @@ function rDps() {
   const s = DSNAP, set = DSET || {}, [ic, txt, cls] = dpsStatus(s), run = s && s.running;
   let h = `<div class="card chhead"><div><div class="nm">📊 DPS Ölçer <span class="${cls} small">${ic} ${esc(txt)}</span></div>
     <div class="small mut">${set.npcap === false ? '<span class="bad">⚠ Npcap kurulu değil.</span> <a href="https://npcap.com/#download" target="_blank" rel="noopener">npcap.com</a>\'dan indirip varsayılan ayarlarla kur.' : "Pasif ölçüm: oyuna dokunmaz, sadece gelen trafiği okur."}</div></div>
-    <div class="lv">${run ? '<button class="btn" id="dstop">⏹ Durdur</button><button class="btn" id="dreset">↻ Sıfırla</button>' : '<button class="btn pri" id="dstart">▶ Başlat (oyunu da aç)</button><button class="btn" id="dstart2">Sadece ölç</button>'}
+    <div class="lv">${run ? '<button class="btn" id="dstop">⏹ Durdur</button><button class="btn" id="dreset">↻ Sıfırla</button>' : '<button class="btn pri" id="dstart">▶ Başlat</button><button class="btn" id="dstart2">Sadece ölç</button>'}
     <label class="small"><input type="checkbox" id="dparty" ${set.partyOnly !== false ? "checked" : ""}> Sadece parti</label>
     <label class="small"><input type="checkbox" id="dov" ${set.overlay !== false ? "checked" : ""}> Oyun üstü pencere</label></div></div>`;
   h += `<details class="card small"><summary><b>Oyun üstü pencere nasıl açılır?</b></summary><ol style="margin:6px 0;padding-left:18px">
     <li>Oyunda <b>Ayarlar → Grafik → Ekran modu: Pencereli tam ekran</b> (ya da Çerçevesiz) seç. Özel tam ekranda Windows hiçbir pencereyi oyunun üstüne koymaz.</li>
     <li>Burada <b>"Oyun üstü pencere"</b> kutusunu işaretle (sayfanın üstünde).</li>
-    <li><b>▶ Başlat</b>'a bas: ölçer başlar, oyun açılır, pencere sol üstte belirir.</li>
+    <li><b>▶ Başlat</b>'a bas: ölçer başlar, pencere sol üstte belirir. Oyun kapalıysa açılır; <b>zaten açıksa kapatılmaz, yeniden açılmaz</b>, ölçer açık oyuna bağlanır.</li>
     <li>Pencereyi başlığından tutup sürükleyebilirsin. [–] küçültür, [×] kapatır; ikisi de kapanınca kalan küçük <b>D</b> düğmesi geri açar.</li></ol>
     Oyun Steam'den değil PURPLE'dan açılıyorsa: oyunu kendin aç, burada <b>Sadece ölç</b>'e bas.</details>`;
-  if (s && s.radar && s.radar.members && s.radar.members.length) h += radarHtml(s.radar);
   if (s && s.status && s.status.error) h += `<div class="errcard small"><p class="bad"><b>⚠ ${esc(s.status.error)}</b></p></div>`;
   if (!s || !s.game) h += noGame("DPS ve parti bilgileri");
   const f = s && s.fight;
@@ -2869,20 +2868,11 @@ function rDps() {
   }
   return h;
 }
-function radarHtml(r) {
-  setTimeout(() => { const c = document.getElementById("radar"); if (!c) return; const g = c.getContext("2d"), W = c.width, H = c.height, cx = W / 2, cy = H / 2;
-    const far = Math.max(1, ...r.members.filter(m => m.dx != null).map(m => Math.hypot(m.dx, m.dy))), k = (W / 2 - 24) / far;
-    g.clearRect(0, 0, W, H); g.strokeStyle = "#2b3547"; for (const q of [0.33, 0.66, 1]) { g.beginPath(); g.arc(cx, cy, (W / 2 - 24) * q, 0, 7); g.stroke(); }
-    g.fillStyle = "#e8b94a"; g.beginPath(); g.arc(cx, cy, 6, 0, 7); g.fill(); g.font = "12px sans-serif"; g.fillText("Sen", cx + 9, cy + 4);
-    for (const m of r.members) { if (m.dx == null) continue; const x = cx + m.dx * k, y = cy + m.dy * k; g.fillStyle = CLSCOL[m.cls] || "#9aa3b2"; g.beginPath(); g.arc(x, y, 6, 0, 7); g.fill(); g.fillStyle = "#e8ecf3"; g.fillText(`${m.name} · ${Math.round(Math.hypot(m.dx, m.dy) / 100)} m`, x + 9, y + 4); } }, 0);
-  return `<div class="card"><div class="sec" style="margin-top:0">📍 Parti radarı <span class="mut small">(deneysel)</span></div>
-    <canvas id="radar" width="360" height="360" style="width:100%;max-width:360px;background:var(--hdr);border-radius:10px"></canvas>
-    <p class="mut small">Parti arkadaşlarının sana göre yeri. Oyun sadece <b>yakınındaki</b> oyuncuların konumunu gönderir; uzaktakiler (başka bölgede) görünmez. Mesafe yaklaşık.</p></div>`;
-}
 async function dpsAction(fn, ...a) { const api = DAPI(); if (!api) return; const r = await api[fn](...a); if (r && r.ok === false) alert(r.error || "Olmadı"); DSET = await api.dps_settings(); await dpsPoll(); return r; }
 document.addEventListener("click", async e => {
   const id = e.target.id, fd = e.target.closest("[data-dfight]"), mem = e.target.closest("[data-dmem]");
-  if (id === "dstart") { const r = await dpsAction("dps_start", true); if (r && r.game && r.game.ok === false) alert("Ölçer çalışıyor ama oyun açılamadı: " + r.game.error); }
+  if (id === "dstart") { const r = await dpsAction("dps_start", true); if (r && r.game && r.game.ok === false) alert("Ölçer çalışıyor ama oyun açılamadı: " + r.game.error);
+    else if (r && r.game && r.game.how === "already") alert("Oyun zaten açık: kapatılmadı, ölçer açık oyuna bağlandı.\n\nParti üyelerinin adları bir yükleme ekranında (ışınlanma / zindana giriş) gelir; o zamana kadar #numara görünebilir."); }
   else if (id === "dstart2") dpsAction("dps_start", false);
   else if (id === "dstop") dpsAction("dps_stop");
   else if (id === "dreset") dpsAction("dps_reset");
