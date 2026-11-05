@@ -1,0 +1,28 @@
+name: Harita verisi
+on:
+  schedule:
+    - cron: "23 5 * * *"   # her gün 08:23 (Türkiye)
+  push:
+    branches: [main]
+    paths: ["tools/harita_data.py", ".github/workflows/harita.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  harita:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pyyaml
+      - run: git clone --depth 1 https://github.com/aion2-interactive-map/aion2-interactive-map.git /tmp/aim
+      - run: python tools/harita_data.py /tmp/aim
+      - name: Değiştiyse kaydet
+        run: |
+          if git diff --quiet kaynak/masaustu/harita/; then echo "değişiklik yok"; exit 0; fi
+          git config user.name "daeva-meta-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add kaynak/masaustu/harita/harita.json
+          git commit -m "Harita verisi güncellendi ($(date +%F))"
+          git push

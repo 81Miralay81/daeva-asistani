@@ -177,66 +177,71 @@ document.addEventListener("click", e => {
     save(); pushTimers(); timerPoll(); }
 });
 
-// ---------------- Harita (gerçek harita resmi, yakınlaştırma, sağda seçmeli liste)
-let HMAP = null, HQ = "", HOPEN = {}, HV = null;
-const HCOL = { teleport: "#4fc3f7", hiddenCube: "#e8b94a", monolithMaterial: "#c9d1dc", seal: "#c58cf5", battlefield: "#ef6b62", occupation: "#ff8a3c", village: "#5fd38a" };
-const HIMG = {};
+// ---------------- Harita (Leaflet: oyunun harita karoları, akıcı yakınlaştırma, simgeli işaretler)
+let HMAP = null, HQ = "", HOPEN = {}, HVIEW = {}, HL = null, HLG = null, HLIVE = false;
 function hSel() { S.harSel = S.harSel || {}; return S.harSel; }
+const htype = t => (HARITA.types || {})[t] || { name: t, cat: "location", icon: "" };
+async function hLive() {  // güncel harita verisi (toplama noktaları dahil) GitHub'dan; olmazsa gömülü veri
+  if (HLIVE) return; HLIVE = true;
+  try { const r = await fetch("https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/kaynak/masaustu/harita/harita.json", { cache: "no-cache" });
+    if (r.ok) { const j = await r.json(); if (j && j.maps) { Object.assign(HARITA, j); if (TAB === "har") hRerender(); } } } catch (e) {}
+}
 function rHar() {
-  const race = (S.prof && S.prof.race) || "Elyos", maps = Object.entries(HARITA.maps || {});
+  hLive();
+  const race = (S.prof && S.prof.race) || "Elyos", maps = Object.entries(HARITA.maps || {}).filter(([, m]) => m.visible !== false || m.markers.length);
   if (!HMAP || !HARITA.maps[HMAP]) HMAP = (maps.find(([, m]) => m.race === race && m.markers.length) || maps[0] || [""])[0];
   const m = HARITA.maps[HMAP]; if (!m) return `<div class="card">Harita verisi yok.</div>`;
-  const sel = hSel(), q = HQ.toLowerCase(), tr = t => (HARITA.types || {})[t] || t;
-  const raceTr = { Elyos: "Elyos", Asmodian: "Asmodian", Abyss: "Abyss (Reshanta)" };
-  const types = [...new Set(m.markers.map(x => x[0]))];
-  const side = types.map(t => {
-    const items = m.markers.map((x, i) => [x, i]).filter(([x]) => x[0] === t && (!q || (x[1] + " " + x[2]).toLowerCase().includes(q)));
+  const sel = hSel(), q = HQ.toLowerCase(), raceTr = { Elyos: "Elyos", Asmodian: "Asmodian", Abyss: "Abyss (Reshanta)" };
+  const bySub = {}; m.markers.forEach((x, i) => (bySub[x[0]] = bySub[x[0]] || []).push(i));
+  const cats = {}; Object.keys(bySub).forEach(t => (cats[htype(t).cat] = cats[htype(t).cat] || []).push(t));
+  const order = ["gathering", "location", "collection", "creature", "quest"];
+  const side = Object.keys(cats).sort((a, b) => order.indexOf(a) - order.indexOf(b)).map(c => `<div class="hcat">${esc((HARITA.cats || {})[c] || c)}</div>` + cats[c].map(t => {
+    const ty = htype(t), items = bySub[t].filter(i => !q || (m.markers[i][1] + " " + m.markers[i][2] + " " + ty.name).toLowerCase().includes(q));
     if (!items.length) return "";
-    const on = items.filter(([, i]) => sel[HMAP + ":" + i]).length, open = HOPEN[t] || !!q;
-    return `<div class="hgrp"><div class="hgh"><label><input type="checkbox" data-hall="${t}" ${on === items.length ? "checked" : ""}> <i style="background:${HCOL[t] || "#ccc"}"></i> ${esc(tr(t))}</label>
-      <span class="mut small">${on}/${items.length}</span><button class="spec-tog" data-hopen="${t}">${open ? "▾" : "▸"}</button></div>
-      ${open ? `<div class="hlist">${items.map(([x, i]) => `<label class="hit"><input type="checkbox" data-hpt="${i}" ${sel[HMAP + ":" + i] ? "checked" : ""}> ${esc(x[1])}${x[2] && x[2] !== x[1] ? ` <span class="mut small">${esc(x[2])}</span>` : ""}</label>`).join("")}</div>` : ""}</div>`;
-  }).join("");
-  setTimeout(hDraw, 0);
+    const on = items.filter(i => sel[HMAP + ":" + i]).length, open = HOPEN[t] || (!!q && items.length < 40);
+    return `<div class="hgrp"><div class="hgh"><label><input type="checkbox" data-hall="${t}" ${on && on === items.length ? "checked" : ""}> ${ty.icon ? `<img src="${esc(ty.icon)}" alt="">` : ""} ${esc(ty.name)}</label>
+      <span class="mut small" data-hcnt="${t}">${on}/${items.length}</span><button class="spec-tog" data-hopen="${t}">${open ? "▾" : "▸"}</button></div>
+      ${open ? `<div class="hlist">${items.map(i => `<label class="hit"><input type="checkbox" data-hpt="${i}" ${sel[HMAP + ":" + i] ? "checked" : ""}> ${esc(m.markers[i][1])}</label>`).join("")}</div>` : ""}</div>`;
+  }).join("")).join("");
+  setTimeout(hInit, 0);
   return `<div class="card"><div class="chform">
     <label>Harita<select id="hmap">${maps.map(([k, x]) => `<option value="${k}" ${k === HMAP ? "selected" : ""}>${raceTr[x.race]} · ${k.replace(/_/g, " ")}${x.markers.length ? ` (${x.markers.length})` : ""}</option>`).join("")}</select></label>
-    <label>Ara<input id="hq" value="${esc(HQ)}" placeholder="yer ya da bölge adı"></label>
-    <button class="btn" id="hzin">＋</button><button class="btn" id="hzout">－</button><button class="btn" id="hzfit">Sığdır</button><button class="btn" id="hclr">Seçimi temizle</button></div>
-    <div class="hwrap"><div class="hmapbox"><canvas id="hcv" width="900" height="900"></canvas></div><div class="hside">${side || '<p class="mut small">Bu haritada işaret yok.</p>'}</div></div>
-    <p class="mut small">Fare tekerleğiyle yakınlaştır, sürükleyerek gez. Sağdaki listeden işaretlediklerin haritada görünür. Harita ve işaretler: ${esc(HARITA.source || "")}. Toplama malzemeleri (Orichalcum, Ruby…) ve yaratık yerleri bu veride yok; Eşya Ara sekmesinden bağlantı var.</p></div>`;
+    <label>Ara<input id="hq" value="${esc(HQ)}" placeholder="Orichalcum, Ruby, Odyle, bölge…"></label><button class="btn" id="hclr">Seçimi temizle</button></div>
+    <div class="hwrap"><div id="hlf" class="hmapbox"></div><div class="hside">${side || '<p class="mut small">Bu haritada işaret yok.</p>'}</div></div>
+    <p class="mut small">Tekerlekle yakınlaştır, sürükleyerek gez; işaretin üstüne gelince adı çıkar. Sağdan seçtiklerin görünür. Harita ve işaretler: ${esc(HARITA.source || "")}.</p></div>`;
 }
-function hImg(m, cb) { if (HIMG[m.img]) return HIMG[m.img]; const im = new Image(); im.onload = cb; im.src = m.img; HIMG[m.img] = im; return im; }
-function hDraw() {
-  const c = document.getElementById("hcv"); if (!c) return; const m = HARITA.maps[HMAP], g = c.getContext("2d");
-  const box = c.parentNode; c.width = box.clientWidth; c.height = Math.min(820, Math.max(420, window.innerHeight - 260));
-  if (!HV || HV.map !== HMAP) HV = { map: HMAP, k: Math.min(c.width / m.w, c.height / m.h), x: 0, y: 0 }, HV.x = (c.width - m.w * HV.k) / 2, HV.y = (c.height - m.h * HV.k) / 2;
-  const im = hImg(m, hDraw); g.fillStyle = "#0b0f16"; g.fillRect(0, 0, c.width, c.height);
-  if (im.complete && im.naturalWidth) g.drawImage(im, HV.x, HV.y, m.w * HV.k, m.h * HV.k); else { g.fillStyle = "#93a0b4"; g.fillText("Harita yükleniyor…", 20, 30); }
-  const sel = hSel(), r = Math.max(4, Math.min(9, 3 + HV.k * 6));
-  m.markers.forEach((x, i) => { if (!sel[HMAP + ":" + i]) return; const px = HV.x + x[3] * HV.k, py = HV.y + x[4] * HV.k;
-    g.fillStyle = HCOL[x[0]] || "#fff"; g.strokeStyle = "#000"; g.lineWidth = 2; g.beginPath(); g.arc(px, py, r, 0, 7); g.fill(); g.stroke();
-    if (HV.k > 0.18) { g.font = "12px sans-serif"; g.lineWidth = 3; g.strokeText(x[1], px + r + 3, py + 4); g.fillStyle = "#fff"; g.fillText(x[1], px + r + 3, py + 4); } });
-  if (!c._b) { c._b = 1; let d = null;
-    c.onwheel = e => { e.preventDefault(); const b = c.getBoundingClientRect(), mx = e.clientX - b.left, my = e.clientY - b.top, f = e.deltaY < 0 ? 1.25 : 0.8; hZoom(f, mx, my); };
-    c.onmousedown = e => d = [e.clientX, e.clientY]; window.addEventListener("mouseup", () => d = null);
-    c.onmousemove = e => { if (!d) return; HV.x += e.clientX - d[0]; HV.y += e.clientY - d[1]; d = [e.clientX, e.clientY]; hDraw(); };
-    let t0 = null; c.ontouchstart = e => { t0 = e.touches.length === 1 ? [e.touches[0].clientX, e.touches[0].clientY] : null; };
-    c.ontouchmove = e => { if (!t0 || e.touches.length !== 1) return; e.preventDefault(); HV.x += e.touches[0].clientX - t0[0]; HV.y += e.touches[0].clientY - t0[1]; t0 = [e.touches[0].clientX, e.touches[0].clientY]; hDraw(); }; }
+function hInit() {
+  const el = document.getElementById("hlf"), m = HARITA.maps[HMAP]; if (!el || !m || !window.L) return;
+  if (HL) { try { HL.remove(); } catch (e) {} HL = null; }
+  el.style.height = Math.min(820, Math.max(440, window.innerHeight - 250)) + "px";
+  HL = L.map(el, { crs: L.CRS.Simple, minZoom: -5, maxZoom: 1, zoomSnap: 0.25, zoomDelta: 0.5, wheelPxPerZoomLevel: 90, attributionControl: false, maxBounds: [[-m.h * 0.2, -m.w * 0.2], [m.h * 1.2, m.w * 1.2]] });
+  const T = L.TileLayer.extend({ getTileUrl(c) { const x = c.x, y = m.ty + c.y; if (x < 0 || y < 0 || x >= m.tx || y >= m.ty) return "data:image/gif;base64,R0lGODlhAQABAAAAACw="; const p = n => String(n).padStart(2, "0"); return `${HARITA.tiles || ""}${HMAP}/Res/${HMAP}_${p(x)}_${p(y)}.webp`; } });
+  new T("", { tileSize: m.ts || 1024, minZoom: -5, maxZoom: 1, minNativeZoom: 0, maxNativeZoom: 0, noWrap: true, bounds: [[0, 0], [m.h, m.w]], keepBuffer: 4 }).addTo(HL);
+  const v = HVIEW[HMAP]; if (v) HL.setView(v.c, v.z, { animate: false }); else HL.fitBounds([[0, 0], [m.h, m.w]]);
+  HL.on("moveend zoomend", () => { HVIEW[HMAP] = { c: HL.getCenter(), z: HL.getZoom() }; });
+  HL.on("zoomend", () => hMarkers());
+  HLG = L.layerGroup().addTo(HL); hMarkers();
 }
-function hZoom(f, mx, my) { const c = document.getElementById("hcv"); if (!c || !HV) return; mx = mx ?? c.width / 2; my = my ?? c.height / 2; const k2 = Math.max(0.03, Math.min(2, HV.k * f)), r = k2 / HV.k; HV.x = mx - (mx - HV.x) * r; HV.y = my - (my - HV.y) * r; HV.k = k2; hDraw(); }
-function hRerender() { const y = window.scrollY, sb = document.querySelector(".hside"), st = sb ? sb.scrollTop : 0; render(); window.scrollTo(0, y); const n = document.querySelector(".hside"); if (n) n.scrollTop = st; }
+function hMarkers() {
+  if (!HL || !HLG) return; HLG.clearLayers(); const m = HARITA.maps[HMAP], sel = hSel(), ic = {}, z = HL.getZoom(), sz = z >= -1 ? 26 : z >= -2 ? 20 : z >= -3 ? 14 : 10;
+  m.markers.forEach((x, i) => { if (!sel[HMAP + ":" + i]) return; const ty = htype(x[0]);
+    const icon = ic[x[0]] = ic[x[0]] || (ty.icon ? L.icon({ iconUrl: ty.icon, iconSize: [sz, sz], className: "hmk" }) : L.divIcon({ className: "hdot", iconSize: [Math.max(8, sz / 2), Math.max(8, sz / 2)] }));
+    L.marker([x[4], x[3]], { icon }).bindTooltip(`<b>${esc(x[1])}</b><br>${esc(ty.name)}${x[2] && x[2] !== x[1] ? " · " + esc(x[2]) : ""}`, { direction: "top", offset: [0, -10] }).addTo(HLG); });
+}
+function hCounts() { document.querySelectorAll("[data-hcnt]").forEach(sp => { const t = sp.dataset.hcnt, boxes = [...document.querySelectorAll(`[data-hpt]`)].filter(b => HARITA.maps[HMAP].markers[+b.dataset.hpt][0] === t);
+  const m = HARITA.maps[HMAP], all = m.markers.map((x, i) => i).filter(i => m.markers[i][0] === t), on = all.filter(i => hSel()[HMAP + ":" + i]).length; sp.textContent = `${on}/${all.length}`; const a = document.querySelector(`[data-hall="${t}"]`); if (a) a.checked = on && on === all.length; }); }
+function hRerender() { const sb = document.querySelector(".hside"), st = sb ? sb.scrollTop : 0, y = window.scrollY; render(); window.scrollTo(0, y); const n = document.querySelector(".hside"); if (n) n.scrollTop = st; }
 document.addEventListener("change", e => {
   const t = e.target, sel = hSel(), m = HARITA.maps[HMAP];
-  if (t.id === "hmap") { HMAP = t.value; HV = null; render(); }
-  else if (t.dataset.hpt != null) { const k = HMAP + ":" + t.dataset.hpt; t.checked ? sel[k] = 1 : delete sel[k]; save(); hDraw(); hRerender(); }
-  else if (t.dataset.hall) { const q = HQ.toLowerCase(); m.markers.forEach((x, i) => { if (x[0] === t.dataset.hall && (!q || (x[1] + " " + x[2]).toLowerCase().includes(q))) { const k = HMAP + ":" + i; t.checked ? sel[k] = 1 : delete sel[k]; } }); save(); hRerender(); }
+  if (t.id === "hmap") { HMAP = t.value; render(); }
+  else if (t.dataset.hpt != null) { const k = HMAP + ":" + t.dataset.hpt; t.checked ? sel[k] = 1 : delete sel[k]; save(); hMarkers(); hCounts(); }
+  else if (t.dataset.hall) { const q = HQ.toLowerCase(); m.markers.forEach((x, i) => { if (x[0] === t.dataset.hall && (!q || (x[1] + " " + x[2] + " " + htype(x[0]).name).toLowerCase().includes(q))) { const k = HMAP + ":" + i; t.checked ? sel[k] = 1 : delete sel[k]; } });
+    document.querySelectorAll("[data-hpt]").forEach(b => { if (m.markers[+b.dataset.hpt][0] === t.dataset.hall) b.checked = t.checked; }); save(); hMarkers(); hCounts(); }
 });
-document.addEventListener("input", e => { if (e.target.id === "hq") { HQ = e.target.value; clearTimeout(window._hq); window._hq = setTimeout(() => { hRerender(); const i = document.getElementById("hq"); if (i) { i.focus(); i.setSelectionRange(HQ.length, HQ.length); } }, 300); } });
-document.addEventListener("click", e => { const o = e.target.closest("[data-hopen]"), id = e.target.id;
+document.addEventListener("input", e => { if (e.target.id === "hq") { HQ = e.target.value; clearTimeout(window._hq); window._hq = setTimeout(() => { hRerender(); const i = document.getElementById("hq"); if (i) { i.focus(); i.setSelectionRange(HQ.length, HQ.length); } }, 350); } });
+document.addEventListener("click", e => { const o = e.target.closest("[data-hopen]");
   if (o) { HOPEN[o.dataset.hopen] = !HOPEN[o.dataset.hopen]; hRerender(); }
-  else if (id === "hzin") hZoom(1.4); else if (id === "hzout") hZoom(0.7); else if (id === "hzfit") { HV = null; hDraw(); }
-  else if (id === "hclr") { const sel = hSel(); Object.keys(sel).filter(k => k.startsWith(HMAP + ":")).forEach(k => delete sel[k]); save(); hRerender(); } });
-window.addEventListener("resize", () => { if (TAB === "har") hDraw(); });
+  else if (e.target.id === "hclr") { const sel = hSel(); Object.keys(sel).filter(k => k.startsWith(HMAP + ":")).forEach(k => delete sel[k]); save(); hRerender(); } });
 
 // ---------------- Eşya / pet arama
 let ESQ = "", ESR = null, ESI = {}, ESB = false;

@@ -3,7 +3,7 @@ name: Windows exe derle
 on:
   push:
     branches: [main]
-    paths: ["kaynak/masaustu/**", "kaynak/web/**", ".github/workflows/exe.yml", "!kaynak/masaustu/dps/data/**"]
+    paths: ["kaynak/masaustu/**", "kaynak/web/**", ".github/workflows/exe.yml", "!kaynak/masaustu/dps/data/**", "!kaynak/masaustu/harita/**"]
   workflow_dispatch:
 
 permissions:

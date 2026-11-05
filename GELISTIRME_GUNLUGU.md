@@ -141,3 +141,9 @@ DPS kısmı GPL-3.0 projelerden aktarıldı (`kaynak/masaustu/dps/LICENSE`). Bu 
 - Oyun üstü geri sayımlar geri geldi ama varsayılan kapalı: uygulamada "üstte göster" denenler görünür.
 - Eşya arama: NC 404 = Global'de yok mesajı; her eşyada düşme/toplama yeri için web araması bağlantısı (açık lisanslı düşme/toplama verisi bulunamadı).
 - Training Scarecrow gibi kuklalar saha bossu sayacına girmez.
+
+### 9. 1.4.14 (5 Kasım gece)
+- Harita Leaflet ile yeniden yapıldı: oyunun harita karoları (aion2-interactive-map deposundan), akıcı yakınlaştırma, oyun simgeleriyle işaretler, simge boyu yakınlaştırmaya göre küçülür, adı üstüne gelince çıkar.
+- Harita verisi tools/harita_data.py + .github/workflows/harita.yml ile her gün yenilenir; sitenin canlı dışa aktarımı (aion2.tc-imba.com/api/v1/export) toplama malzemelerini (Odyle, Orichalcum, Ruby…) içeriyorsa onlar da gelir. Uygulama harita.json dosyasını açılışta GitHub dan çeker.
+- interactivemap.app robots.txt ile otomatik erişimi yasakladığı için kullanılmadı.
+- Güncelleyici yeni sürümü Windows Gezgini ile başlatır (Python DLL hatası için).
