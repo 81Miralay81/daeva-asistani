@@ -215,3 +215,13 @@ def test_tracker_mob_hitting_player_is_not_dps():
     t.process(("dmg", 1200, 500, 100, 1234567, 800, 0, 1))
     f = t.snapshot()["fight"]
     assert f["members"][0]["dmg"] == 300 and f["members"][0]["taken"] == 800
+
+
+def test_party_filter_without_roster_shows_everyone():
+    t = Tracker(DATA)
+    t.process(("self", 0, 100, "Ben", 2305, "templar", 45, 0))
+    t.process(("npc", 0, 500, 2000002, 10_000_000))
+    t.process(("dmg", 1000, 100, 500, 12010000, 1000, 0, 1))
+    t.process(("dmg", 1000, 777, 500, 11020000, 2000, 0, 1))  # adı bilinmeyen parti üyesi
+    names = {m["name"] for m in t.snapshot(party_only=True)["fight"]["members"]}
+    assert names == {"Ben", "#777"}

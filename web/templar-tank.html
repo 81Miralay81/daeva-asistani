@@ -2855,7 +2855,7 @@ function rDps() {
   if (s && s.history && s.history.length) h += `<div class="chips" style="margin-bottom:8px"><button class="chip ${!DFIGHT ? "pick" : ""}" data-dfight="">Canlı</button>${s.history.slice(0, 12).map(x => `<button class="chip ${DFIGHT === x.id ? "pick" : ""}" data-dfight="${x.id}"><b>${hhmm(x.start / 1000)}</b>${esc(x.boss || x.zone || "Savaş")} · ${nfmt(x.total)}</button>`).join("")}</div>`;
   if (!f) return h + `<div class="card"><p class="mut">Henüz savaş yok. ${run ? "Bir yaratığa vurunca burada belirir." : "<b>Başlat</b>'a bas; meteri zindana girmeden önce başlat ki parti üyelerinin adları gelsin."}</p></div>`;
   const b = f.boss;
-  h += `<div class="card"><div class="dhead"><div><div class="nm">${esc((b && b.name) || f.zone || "Savaş")}</div><div class="mut small">${leftStr(f.dur)} · Toplam ${nfmt(f.total)} · Parti DPS ${nfmt(f.dps)}/s${f.hidden ? ` · ${f.hidden} parti dışı oyuncu gizli` : ""}</div></div></div>
+  h += `<div class="card"><div class="dhead"><div><div class="nm">${esc((b && b.name) || f.zone || "Savaş")}</div>${f.members.some(m => m.name.startsWith("#")) ? `<div class="note small">#numara görünen oyuncuların adı henüz gelmedi: oyun adları yükleme ekranında gönderir. Ölçeri zindana girmeden önce başlat ya da bir kez ışınlan.</div>` : ""}<div class="mut small">${leftStr(f.dur)} · Toplam ${nfmt(f.total)} · Parti DPS ${nfmt(f.dps)}/s${f.hidden ? ` · ${f.hidden} parti dışı oyuncu gizli` : ""}</div></div></div>
     ${b && b.pct != null ? `<div class="bar" style="height:7px"><i style="width:${b.pct}%;background:var(--bad)"></i></div>` : ""}</div>`;
   for (const m of f.members) {
     const open = DOPEN[m.id] !== false, col = CLSCOL[m.cls] || "var(--mut)";

@@ -478,9 +478,11 @@ class Tracker:
 
     # ---------------------------------------------------------------- çıktı
     def _in_party(self, c):
-        if c.is_self:
+        """Parti filtresi. Parti listesi henüz gelmediyse (ölçer zindana girdikten sonra açıldıysa) ya da oyuncunun
+        adı bilinmiyorsa (#numara) gizleme: yoksa sadece kendi hasarın görünür."""
+        if c.is_self or not self.roster_names:
             return True
-        return c.name in self.roster_names
+        return c.name in self.roster_names or c.name.startswith("#")
 
     def fight_dict(self, enc, party_only=True, now=None, detail=True):
         end = enc.last if enc.active else enc.end
