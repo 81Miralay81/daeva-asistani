@@ -559,14 +559,17 @@ class Tracker:
             return {"me": {"x": me[0], "y": me[1]} if me else None, "members": out}
 
     def overlay_rows(self, party_only=True):
-        """Oyun üstü pencere: son boss dövüşü, bir sonraki boss'a vurulana kadar ekranda kalır
-        (boss ölünce ya da arada çöplere vurunca kaybolmaz). Hiç boss dövüşü yoksa o anki dövüş."""
-        with self.lock:
+        """Oyun üstü pencere: son boss dövüşü, bir sonraki boss'a vurulana kadar ekranda kalır.
+        Kilit meşgulse (büyük dövüşte paket yağarken) beklemez, son hesaplanan tabloyu döndürür: pencere donmaz."""
+        if not self.lock.acquire(timeout=0.03):
+            return getattr(self, "_ov_cache", None)
+        try:
             cur = self.cur
             if cur and cur.boss_id is not None:
                 enc = cur
             else:
                 enc = next((f for f in self.done if f.boss_id is not None), None) or cur or (self.done[0] if self.done else None)
-            if not enc:
-                return None
-            return self.fight_dict(enc, party_only, detail=False)
+            self._ov_cache = self.fight_dict(enc, party_only, detail=False) if enc else None
+            return self._ov_cache
+        finally:
+            self.lock.release()

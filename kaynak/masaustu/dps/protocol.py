@@ -1091,4 +1091,4 @@ class Pipeline:
 
     def game_servers(self):
         """Kilitlenmiş oyun sunucuları: [(ip, port)]"""
-        return [(k[0], k[1]) for k, f in self.flows.items() if f.game]
+        return [(k[0], k[1]) for k, f in list(self.flows.items()) if f.game]  # kopya: yakalama iş parçacığı değiştirebilir

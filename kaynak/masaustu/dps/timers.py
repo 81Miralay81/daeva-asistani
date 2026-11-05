@@ -60,8 +60,8 @@ def all_timers(tracker=None, custom=None, race=None, hidden=(), now=None):
         if t:
             out.append({"id": f"c{i}", "name": c.get("name", "Özel"), "kind": "özel", "at": int(t), "active": active,
                         "end": int(t) + int(c.get("dur") or 0) * 60 if active else 0, "note": c.get("note", ""), "src": "sen"})
-    if tracker is not None:
-        with tracker.lock:
+    if tracker is not None and tracker.lock.acquire(timeout=0.05):  # meşgulse bekleme (pencere donmasın)
+        try:
             for mp, fb in tracker.fieldboss.items():
                 for sl in fb["slots"]:
                     at = sl["at"] // 1000 if sl["at"] else 0
@@ -83,6 +83,8 @@ def all_timers(tracker=None, custom=None, race=None, hidden=(), now=None):
                 at = kt // 1000 + hrs * H
                 out.append({"id": f"k{code}", "name": nm, "kind": "saha bossu", "at": at, "active": at <= now, "end": 0,
                             "note": f"ölümünden {hrs} saat sonra (tahmini)", "src": "ölçer"})
+        finally:
+            tracker.lock.release()
     for o in out:
         o["left"] = max(0, o["at"] - now) if not o["active"] else 0
         o["hidden"] = o["id"] in hidden

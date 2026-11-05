@@ -158,6 +158,8 @@ class DpsManager:
                     and time.time() * 1000 - self.cap.pipeline.last_game_ms < 10_000)
 
     def timers(self):
+        if not self.s.get("showTimers") and getattr(self, "_tm_for_overlay", False):
+            return []
         out = TM.all_timers(self.tracker, self.s.get("customTimers"), self.s.get("race"), set())
         shown = set(self.s.get("ovTimers") or [])
         for t in out:

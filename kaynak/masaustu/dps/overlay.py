@@ -149,10 +149,12 @@ class Overlay:
             a = float(self.s.get("alpha", 0.75))
             if abs(float(self.root.attributes("-alpha")) - a) > 0.01:
                 self.root.attributes("-alpha", a)
-            self.root.attributes("-topmost", True)
+            self._n = getattr(self, "_n", 0) + 1
+            if self._n % 10 == 0:  # en üstte kalmayı arada bir tazele (her seferinde değil)
+                self.root.attributes("-topmost", True)
             self._draw()
         except Exception:
-            pass
+            pass  # bir çizim hatası pencereyi durdurmasın
         self.root.after(500, self._tick)
 
     # ------------------------------------------------------------ çizim
@@ -214,7 +216,10 @@ class Overlay:
                     y += R
             y += 4
         if self.s.get("showTimers"):
+            try:
             tl = [t for t in (self.timers() or []) if not t.get("hidden")]
+        except Exception:
+            tl = []
             y = self._head(y, "Geri sayımlar", time.strftime("%H:%M"), "timersMin", "showTimers")
             if not self.s.get("timersMin"):
                 for t in tl[:int(self.s.get("timerRows", 6))]:
