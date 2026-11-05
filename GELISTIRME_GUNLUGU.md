@@ -11,7 +11,7 @@ Kaynak kodun nasıl derlendiği `kaynak/OKU.md` dosyasında yazıyor.
 | Telefon (APK) | 1.0.25 | Releases → v1.0.25 (en son sürüm) |
 | DPS kaynak tabloları | 2026-11-05.1 | `meta/dps_kaynak.json` |
 
-- Exe kendini günceller (1.4.2 ve sonrası). APK açılışta kendini günceller.
+- Exe kendini otomatik günceller (1.4.6 ve sonrası; 1.4.2–1.4.5 güncelleyicisi bozuktu: .bat takılıyordu, PowerShell ile düzeltildi). APK açılışta kendini günceller.
 - `main` dalına her gönderimde GitHub Actions iki şeyi derler:
   - exe: `.github/workflows/exe.yml`, sürüm numarası `1.4.<çalıştırma no>`.
   - APK: `.github/workflows/apk.yml`.

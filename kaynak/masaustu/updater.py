@@ -57,16 +57,18 @@ def install(url):
             f.write(chunk)
     if os.path.getsize(tmp) < 1_000_000:
         return {"ok": False, "error": "İndirilen dosya eksik"}
-    bat = os.path.join(tempfile.gettempdir(), "daeva_guncelle.bat")
-    with open(bat, "w", encoding="mbcs", errors="replace") as f:
-        f.write(f'''@echo off
-set /a n=0
-:bekle
-timeout /t 1 /nobreak >nul
-tasklist /fi "PID eq {os.getpid()}" | find "{os.getpid()}" >nul && (set /a n+=1 & if %n% lss 30 goto bekle)
-move /y "{tmp}" "{exe}" >nul || (timeout /t 2 /nobreak >nul & move /y "{tmp}" "{exe}" >nul)
-start "" "{exe}"
-del "%~f0"
-''')
-    subprocess.Popen(["cmd", "/c", bat], creationflags=0x08000000 | 0x00000008)  # CREATE_NO_WINDOW | DETACHED
+    # Onefile exe iki işlemdir (başlatıcı + uygulama); ikisi de kapanınca dosya serbest kalır.
+    pids = ",".join(str(p) for p in {os.getpid(), os.getppid()})
+    ps1 = os.path.join(tempfile.gettempdir(), "daeva_guncelle.ps1")
+    with open(ps1, "w", encoding="utf-8-sig") as f:
+        f.write(f"""$ErrorActionPreference = 'SilentlyContinue'
+foreach ($p in @({pids})) {{ Wait-Process -Id $p -Timeout 40 }}
+for ($i = 0; $i -lt 20; $i++) {{
+  try {{ Move-Item -LiteralPath '{tmp}' -Destination '{exe}' -Force -ErrorAction Stop; break }} catch {{ Start-Sleep -Milliseconds 700 }}
+}}
+Start-Process -FilePath '{exe}'
+Remove-Item -LiteralPath $MyInvocation.MyCommand.Path -Force
+""")
+    subprocess.Popen(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-WindowStyle", "Hidden", "-File", ps1],
+                     creationflags=0x08000000, close_fds=True)  # CREATE_NO_WINDOW: pencere açılmaz
     return {"ok": True}
