@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="280" viewBox="0 0 1200 280"><defs>
+<linearGradient id="wA" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="-175" y2="-158"><stop offset="0" stop-color="#FF5A1F"/><stop offset="1" stop-color="#FFC24D"/></linearGradient>
+<linearGradient id="wB" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="-175" y2="-158"><stop offset="0" stop-color="#FF8A2E"/><stop offset="1" stop-color="#FFE3A0"/></linearGradient>
+<path id="wing" d="M-6,-10 C-28,-70 -88,-132 -182,-164 Q-156,-132 -142,-122 Q-162,-112 -170,-100 Q-140,-100 -118,-96 Q-136,-82 -144,-70 Q-114,-72 -92,-70 Q-106,-56 -112,-44 Q-86,-48 -64,-46 Q-72,-34 -74,-24 Q-40,-24 -10,-6 Z"/>
+<g id="mark">
+ <use href="#wing" fill="url(#wB)" transform="scale(-1,1)"/><use href="#wing" fill="url(#wB)" transform="scale(1,-1)"/>
+ <use href="#wing" fill="url(#wA)"/><use href="#wing" fill="url(#wA)" transform="scale(-1,-1)"/>
+ <circle r="22" fill="#0E1C33"/><path d="M0,-15 L15,0 L0,15 L-15,0 Z" fill="#FFFFFF"/><path d="M0,-15 L15,0 L0,0 Z" fill="#D6E2F3"/>
+</g>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1B2232"/><stop offset="1" stop-color="#0B0F16"/></linearGradient></defs>
+<rect width="1200" height="280" fill="url(#bg)"/>
+<g transform="translate(1050,140.0) scale(1.7)" opacity="0.06" fill="#FFFFFF">
+ <use href="#wing"/><use href="#wing" transform="scale(-1,1)"/><use href="#wing" transform="scale(1,-1)"/><use href="#wing" transform="scale(-1,-1)"/></g>
+<rect x="0" y="276" width="1200" height="4" fill="#E8B94A" opacity="0.85"/>
+<g transform="translate(160,140.0) scale(0.58)"><use href="#mark"/></g>
+<text x="300" y="154.0" font-family="Inter Display" font-weight="700" font-size="92" letter-spacing="9" fill="#FFFFFF">KANATIX</text>
+<rect x="304" y="180.0" width="56" height="4" rx="2" fill="#FF7A2F"/>
+<text x="374" y="189.0" font-family="Inter Display" font-weight="600" font-size="24" letter-spacing="5" fill="#E8B94A">DAEVA ASİSTANI</text></svg>

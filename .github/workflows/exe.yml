@@ -32,12 +32,12 @@ jobs:
         run: echo "ver=$(grep -oP 'APP_VERSION = \"\K[^\"]+' kaynak/masaustu/main.py)" >> $GITHUB_OUTPUT
       - name: Exe
         working-directory: kaynak/masaustu
-        run: python -m PyInstaller --noconfirm --onefile --windowed --name DaevaAsistani --icon icon.ico --add-data "app;app" --add-data "dps\data;dps\data" --add-data "harita;harita" --hidden-import tkinter main.py
+        run: python -m PyInstaller --noconfirm --onefile --windowed --name KanatixDaevaAsistani --icon icon.ico --add-data "app;app" --add-data "dps\data;dps\data" --add-data "harita;harita" --hidden-import tkinter main.py
       - name: Yayınla
         uses: softprops/action-gh-release@v2
         with:
           tag_name: exe-v${{ steps.v.outputs.ver }}
-          name: Daeva Asistanı (bilgisayar) ${{ steps.v.outputs.ver }}
-          body: "Uygulama kuruluysa açılışta bu sürümü kendisi önerir ve günceller. İlk kurulum: DaevaAsistani.exe dosyasını indir. DPS ölçer için Npcap gerekir: https://npcap.com"
-          files: kaynak/masaustu/dist/DaevaAsistani.exe
+          name: Kanatix Daeva Asistanı (bilgisayar) ${{ steps.v.outputs.ver }}
+          body: "Uygulama kuruluysa açılışta bu sürümü kendisi önerir ve günceller. İlk kurulum: KanatixDaevaAsistani.exe dosyasını indir. DPS ölçer için Npcap gerekir: https://npcap.com"
+          files: kaynak/masaustu/dist/KanatixDaevaAsistani.exe
           make_latest: false

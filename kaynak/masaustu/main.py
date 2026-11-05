@@ -436,7 +436,7 @@ class Api:
 
 def main():
     os.makedirs(DATA_DIR, exist_ok=True)
-    win = webview.create_window("Daeva Asistanı", resource(os.path.join("app", "index.html")),
+    win = webview.create_window("Kanatix Daeva Asistanı", resource(os.path.join("app", "index.html")),
                                 js_api=Api(), width=1280, height=860, min_size=(420, 600))
 
     def on_closed(*_):

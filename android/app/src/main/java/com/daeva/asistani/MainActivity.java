@@ -133,7 +133,7 @@ public class MainActivity extends Activity {
             final String apkUrl = url, ver = rel.optString("tag_name").replaceFirst("^v", "");
             ui.post(() -> new AlertDialog.Builder(this)
                     .setTitle("Yeni sürüm var")
-                    .setMessage("Daeva Asistanı " + ver + " hazır. Şimdi güncellensin mi?\n\nAyarların ve seviyelerin silinmez.")
+                    .setMessage("Kanatix Daeva Asistanı " + ver + " hazır. Şimdi güncellensin mi?\n\nAyarların ve seviyelerin silinmez.")
                     .setPositiveButton("Güncelle", (d, w) -> startDownload(apkUrl, ver))
                     .setNegativeButton("Sonra", null)
                     .show());
@@ -144,11 +144,11 @@ public class MainActivity extends Activity {
         try {
             DownloadManager dm = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
             DownloadManager.Request r = new DownloadManager.Request(Uri.parse(url))
-                    .setTitle("Daeva Asistanı " + ver)
+                    .setTitle("Kanatix Daeva Asistanı " + ver)
                     .setDescription("Güncelleme indiriliyor")
                     .setMimeType("application/vnd.android.package-archive")
                     .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
-                    .setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, "DaevaAsistani-" + ver + ".apk");
+                    .setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, "KanatixDaevaAsistani-" + ver + ".apk");
             if (dlReceiver == null) {
                 dlReceiver = new BroadcastReceiver() {
                     @Override public void onReceive(Context ctx, Intent in) {

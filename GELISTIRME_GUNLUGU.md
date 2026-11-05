@@ -95,6 +95,19 @@ Kaynak kodun nasıl derlendiği `kaynak/OKU.md` dosyasında yazıyor.
 - Başlat: oyun açıksa kapatmaz ve yeniden açmaz, ölçer açık oyuna bağlanır; kapalıysa Steam'den açar (Steam uygulama no 3393110).
 - Oyunun açık olduğunu, adında "aion2" geçen çalışan bir işlem olup olmadığına bakarak anlar.
 
+### 8. Kanatix markası (5 Kasım)
+- Neden: kullanıcı bütün programları için ortak marka olarak **Kanatix**'i seçti (kanat + X logosu).
+- Ad: telefonda ve pencere başlığında **Kanatix Daeva Asistanı**. Dosyalar: `KanatixDaevaAsistani.exe`, `KanatixDaevaAsistani.apk`.
+- Simge: Kanatix kanat-X + altın kılıç rozeti. Exe: `kaynak/masaustu/icon.ico`. Android: `android/app/src/main/res/mipmap-*/ic_launcher.png`.
+- Banner: arayüzün en üstünde, uygulamanın kendi renkleriyle (#1B2232→#0B0F16, altın #E8B94A çizgi). Dosya `kaynak/web/kanatix_banner.webp`; `kaynak/build_all.py` derlerken sayfaya gömer (hem exe hem APK).
+- Değişmeyenler (bilerek):
+  - `%APPDATA%\DaevaAsistani` veri klasörü: ayarlar ve sohbet geçmişi kaybolmasın diye.
+  - Android paket adı `com.daeva.asistani` ve imza: güncelleme eskisinin üzerine kurulsun diye.
+- Güncelleyiciler `.exe` / `.apk` ile biten herhangi bir dosyayı aldığı için yeni dosya adları otomatik güncellemeyi bozmuyor.
+  - Kurulu eski exe güncellenince kendi dosya adıyla kalır.
+  - Yeni indirenler `KanatixDaevaAsistani.exe` alır.
+- Marka kaynakları: `marka/` (`uret.py`, `daeva-icon.svg`, `daeva-banner.svg`).
+
 ## Bekleyen / sıradaki işler
 1. Kullanıcı gerçek oyunda denesin:
    - DPS sayıları doğru mu?
@@ -105,7 +118,6 @@ Kaynak kodun nasıl derlendiği `kaynak/OKU.md` dosyasında yazıyor.
 3. Eşya aramada "hangi boss düşürür" için daha ayrıntılı bir loot tablosu.
 4. Siege / Abyss savaş saatleri doğrulanırsa sabit programa eklemek.
 5. Haritaya boss/yaratık konumları ve gerçek harita resmi (açık bir kaynak bulunursa).
-6. Kullanıcı bütün programları için ortak bir marka adı ve logo düşünüyor (henüz seçilmedi).
 
 ## Lisans notu
 DPS kısmı GPL-3.0 projelerden aktarıldı (`kaynak/masaustu/dps/LICENSE`). Bu yüzden uygulama açık kaynak kalmalı; depo zaten herkese açık.

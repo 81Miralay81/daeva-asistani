@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><defs>
+<linearGradient id="wA" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="-175" y2="-158"><stop offset="0" stop-color="#FF5A1F"/><stop offset="1" stop-color="#FFC24D"/></linearGradient>
+<linearGradient id="wB" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="-175" y2="-158"><stop offset="0" stop-color="#FF8A2E"/><stop offset="1" stop-color="#FFE3A0"/></linearGradient>
+<path id="wing" d="M-6,-10 C-28,-70 -88,-132 -182,-164 Q-156,-132 -142,-122 Q-162,-112 -170,-100 Q-140,-100 -118,-96 Q-136,-82 -144,-70 Q-114,-72 -92,-70 Q-106,-56 -112,-44 Q-86,-48 -64,-46 Q-72,-34 -74,-24 Q-40,-24 -10,-6 Z"/>
+<g id="mark">
+ <use href="#wing" fill="url(#wB)" transform="scale(-1,1)"/><use href="#wing" fill="url(#wB)" transform="scale(1,-1)"/>
+ <use href="#wing" fill="url(#wA)"/><use href="#wing" fill="url(#wA)" transform="scale(-1,-1)"/>
+ <circle r="22" fill="#0E1C33"/><path d="M0,-15 L15,0 L0,15 L-15,0 Z" fill="#FFFFFF"/><path d="M0,-15 L15,0 L0,0 Z" fill="#D6E2F3"/>
+</g>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1B2232"/><stop offset="1" stop-color="#0B0F16"/></linearGradient></defs>
+<rect width="512" height="512" rx="112" fill="url(#bg)"/>
+<rect x="5" y="5" width="502" height="502" rx="107" fill="none" stroke="#FFFFFF" stroke-opacity="0.10" stroke-width="2"/>
+<g transform="translate(236,236) scale(0.92)"><use href="#mark"/></g><g transform="translate(404,404)"><circle r="82" fill="#0B0F16"/><circle r="70" fill="#C9962E"/><g fill="#FFFFFF"><path d="M-7,-46 L0,-58 L7,-46 L7,14 L-7,14 Z"/><rect x="-26" y="14" width="52" height="10" rx="4"/><rect x="-5" y="24" width="10" height="22" rx="3"/><circle cy="50" r="7"/></g></g></svg>

@@ -43,18 +43,18 @@ jobs:
         run: gradle -p android assembleRelease --no-daemon --stacktrace
 
       - name: APK'yı adlandır
-        run: cp android/app/build/outputs/apk/release/app-release.apk DaevaAsistani.apk
+        run: cp android/app/build/outputs/apk/release/app-release.apk KanatixDaevaAsistani.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: DaevaAsistani-apk
-          path: DaevaAsistani.apk
+          name: KanatixDaevaAsistani-apk
+          path: KanatixDaevaAsistani.apk
 
       - name: Son sürüm olarak yayınla
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: Daeva Asistanı 1.0.${{ github.run_number }}
-          body: "Telefonda DaevaAsistani.apk dosyasını indirip kur. Uygulama kuruluysa açtığında bu sürümü kendisi önerir."
-          files: DaevaAsistani.apk
+          name: Kanatix Daeva Asistanı 1.0.${{ github.run_number }}
+          body: "Telefonda KanatixDaevaAsistani.apk dosyasını indirip kur. Uygulama kuruluysa açtığında bu sürümü kendisi önerir."
+          files: KanatixDaevaAsistani.apk
           make_latest: true
