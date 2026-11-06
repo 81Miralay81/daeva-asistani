@@ -3,6 +3,7 @@
   "notes": "Yetenek/NPC tabloları yenilendi: npcs.json",
   "files": {
     "dot_skill_ids.json": "https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/kaynak/masaustu/dps/data/dot_skill_ids.json",
+    "field_boss_maps.json": "https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/kaynak/masaustu/dps/data/field_boss_maps.json",
     "healing_skill_ids.json": "https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/kaynak/masaustu/dps/data/healing_skill_ids.json",
     "maps.json": "https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/kaynak/masaustu/dps/data/maps.json",
     "npcs.json": "https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/kaynak/masaustu/dps/data/npcs.json",
