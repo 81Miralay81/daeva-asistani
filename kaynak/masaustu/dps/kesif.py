@@ -215,6 +215,6 @@ def _fit(tps, marks):
                                 if d is not None and d < TOL:
                                     hit += 1
                                     err += d
-                            if hit >= 2 and (best is None or (hit, -err) > (best[0], -best[1])):
+                            if hit >= 3 and (best is None or (hit, -err) > (best[0], -best[1])):
                                 best = (hit, err, (s, sx, sy, ox, oy, sw))
     return best[2] if best else None
