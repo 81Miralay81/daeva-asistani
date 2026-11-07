@@ -159,13 +159,17 @@ class DpsManager:
     def reset(self):
         if self.tracker:
             self.tracker.reset()
+        if self.overlay:  # oyun üstü pencereyi kapatıp yeniden aç (tamamen tazelensin)
+            self._stop_overlay()
+            if self.s.get("overlay"):
+                threading.Timer(1.5, self._start_overlay).start()  # eski pencere kapansın, sonra yenisi
         return {"ok": True}
 
     # ------------------------------------------------------------ overlay
     def _ov_settings(self):
         return {"x": self.s["overlayX"], "y": self.s["overlayY"], "alpha": self.s["overlayAlpha"], "rows": self.s["overlayRows"],
                 "showDps": self.s["showDps"], "showTimers": self.s["showTimers"], "dpsMin": self.s["dpsMin"],
-                "timersMin": self.s["timersMin"], "timerRows": self.s["timerRows"], "hidden": []}
+                "timersMin": self.s["timersMin"], "timerRows": self.s["timerRows"], "hidden": [], "partyOnly": self.s.get("partyOnly", True)}
 
     def game_live(self):
         return bool(self.cap and self.cap.running and self.cap.pipeline.game_servers()
@@ -186,7 +190,7 @@ class DpsManager:
 
         def changed(o):
             self.s.update(overlayX=o["x"], overlayY=o["y"], showDps=o["showDps"], showTimers=o["showTimers"],
-                          dpsMin=o["dpsMin"], timersMin=o["timersMin"],
+                          dpsMin=o["dpsMin"], timersMin=o["timersMin"], partyOnly=o.get("partyOnly", True),
                           ovTimers=[i for i in self.s.get("ovTimers", []) if i not in (o.get("hidden") or [])])
             self._save()
         self.overlay = Overlay(lambda: self.tracker.overlay_rows(self.s.get("partyOnly", True)) if self.tracker else None,

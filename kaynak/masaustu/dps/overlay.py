@@ -166,7 +166,9 @@ class Overlay:
         cv, W = self.cv, self.W
         cv.create_rectangle(0, y, W, y + 20, fill="#121824", outline="")
         cv.create_text(8, y + 10, text=title, fill=ACC, anchor="w", font=(F, 9, "bold"))
-        cv.create_text(W - 46, y + 10, text=right, fill=MUT, anchor="e", font=(F, 8))
+        cv.create_text(W - 64 if key_show == "showDps" else W - 46, y + 10, text=right, fill=MUT, anchor="e", font=(F, 8))
+        if key_show == "showDps":  # P = sadece parti, H = herkes (tıklayınca değişir)
+            self._btn(W - 52, y + 10, "P" if self.s.get("partyOnly", True) else "H", "toggle:partyOnly")
         self._btn(W - 32, y + 10, "+" if self.s.get(key_min) else "–", "toggle:" + key_min)
         self._btn(W - 12, y + 10, "×", "toggle:" + key_show)
         return y + 22
