@@ -482,6 +482,8 @@ class Tracker:
         adı bilinmiyorsa (#numara) gizleme: yoksa sadece kendi hasarın görünür."""
         if c.is_self:
             return True
+        if not self.self_info.get("name"):
+            return True  # kim olduğun henüz bilinmiyor (ölçer oyuna girdikten sonra açıldı): kimseyi gizleme
         if not self.roster_names:
             return False  # parti yok (tek başına): açık dünyada yakındaki yabancıları gösterme
         # Parti listesi seni içermiyorsa eski ya da yarım okunmuştur (sen her zaman kendi partindesin):
