@@ -321,3 +321,18 @@ async function forceAppUpdate(app) {
   const g = document.getElementById("fupdgec"); if (g) g.onclick = () => o.remove();
 }
 setTimeout(() => { if (!profOk()) showProf(true); }, 400);
+// Uygulama açıkken de yeni sürümü yakala: 3 dakikada bir kontrol; yeni sürüm gelince uyarıyla kendini günceller.
+async function appUpdCheck(manual) {
+  const a = DAPI(); if (!a || !a.app_check || document.getElementById("fupd")) return;
+  const b = document.getElementById("updchk"); if (manual && b) b.textContent = "⟳ Kontrol ediliyor…";
+  let app = null; try { app = await a.app_check(); } catch (e) {}
+  if (app && app.new && app.canAuto) { forceAppUpdate(app); return; }
+  if (manual && b) { b.textContent = app && app.current ? "✓ Güncel (" + app.current + ")" : "Kontrol edilemedi"; setTimeout(() => { b.textContent = "⟳ Güncelleme kontrol"; }, 4000); }
+}
+setInterval(() => appUpdCheck(false), 180000);
+window.addEventListener("pywebviewready", () => {
+  if (!DESK() || document.getElementById("updchk")) return;
+  const b = document.createElement("button"); b.id = "updchk"; b.className = "btn"; b.textContent = "⟳ Güncelleme kontrol";
+  b.style.cssText = "position:fixed;top:8px;right:10px;z-index:900;font-size:12px;padding:5px 10px";
+  b.onclick = () => appUpdCheck(true); document.body.appendChild(b);
+});
