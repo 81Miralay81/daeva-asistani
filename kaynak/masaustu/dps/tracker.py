@@ -487,7 +487,10 @@ class Tracker:
         me = self.self_info.get("name")
         if not me or me not in self.roster_names or len(self.roster_names) < 2:
             return True
-        return c.name in self.roster_names or c.name.startswith("#")
+        if c.name.startswith("#"):
+            return True
+        norm = lambda n: (n or "").split("[")[0].strip().lower()
+        return norm(c.name) in {norm(n) for n in self.roster_names}
 
     def fight_dict(self, enc, party_only=True, now=None, detail=True):
         end = enc.last if enc.active else enc.end
@@ -495,6 +498,10 @@ class Tracker:
         rows = [c for c in enc.cbt.values() if (not party_only or self._in_party(c))]
         for c in rows:
             self._ident(c)
+        # Az oyunculu dövüşte (zindan/parti) kimseyi gizleme: parti listesi yarım/eski olsa da 6 kişiye kadar hepsi görünsün.
+        players = [c for c in enc.cbt.values() if c.dmg > 0]
+        if len(players) <= 6:
+            party_only = False
         rows = [c for c in enc.cbt.values() if (not party_only or self._in_party(c))]
         total = sum(c.dmg for c in rows) or 1
         rows.sort(key=lambda c: -c.dmg)
