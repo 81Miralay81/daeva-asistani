@@ -193,7 +193,10 @@ class Overlay:
             f = self.provider()
             right = f"{int((f or {}).get('dur', 0)) // 60:02d}:{int((f or {}).get('dur', 0)) % 60:02d}  {fmt((f or {}).get('dps'))}/s" if f else ""
             b = (f or {}).get("boss")
-            y = self._head(y, ((b and b.get("name")) or (f and f.get("zone")) or "DPS")[:24], right, "dpsMin", "showDps")
+            title = ((b and b.get("name")) or (f and f.get("zone")) or "DPS")[:22]
+            if f and b and not f.get("active"):
+                title += " ✓ kesildi" if f.get("reason") == "kill" else " (bitti)"
+            y = self._head(y, title, right, "dpsMin", "showDps")
             if not self.s.get("dpsMin"):
                 if b and b.get("pct") is not None:
                     cv.create_rectangle(8, y, W - 8, y + 6, fill="#1a1f2a", outline="")
