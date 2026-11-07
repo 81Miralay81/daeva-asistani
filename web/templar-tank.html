@@ -3689,7 +3689,7 @@ function rHar() {
     <p class="mut small">Tekerlekle yakınlaştır, sürükleyerek gez; işaretin üstüne gelince adı çıkar. Sağdan seçtiklerin görünür. Harita ve işaretler: ${esc(HARITA.source || "")}.</p></div>`;
 }
 // ---- Kendi kendine öğrenen harita (oyunda ekrana giren toplama noktaları, küpler…)
-let KD = null, KMAP = null;
+let KD = null, KMAP = null, KCAL = null;
 const KCOL = ["#f5b942", "#4fc3f7", "#e57373", "#81c784", "#ba68c8", "#ffb74d", "#4db6ac", "#f06292", "#aed581", "#90a4ae"];
 async function kesifLoad() { const a = DAPI(); if (!a || !a.kesif_data) return; try { KD = await a.kesif_data(HMAP); KMAP = HMAP; } catch (e) { KD = null; } if (TAB === "har") { hRerender(); } }
 function kSel() { S.kshow = S.kshow || {}; return S.kshow; }
@@ -3704,13 +3704,20 @@ function kesifCard() {
     <td class="mut small">kod ${t.code}</td><td class="small">${t.n} nokta${t.got ? ` · ${t.got} toplama` : ""}</td></tr>`).join("");
   return `<div class="card"><div class="nm">🧭 Öğrenilen noktalar <button class="btn" id="kref" style="margin-left:8px">↻ Yenile</button></div>
     <p class="small">${KD.calibrated ? '<span class="ok">✓ Harita ayarlandı</span>: işaretlediğin türler haritada renkli nokta olarak görünür.' : (KD.tps < 3 ? `<span class="warn">⏳ Harita ayarı için ${3 - KD.tps} ışınlanma daha gerekli</span> (şu an ${KD.tps}). Ölçer açıkken farklı ışınlanma taşlarına ışınlan; program bunlardan haritayı kendisi oturtur.` : `<span class="warn">⏳ ${KD.tps} ışınlanma var ama haritaya oturtulamadı.</span> Bu haritadaki (Elyos ana dünya) birkaç farklı ışınlanma taşına daha ışınlan.`)}</p>
+    <div class="small" style="margin:6px 0;padding:8px;border:1px dashed var(--acc);border-radius:8px">
+      <b>📍 Haritayı elle ayarla</b> (en garantisi): bir maden/bitki topla, oyundaki haritaya bakıp yerini gör, aşağıdan o toplamanın yanındaki <b>"Haritada yerini göster"</b>e bas, sonra yukarıdaki haritada tam o noktaya tıkla. Birbirinden <b>uzak 2 nokta</b> yeter. ${KD.cal ? `<span class="ok">${KD.cal} nokta işaretli</span> <button class="btn" id="kcalclr">Sıfırla</button>` : ""}
+      ${KCAL ? `<div class="warn">👉 Şimdi yukarıdaki haritada o noktanın yerine tıkla.</div>` : ""}
+      ${(KD.recent || []).length ? `<table>${KD.recent.map(o => `<tr><td>${esc(o.name || "kod " + o.code)}</td><td class="mut small">${new Date(o.gotAt * 1000).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</td><td><button class="btn" data-kcal="${esc(o.key)}">Haritada yerini göster</button></td></tr>`).join("")}</table>` : '<div class="mut">Henüz toplama yok: ölçer açıkken bir şey topla, sonra ↻ Yenile.</div>'}
+    </div>
     <p class="mut small">DPS ölçer açıkken oyunda ekrana gelen her toplama noktası ve nesne kendiliğinden buraya yazılır. Topladıklarının yanında "toplama" sayısı çıkar: hangi kodun ne olduğunu anlamana yardım eder. Adını bir kere yaz, hep o adla görünür. Küpler de buradaki türlerin arasında (hangisi olduğunu bulunca adını ver).</p>
     ${rows ? `<table>${rows}</table>` : '<p class="mut small">Henüz nokta yok. DPS ölçeri başlatıp oyunda gez.</p>'}</div>`;
 }
 document.addEventListener("change", async e => { const t = e.target;
   if (t.dataset.kn) { await DAPI().kesif_name(+t.dataset.kn, t.value); const ty = KD && KD.types.find(x => x.code === +t.dataset.kn); if (ty) ty.name = t.value; hMarkers(); }
   else if (t.dataset.kshow) { const s = kSel(); t.checked ? s[t.dataset.kshow] = 1 : delete s[t.dataset.kshow]; save(); hMarkers(); } });
-document.addEventListener("click", e => { if (e.target.id === "kref") { KMAP = null; kesifLoad(); } });
+document.addEventListener("click", async e => { if (e.target.id === "kref") { KMAP = null; kesifLoad(); }
+  else if (e.target.dataset.kcal) { KCAL = e.target.dataset.kcal; hRerender(); document.getElementById("hlf").scrollIntoView({ behavior: "smooth" }); }
+  else if (e.target.id === "kcalclr") { await DAPI().kesif_cal_clear(); KMAP = null; kesifLoad(); } });
 function hInit() {
   const el = document.getElementById("hlf"), m = HARITA.maps[HMAP]; if (!el || !m || !window.L) return;
   if (HL) { try { HL.remove(); } catch (e) {} HL = null; }
@@ -3722,6 +3729,7 @@ function hInit() {
   HL.on("moveend zoomend", () => { HVIEW[HMAP] = { c: HL.getCenter(), z: HL.getZoom() }; });
   HL.on("zoomend", () => hMarkers());
   HLG = L.layerGroup().addTo(HL); hMarkers();
+  HL.on("click", async ev => { if (!KCAL) return; const k = KCAL; KCAL = null; await DAPI().kesif_cal(k, ev.latlng.lng, ev.latlng.lat); KMAP = null; kesifLoad(); });
 }
 function hMarkers() {
   if (!HL || !HLG) return; HLG.clearLayers(); const m = HARITA.maps[HMAP], sel = hSel(), ic = {}, z = HL.getZoom(), sz = z >= -1 ? 26 : z >= -2 ? 20 : z >= -3 ? 14 : 10;

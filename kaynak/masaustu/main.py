@@ -346,6 +346,12 @@ class Api:
         k.save()
         return k.data(tps)
 
+    def kesif_cal(self, key, mx, my):
+        return dps().kesif_obj().add_cal(key, mx, my)
+
+    def kesif_cal_clear(self):
+        return dps().kesif_obj().clear_cal()
+
     def kesif_name(self, code, name):
         return dps().kesif_obj().set_name(int(code), name)
 

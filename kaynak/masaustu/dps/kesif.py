@@ -53,10 +53,11 @@ class Kesif:
                     key = self.byid.get(e[2])
                     if key and key in self.d["objs"]:
                         self.d["objs"][key]["got"] += 1
+                        self.d["objs"][key]["gotAt"] = int(time.time())
                         self.dirty = True
             elif k == "zone":
                 self.zone = e[2]
-            elif k == "pos" and e[2] == 0:  # bölgeye giriş / ışınlanma varışı: kendi konumun
+            elif k == "pos" and e[2] == 0 and (abs(e[3]) > 1 or abs(e[4]) > 1):  # bölgeye giriş / ışınlanma varışı: kendi konumun
                 with self.lock:
                     p = [self.zone, round(e[3]), round(e[4])]
                     if not any(q[0] == p[0] and abs(q[1] - p[1]) < 300 and abs(q[2] - p[2]) < 300 for q in self.d["tps"]):
@@ -78,6 +79,26 @@ class Kesif:
             self.dirty = False
             self.last_save = time.time()
 
+    def add_cal(self, key, mx, my):
+        """Elle ayar: oyundaki bir noktanın (anahtar) haritadaki yeri. 2 farklı nokta yeter."""
+        with self.lock:
+            o = self.d["objs"].get(key)
+            if not o:
+                return {"ok": False, "error": "nokta bulunamadı"}
+            cal = [c for c in self.d.setdefault("cal", []) if c[0] != key]
+            cal.append([key, o["x"], o["y"], float(mx), float(my)])
+            self.d["cal"] = cal[-6:]
+            self.dirty = True
+        self.save()
+        return {"ok": True, "n": len(self.d["cal"])}
+
+    def clear_cal(self):
+        with self.lock:
+            self.d["cal"] = []
+            self.dirty = True
+        self.save()
+        return {"ok": True}
+
     def set_name(self, code, name):
         with self.lock:
             name = (name or "").strip()[:40]
@@ -97,7 +118,8 @@ class Kesif:
             objs = [dict(o) for o in self.d["objs"].values()]
             names = dict(self.d["names"])
             tps = [list(p) for p in self.d["tps"]]
-        tf = fit(tps, teleports)
+        cal = [list(c) for c in self.d.get("cal", [])]
+        tf = fit_cal(cal) or (None if cal else fit(tps, teleports))
         if tf:
             for o in objs:
                 o["mx"], o["my"] = apply(tf, o["x"], o["y"])
@@ -106,11 +128,39 @@ class Kesif:
             c = codes.setdefault(o["code"], {"code": o["code"], "n": 0, "got": 0, "name": names.get(str(o["code"]), "")})
             c["n"] += 1
             c["got"] += o["got"]
+        recent = sorted([o for o in objs if o.get("gotAt")], key=lambda o: -o["gotAt"])[:5]
+        for o in recent:
+            o["key"] = f"{o['code']}:{round(o['x'] / GRID) * GRID}:{round(o['y'] / GRID) * GRID}"
+            o["name"] = names.get(str(o["code"]), "")
         return {"objs": objs, "types": sorted(codes.values(), key=lambda c: (-c["got"], -c["n"])),
-                "tps": len(tps), "calibrated": bool(tf), "tf": tf}
+                "tps": len(tps), "calibrated": bool(tf), "tf": tf, "cal": len(cal), "recent": recent}
+
+
+def fit_cal(cal):
+    """Elle verilen eşleşmelerden (oyun x,y -> harita x,y) eksen başına ölçek+kaydırma (en küçük kareler)."""
+    if len(cal) < 2:
+        return None
+
+    def axis(g, m):
+        n = len(g)
+        mg, mm = sum(g) / n, sum(m) / n
+        v = sum((a - mg) ** 2 for a in g)
+        if v < 1e-6:
+            return None
+        k = sum((a - mg) * (b - mm) for a, b in zip(g, m)) / v
+        return k, mm - k * mg
+    ax = axis([c[1] for c in cal], [c[3] for c in cal])
+    ay = axis([c[2] for c in cal], [c[4] for c in cal])
+    if not ax or not ay:
+        return None
+    # apply() biçimine çevir: a/s*sx+ox  ->  s=1/|k|, sx=işaret
+    return ("lin", ax[0], ay[0], ax[1], ay[1], 0)
 
 
 def apply(tf, x, y):
+    if tf[0] == "lin":
+        _, kx, ky, ox, oy, _ = tf
+        return round(x * kx + ox, 1), round(y * ky + oy, 1)
     s, sx, sy, ox, oy, sw = tf
     a, b = (y, x) if sw else (x, y)
     return round(a / s * sx + ox, 1), round(b / s * sy + oy, 1)
