@@ -257,3 +257,19 @@ def test_partial_roster_does_not_hide_party():
     for a in (100, 101, 102):
         t.process(("dmg", 1000, a, 500, 15010000, 1000, 0, 1))
     assert {m["name"] for m in t.snapshot(party_only=True)["fight"]["members"]} == {"Miralay", "Arzbaby", "Liisara"}
+
+
+def test_kesif_fit_recovers_transform(tmp_path):
+    from dps import kesif as K
+    marks = [(1000 + 137 * i % 3000, 2000 + 311 * i % 2500) for i in range(40)]
+    s, ox, oy = 16.0, 500.0, 300.0
+    tps = [[1, (mx - ox) * s, (my - oy) * s] for mx, my in [marks[3], marks[17], marks[29]]]
+    tf = K._fit(tps, marks)
+    assert tf and abs(tf[0] - s) < 0.3
+    x, y = K.apply(tf, *[(marks[5][0] - ox) * s, (marks[5][1] - oy) * s])
+    assert abs(x - marks[5][0]) < 10 and abs(y - marks[5][1]) < 10
+    k = K.Kesif(str(tmp_path))
+    k.process(("obj", 0, 7, 1500004, 100.0, 200.0, 5.0))
+    k.process(("gather", 0, 7))
+    d = k.data([])
+    assert d["types"][0]["code"] == 1500004 and d["types"][0]["got"] == 1

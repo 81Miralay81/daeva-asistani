@@ -18,6 +18,7 @@ OPCODES = {
     "heartbeat": 0x0036, "self": 0x3336, "player": 0x4536, "player_old": 0x4436, "spawn": 0x4136,
     "death": 0x4236, "map": 0x2136, "pos": 0x2336, "cast": 0x0238, "hit": 0x0338, "damage": 0x0438, "dot": 0x0538,
     "remain_hp": 0x008D, "fieldboss": 0x0191, "kill": 0x048D, "hpmp": 0x1B92, "roster": 0x0297,
+    "object": 0x3436, "gather": 0x318D,
 }
 HEARTBEATS = [b"\x0e\x00\x36", b"\x06\x00\x36"]
 
@@ -398,6 +399,7 @@ class PacketParser:
             O["self"]: self._self, O["roster"]: self._roster, O["player"]: self._player,
             O["player_old"]: self._player, O["spawn"]: self._spawn, O["death"]: self._death,
             O["map"]: self._map, O["pos"]: self._pos, O["remain_hp"]: self._remain_hp, O["fieldboss"]: self._fieldboss, O["hpmp"]: self._hpmp, O["kill"]: self._kill,
+            O["object"]: self._object, O["gather"]: self._gather,
         }
 
     recorder = None  # keşif kaydı: (op, body) -> None
@@ -987,6 +989,22 @@ class PacketParser:
         if all(v == v and abs(v) < 1e7 for v in (x, y, z)):
             self._emit("pos", self.t, eid, x, y, z)
 
+    def _object(self, b):
+        """34 36: dünya nesnesi (toplama noktası, küp...): id varint, 1 bayt, kod u32, 1 bayt, x y z f32."""
+        eid, o = varint(b, 0)
+        if eid is None or o + 18 > len(b):
+            return
+        code = u32(b, o + 2)
+        x, y, z = struct.unpack_from("<fff", b, o + 6)
+        if 1_000_000 <= code <= 9_999_999 and all(v == v and 1 < abs(v) < 1e6 for v in (x, y)):
+            self._emit("obj", self.t, eid, code, x, y, z)
+
+    def _gather(self, b):
+        """31 8D: toplama sonucu: 2 bayt, sonra toplanan nesnenin id'si (varint)."""
+        eid, _ = varint(b, 2)
+        if eid:
+            self._emit("gather", self.t, eid)
+
     def _map(self, b):
         if len(b) < 8:
             return
@@ -994,6 +1012,10 @@ class PacketParser:
         if 0 < mid <= 9_999_999:
             self._emit("zone", self.t, mid, mid == self._last_map)
             self._last_map = mid
+            if len(b) >= 28:  # bölgeye giriş / ışınlanma varışı: kendi konumun (x y z f32, 16. bayttan)
+                x, y, z = struct.unpack_from("<fff", b, 16)
+                if all(v == v and 1 < abs(v) < 1e6 for v in (x, y)):
+                    self._emit("pos", self.t, 0, x, y, z)
 
 
 # ---------------------------------------------------------------- akış seçici

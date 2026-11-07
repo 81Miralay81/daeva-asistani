@@ -115,7 +115,16 @@ class DpsManager:
     def start(self, launch=None):
         if self.running():
             return {"ok": True, "already": True}
-        self.cap = C.Capture(self.tracker.process, self.data, log=self.log)
+        from . import kesif as K
+        if getattr(self, "kesif", None) is None:
+            self.kesif = K.Kesif(self.data_dir)
+        kz = self.kesif
+
+        def on_event(e, tp=self.tracker.process):
+            if e[0] in ("obj", "gather", "zone", "pos"):
+                kz.process(e)
+            tp(e)
+        self.cap = C.Capture(on_event, self.data, log=self.log)
         if not self.cap.start():
             err = self.cap.error
             self.cap = None
@@ -131,6 +140,11 @@ class DpsManager:
         return {"ok": True, "game": game}
 
     def stop(self):
+        if getattr(self, "kesif", None):
+            try:
+                self.kesif.save()
+            except Exception:
+                pass
         if self.cap:
             self.cap.stop()
             self.cap = None
@@ -318,6 +332,13 @@ class DpsManager:
             return {"ok": True, "file": m.group(1)}
         except Exception as e:
             return {"ok": False, "error": str(e)}
+
+    # ------------------------------------------------------------ kendi kendine öğrenen harita
+    def kesif_obj(self):
+        from . import kesif as K
+        if getattr(self, "kesif", None) is None:
+            self.kesif = K.Kesif(self.data_dir)
+        return self.kesif
 
     # ------------------------------------------------------------ keşif kaydı
     def record(self, on):

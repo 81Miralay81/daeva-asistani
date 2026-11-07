@@ -233,8 +233,32 @@ function rHar() {
     <label>Harita<select id="hmap">${maps.map(([k, x]) => `<option value="${k}" ${k === HMAP ? "selected" : ""}>${raceTr[x.race]} · ${k.replace(/_/g, " ")}${x.markers.length ? ` (${x.markers.length})` : ""}</option>`).join("")}</select></label>
     <label>Ara<input id="hq" value="${esc(HQ)}" placeholder="Orichalcum, Ruby, Odyle, bölge…"></label><button class="btn" id="hclr">Seçimi temizle</button></div>
     <div class="hwrap"><div id="hlf" class="hmapbox"></div><div class="hside">${side || '<p class="mut small">Bu haritada işaret yok.</p>'}</div></div>
+    ${kesifCard()}
     <p class="mut small">Tekerlekle yakınlaştır, sürükleyerek gez; işaretin üstüne gelince adı çıkar. Sağdan seçtiklerin görünür. Harita ve işaretler: ${esc(HARITA.source || "")}.</p></div>`;
 }
+// ---- Kendi kendine öğrenen harita (oyunda ekrana giren toplama noktaları, küpler…)
+let KD = null, KMAP = null;
+const KCOL = ["#f5b942", "#4fc3f7", "#e57373", "#81c784", "#ba68c8", "#ffb74d", "#4db6ac", "#f06292", "#aed581", "#90a4ae"];
+async function kesifLoad() { const a = DAPI(); if (!a || !a.kesif_data) return; try { KD = await a.kesif_data(HMAP); KMAP = HMAP; } catch (e) { KD = null; } if (TAB === "har") { hRerender(); } }
+function kSel() { S.kshow = S.kshow || {}; return S.kshow; }
+function kesifCard() {
+  if (!DESK()) return "";
+  if (KMAP !== HMAP) { setTimeout(kesifLoad, 0); return `<div class="card"><div class="nm">🧭 Öğrenilen noktalar</div><p class="mut small">Yükleniyor…</p></div>`; }
+  if (!KD) return "";
+  const sel = kSel();
+  const rows = KD.types.map((t, i) => `<tr><td><input type="checkbox" data-kshow="${t.code}" ${sel[t.code] ? "checked" : ""}></td>
+    <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${KCOL[i % KCOL.length]}"></span></td>
+    <td><input data-kn="${t.code}" value="${esc(t.name)}" placeholder="Ad ver (örn. Orichalcum)" style="width:160px"></td>
+    <td class="mut small">kod ${t.code}</td><td class="small">${t.n} nokta${t.got ? ` · ${t.got} toplama` : ""}</td></tr>`).join("");
+  return `<div class="card"><div class="nm">🧭 Öğrenilen noktalar <button class="btn" id="kref" style="margin-left:8px">↻ Yenile</button></div>
+    <p class="small">${KD.calibrated ? '<span class="ok">✓ Harita ayarlandı</span>: işaretlediğin türler haritada renkli nokta olarak görünür.' : `<span class="warn">⏳ Harita ayarı için ${Math.max(0, 3 - KD.tps)} ışınlanma daha gerekli</span> (şu an ${KD.tps}). Ölçer açıkken farklı ışınlanma taşlarına ışınlan; program bunlardan haritayı kendisi oturtur.`}</p>
+    <p class="mut small">DPS ölçer açıkken oyunda ekrana gelen her toplama noktası ve nesne kendiliğinden buraya yazılır. Topladıklarının yanında "toplama" sayısı çıkar: hangi kodun ne olduğunu anlamana yardım eder. Adını bir kere yaz, hep o adla görünür. Küpler de buradaki türlerin arasında (hangisi olduğunu bulunca adını ver).</p>
+    ${rows ? `<table>${rows}</table>` : '<p class="mut small">Henüz nokta yok. DPS ölçeri başlatıp oyunda gez.</p>'}</div>`;
+}
+document.addEventListener("change", async e => { const t = e.target;
+  if (t.dataset.kn) { await DAPI().kesif_name(+t.dataset.kn, t.value); const ty = KD && KD.types.find(x => x.code === +t.dataset.kn); if (ty) ty.name = t.value; hMarkers(); }
+  else if (t.dataset.kshow) { const s = kSel(); t.checked ? s[t.dataset.kshow] = 1 : delete s[t.dataset.kshow]; save(); hMarkers(); } });
+document.addEventListener("click", e => { if (e.target.id === "kref") { KMAP = null; kesifLoad(); } });
 function hInit() {
   const el = document.getElementById("hlf"), m = HARITA.maps[HMAP]; if (!el || !m || !window.L) return;
   if (HL) { try { HL.remove(); } catch (e) {} HL = null; }
@@ -252,6 +276,9 @@ function hMarkers() {
   m.markers.forEach((x, i) => { if (!sel[HMAP + ":" + i]) return; const ty = htype(x[0]);
     const icon = ic[x[0]] = ic[x[0]] || (ty.icon ? L.icon({ iconUrl: ty.icon, iconSize: [sz, sz], className: "hmk" }) : L.divIcon({ className: "hdot", iconSize: [Math.max(8, sz / 2), Math.max(8, sz / 2)] }));
     L.marker([x[4], x[3]], { icon }).bindTooltip(`<b>${esc(x[1])}</b><br>${esc(ty.name)}${x[2] && x[2] !== x[1] ? " · " + esc(x[2]) : ""}`, { direction: "top", offset: [0, -10] }).addTo(HLG); });
+  if (KD && KMAP === HMAP && KD.calibrated) { const ks = kSel(), col = {}; KD.types.forEach((t, i) => col[t.code] = [KCOL[i % KCOL.length], t.name || "kod " + t.code]);
+    KD.objs.forEach(o => { if (!ks[o.code] || o.mx == null) return; const [c, n] = col[o.code];
+      L.circleMarker([o.my, o.mx], { radius: Math.max(4, sz / 3), color: "#000", weight: 1, fillColor: c, fillOpacity: .95 }).bindTooltip(`<b>${esc(n)}</b>${o.got ? `<br>${o.got} kez topladın` : ""}`, { direction: "top" }).addTo(HLG); }); }
 }
 function hCounts() { document.querySelectorAll("[data-hcnt]").forEach(sp => { const t = sp.dataset.hcnt, boxes = [...document.querySelectorAll(`[data-hpt]`)].filter(b => HARITA.maps[HMAP].markers[+b.dataset.hpt][0] === t);
   const m = HARITA.maps[HMAP], all = m.markers.map((x, i) => i).filter(i => m.markers[i][0] === t), on = all.filter(i => hSel()[HMAP + ":" + i]).length; sp.textContent = `${on}/${all.length}`; const a = document.querySelector(`[data-hall="${t}"]`); if (a) a.checked = on && on === all.length; }); }
