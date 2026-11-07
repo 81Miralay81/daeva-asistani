@@ -197,7 +197,7 @@ def test_tracker_party_and_skills():
     assert m["Sylvaen"]["dmg"] == 4500 and m["Sylvaen"]["self"] and m["Sylvaen"]["gear"] == 2859
     assert m["Sylvaen"]["skills"][0]["dmg"] == 4000 and m["Sylvaen"]["skills"][0]["crit"] == 50.0
     assert m["Sylvaen"]["skills"][0]["icon"].endswith(".png")
-    assert s["fight"]["hidden"] == 1
+    assert s["fight"]["hidden"] == 0
     allp = t.snapshot(party_only=False)
     assert len(allp["fight"]["members"]) == 3
     t.tick(20_000)
