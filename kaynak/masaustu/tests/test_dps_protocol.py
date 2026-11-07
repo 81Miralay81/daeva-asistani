@@ -197,7 +197,7 @@ def test_tracker_party_and_skills():
     assert m["Sylvaen"]["dmg"] == 4500 and m["Sylvaen"]["self"] and m["Sylvaen"]["gear"] == 2859
     assert m["Sylvaen"]["skills"][0]["dmg"] == 4000 and m["Sylvaen"]["skills"][0]["crit"] == 50.0
     assert m["Sylvaen"]["skills"][0]["icon"].endswith(".png")
-    assert s["fight"]["hidden"] == 0
+    assert s["fight"]["hidden"] == 1
     allp = t.snapshot(party_only=False)
     assert len(allp["fight"]["members"]) == 3
     t.tick(20_000)
@@ -224,7 +224,7 @@ def test_party_filter_without_roster_shows_everyone():
     t.process(("dmg", 1000, 100, 500, 12010000, 1000, 0, 1))
     t.process(("dmg", 1000, 777, 500, 11020000, 2000, 0, 1))  # adı bilinmeyen parti üyesi
     names = {m["name"] for m in t.snapshot(party_only=True)["fight"]["members"]}
-    assert names == {"Ben", "#777"}
+    assert names == {"Ben"}  # parti yokken açık dünyada adı bilinmeyen yabancı gizlenir
 
 
 def test_overlay_keeps_last_boss_fight():

@@ -480,15 +480,17 @@ class Tracker:
     def _in_party(self, c):
         """Parti filtresi. Parti listesi henüz gelmediyse (ölçer zindana girdikten sonra açıldıysa) ya da oyuncunun
         adı bilinmiyorsa (#numara) gizleme: yoksa sadece kendi hasarın görünür."""
-        if c.is_self or not self.roster_names:
+        if c.is_self:
             return True
+        if not self.roster_names:
+            return False  # parti yok (tek başına): açık dünyada yakındaki yabancıları gösterme
         # Parti listesi seni içermiyorsa eski ya da yarım okunmuştur (sen her zaman kendi partindesin):
         # o zaman listeye güvenme, kimseyi gizleme.
         me = self.self_info.get("name")
         if not me or me not in self.roster_names or len(self.roster_names) < 2:
-            return True
+            return not c.name.startswith("#")
         if c.name.startswith("#"):
-            return True
+            return False  # adı bilinmeyen = yakındaki yabancı (parti üyesinin adı listeden bilinir)
         norm = lambda n: (n or "").split("[")[0].strip().lower()
         return norm(c.name) in {norm(n) for n in self.roster_names}
 
@@ -500,7 +502,7 @@ class Tracker:
             self._ident(c)
         # Az oyunculu dövüşte (zindan/parti) kimseyi gizleme: parti listesi yarım/eski olsa da 6 kişiye kadar hepsi görünsün.
         players = [c for c in enc.cbt.values() if c.dmg > 0]
-        if len(players) <= 6:
+        if enc.boss_id is not None and len(players) <= 6:
             party_only = False
         rows = [c for c in enc.cbt.values() if (not party_only or self._in_party(c))]
         total = sum(c.dmg for c in rows) or 1
