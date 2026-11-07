@@ -236,6 +236,7 @@ class DpsManager:
         snap["partyOnly"] = po
         snap["log"] = self.log_lines[-8:]
         snap["game"] = self.game_live()
+        snap["rec"] = self.record_status()
         return snap
 
     # ------------------------------------------------------------ güncelleme
@@ -317,6 +318,54 @@ class DpsManager:
             return {"ok": True, "file": m.group(1)}
         except Exception as e:
             return {"ok": False, "error": str(e)}
+
+    # ------------------------------------------------------------ keşif kaydı
+    def record(self, on):
+        """Ekrana giren nesnelerin ham paketlerini dosyaya yazar (toplama noktalarının konumunu çözmek için)."""
+        import time as _t
+        if not on:
+            f = getattr(self, "_rec", None)
+            self._rec = None
+            if self.cap:
+                self.cap.pipeline.parser.recorder = None
+            if f:
+                path, n = f.name, getattr(self, "_rec_n", 0)
+                f.close()
+                return {"ok": True, "on": False, "file": path, "count": n, "size": os.path.getsize(path)}
+            return {"ok": True, "on": False}
+        if not self.running():
+            return {"ok": False, "error": "Önce ölçeri başlat (Başlat ya da Sadece ölç)."}
+        folder = os.path.join(self.data_dir, "kesif")
+        os.makedirs(folder, exist_ok=True)
+        path = os.path.join(folder, _t.strftime("kesif_%Y%m%d_%H%M%S.jsonl"))
+        self._rec = open(path, "w", encoding="utf-8")
+        self._rec_n = 0
+        lock = threading.Lock()
+
+        def rec(op, body):
+            f = self._rec
+            if f is None or f.tell() > 80 * 1024 * 1024:
+                return
+            with lock:
+                f.write(json.dumps({"t": int(_t.time() * 1000), "op": f"{op:04x}", "b": bytes(body).hex()}) + "\n")
+                self._rec_n += 1
+        self.cap.pipeline.parser.recorder = rec
+        self.mark("kayıt başladı" + (f" · {self.tracker.zone}" if self.tracker and self.tracker.zone else ""))
+        return {"ok": True, "on": True, "file": path}
+
+    def mark(self, text):
+        f = getattr(self, "_rec", None)
+        if not f:
+            return {"ok": False, "error": "Kayıt açık değil"}
+        import time as _t
+        f.write(json.dumps({"t": int(_t.time() * 1000), "mark": str(text)[:200]}, ensure_ascii=False) + "\n")
+        f.flush()
+        return {"ok": True}
+
+    def record_status(self):
+        f = getattr(self, "_rec", None)
+        return {"on": bool(f), "count": getattr(self, "_rec_n", 0), "file": f.name if f else "",
+                "folder": os.path.join(self.data_dir, "kesif")}
 
     def overlay_toggle(self, on):
         (self._start_overlay() if on else self._stop_overlay())

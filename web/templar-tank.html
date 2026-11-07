@@ -3516,6 +3516,12 @@ function rDps() {
     <li><b>▶ Başlat</b>'a bas: ölçer başlar, pencere sol üstte belirir. Oyun kapalıysa açılır; <b>zaten açıksa kapatılmaz, yeniden açılmaz</b>, ölçer açık oyuna bağlanır.</li>
     <li>Pencerede sadece parti DPS görünür; son boss dövüşü bir sonraki bossa vurana kadar ekranda kalır. Başlığından tutup sürükleyebilirsin; [–] küçültür, [×] kapatır, kalan küçük <b>D</b> düğmesi geri açar.</li></ol>
     Oyun Steam'den değil PURPLE'dan açılıyorsa: oyunu kendin aç, burada <b>Sadece ölç</b>'e bas.</details>`;
+  if (s && s.running) { const r = s.rec || {};
+    h += `<div class="card small"><div class="sec" style="margin-top:0">🧭 Keşif kaydı ${r.on ? `<span class="ok">● kaydediliyor · ${r.count} kayıt</span>` : ""}</div>
+      ${r.on ? `<div class="chform"><label>Not (ne yapıyorsun?)<input id="kmark" placeholder="Orichalcum madenine vurdum / Işınlanma taşındayım"></label><button class="btn" id="kmarkgo">Not ekle</button><button class="btn pri" id="krec0">⏹ Kaydı bitir</button></div>
+        <div class="chips">${["Işınlanma taşındayım", "Maden/bitki topladım", "Gizli küpü açtım", "Bölge değiştirdim"].map(x => `<button class="chip" data-kq="${x}">${x}</button>`).join("")}</div>`
+      : `<p class="mut">Toplama noktalarının yerini öğrenmek için: kaydı başlat, 15–20 dakika gez (birkaç ışınlanma taşının yanından geç, birkaç maden/bitki topla), olduğun anda yukarıdaki hazır notlara bas. Bitince dosyayı Claude'a gönder. Sadece ekrana giren nesneler yazılır; sohbet ya da hesap bilgisi yazılmaz.</p>
+        <button class="btn pri" id="krec1">● Kaydı başlat</button> <button class="btn" id="kfold">📁 Kayıt klasörünü aç</button>`}</div>`; }
   if (s && s.status && s.status.error) h += `<div class="errcard small"><p class="bad"><b>⚠ ${esc(s.status.error)}</b></p></div>`;
   if (!s || !s.game) h += noGame("DPS ve parti bilgileri");
   const f = s && s.fight;
@@ -3548,6 +3554,11 @@ document.addEventListener("click", async e => {
   else if (id === "npcapgo") { const b = e.target; b.disabled = true; b.textContent = "İndiriliyor…";
     const r = await DAPI().npcap_install();
     b.textContent = r.ok ? "Kurulum açıldı: Windows izin sorusuna Evet, sonra İleri → Kur. Bitince uygulamayı yeniden aç." : "Olmadı: " + (r.error || ""); if (!r.ok) b.disabled = false; }
+  else if (id === "krec1") { const r = await DAPI().dps_record(true); if (!r.ok) alert(r.error); dpsPoll(); }
+  else if (id === "krec0") { const r = await DAPI().dps_record(false); if (r.file) alert(`Kayıt bitti: ${r.count} kayıt (${Math.round(r.size / 1024)} KB).\n\nDosya: ${r.file}\n\nBu dosyayı Claude'a gönder.`); DAPI().open_folder(r.file.replace(/[\\/][^\\/]+$/, "")); dpsPoll(); }
+  else if (id === "kfold") { const s2 = DSNAP && DSNAP.rec; DAPI().open_folder(s2 ? s2.folder : ""); }
+  else if (id === "kmarkgo") { const i = document.getElementById("kmark"); if (i && i.value.trim()) { await DAPI().dps_mark(i.value.trim()); i.value = ""; } }
+  else if (e.target.closest("[data-kq]")) { const b = e.target.closest("[data-kq]"); await DAPI().dps_mark(b.dataset.kq); b.textContent = "✓ " + b.dataset.kq; setTimeout(() => b.textContent = b.dataset.kq, 1500); }
   else if (id === "dstart2") dpsAction("dps_start", false);
   else if (id === "dstop") dpsAction("dps_stop");
   else if (id === "dreset") dpsAction("dps_reset");

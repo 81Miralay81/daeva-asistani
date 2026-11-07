@@ -400,7 +400,19 @@ class PacketParser:
             O["map"]: self._map, O["pos"]: self._pos, O["remain_hp"]: self._remain_hp, O["fieldboss"]: self._fieldboss, O["hpmp"]: self._hpmp, O["kill"]: self._kill,
         }
 
+    recorder = None  # keşif kaydı: (op, body) -> None
+    REC_OPS = None
+
     def handle(self, op, body):
+        if self.recorder is not None:
+            if self.REC_OPS is None:
+                O = OPCODES
+                self.REC_OPS = {O["spawn"], O["pos"], O["map"], O["fieldboss"], O["death"], O["self"], O["player"], O["hpmp"]}
+            if op in self.REC_OPS or (op not in self._dispatch_ops() and len(body) >= 12):
+                try:
+                    self.recorder(op, body)
+                except Exception:
+                    pass
         if self._dispatch is None:
             self._dispatch = self._table()
         f = self._dispatch.get(op)
@@ -410,6 +422,11 @@ class PacketParser:
             self._scan_ids(body)
             self._scan_roster(body)
             self._scan_bundles(body)
+
+    def _dispatch_ops(self):
+        if self._dispatch is None:
+            self._dispatch = self._table()
+        return self._dispatch
 
     def _emit(self, *e):
         self.sink(e)

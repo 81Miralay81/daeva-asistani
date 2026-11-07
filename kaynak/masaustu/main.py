@@ -338,6 +338,20 @@ class Api:
     def dps_overlay(self, on):
         return dps().overlay_toggle(on)
 
+    def dps_record(self, on):
+        return dps().record(bool(on))
+
+    def dps_mark(self, text):
+        return dps().mark(text)
+
+    def open_folder(self, path):
+        try:
+            os.makedirs(path, exist_ok=True)
+            os.startfile(path)
+            return {"ok": True}
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+
     def npcap_install(self):
         return dps().install_npcap()
 
