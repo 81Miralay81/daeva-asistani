@@ -263,7 +263,7 @@ def test_kesif_fit_recovers_transform(tmp_path):
     from dps import kesif as K
     marks = [(1000 + 137 * i % 3000, 2000 + 311 * i % 2500) for i in range(40)]
     s, ox, oy = 16.0, 500.0, 300.0
-    tps = [[1, (mx - ox) * s, (my - oy) * s] for mx, my in [marks[3], marks[17], marks[29]]]
+    tps = [[1, (mx - ox) * s, (my - oy) * s] for mx, my in [marks[3], marks[17], marks[29], marks[35]]]
     tf = K._fit(tps, marks)
     assert tf and abs(tf[0] - s) < 0.3
     x, y = K.apply(tf, *[(marks[5][0] - ox) * s, (marks[5][1] - oy) * s])
