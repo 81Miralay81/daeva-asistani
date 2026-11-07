@@ -36,7 +36,7 @@ class DpsManager:
         self.bundled = bundled_dir                    # exe içindeki dps/data
         self.app_version = app_version
         self.set_path = os.path.join(data_dir, "dps_ayarlar.json")
-        self.s = {"launcher": "steam", "gamePath": "", "partyOnly": True, "selfName": "", "overlay": True,
+        self.s = {"launcher": "steam", "gamePath": "", "partyOnly": True, "selfName": "", "fbNames": {}, "overlay": True,
                   "overlayAlpha": 0.75, "overlayX": 12, "overlayY": 12, "overlayRows": 8,
                   "showDps": True, "showTimers": False, "dpsMin": False, "timersMin": False, "timerRows": 6,
                   "hiddenTimers": [], "ovTimers": [], "customTimers": [], "race": "", "serverId": 0, "serverName": "", "region": "eu",
@@ -54,6 +54,7 @@ class DpsManager:
         self.started_at = 0
         self.update_info = None
         self.tracker = Tracker(self.data)
+        self.tracker.fb_names = dict(self.s.get("fbNames") or {}) if isinstance(getattr(self, "s", None), dict) else {}
         self.tracker.self_hint = self.s.get("selfName", "") if isinstance(getattr(self, "s", None), dict) else ""
         self._ticker = None
         self._reload_data()
@@ -155,6 +156,13 @@ class DpsManager:
 
     def _tick_loop(self):
         while self.running():
+            try:  # öğrenilen saha bossu adlarını kaydet
+                fb = getattr(self.tracker, "fb_names", None)
+                if fb and fb != self.s.get("fbNames"):
+                    self.s["fbNames"] = dict(fb)
+                    self._save()
+            except Exception:
+                pass
             try:  # karakter adını hatırla: ölçer oyun açıkken yeniden başlarsa seni yine tanısın
                 nm = (self.tracker.self_info or {}).get("name") if self.tracker else None
                 if nm and nm != self.s.get("selfName"):

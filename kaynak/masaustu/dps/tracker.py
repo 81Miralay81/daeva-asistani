@@ -264,11 +264,20 @@ class Tracker:
                 _, t, mp, cnt, slots = e
                 info = self.data.fb_maps.get(mp) or {}
                 codes = self.data.bosses_in_block(info.get("block", 0)) if info.get("block") else []
+                if not hasattr(self, "fb_names"):
+                    self.fb_names = {}
+                prev = {x["slot"]: x["alive"] for x in (self.fieldboss.get(mp) or {}).get("slots", [])}
                 for sl in slots:
+                    # Öğrenme: canlıyken ölüye dönen yuva + son 3 dakikada kesilen boss = o yuvanın adı
+                    if prev.get(sl["slot"]) and not sl["alive"] and getattr(self, "last_boss_kill", None):
+                        kt, kname = self.last_boss_kill
+                        if 0 <= t - kt < 180_000:
+                            self.fb_names[f"{mp}:{sl['slot']}"] = kname
+                            self.last_boss_kill = None
                     place = sl["slot"] - mp * 100
                     code = codes[place - 1] if len(codes) == cnt and 1 <= place <= len(codes) else 0
                     sl["code"] = code
-                    sl["name"] = (self.data.npc(code).get("name") if code else "") or f"Boss {place}"
+                    sl["name"] = (self.data.npc(code).get("name") if code else "") or self.fb_names.get(f"{mp}:{sl['slot']}") or f"Boss {place}"
                 self.fieldboss[mp] = {"t": t, "map": info.get("en") or self.data.map_name(mp), "slots": slots}
             elif k == "hp":
                 self._hp(e)
@@ -278,6 +287,9 @@ class Tracker:
                     n["hp"] = 0
                     if n.get("boss") and n.get("code") and not self.data.npc(n["code"]).get("isDummy") and not 600_000 <= self.map_id < 700_000:
                         self.kills[n["code"]] = e[1]
+                        nm = self.data.npc(n["code"]).get("name")
+                        if nm:
+                            self.last_boss_kill = (e[1], nm)
                 if self.cur and self.cur.active and self.cur.boss_id == e[2]:
                     self.cur.boss_hp = 0
                     self._finish("kill", max(e[1], self.cur.last))
