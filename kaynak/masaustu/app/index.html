@@ -3516,6 +3516,7 @@ function rDps() {
   let h = `<div class="card chhead"><div><div class="nm">📊 DPS Ölçer <span class="${cls} small">${ic} ${esc(txt)}</span></div>
     <div class="small mut">${set.npcap === false ? '<span class="bad">⚠ Npcap kurulu değil</span> (DPS ölçer için bir kerelik gerekli). <button class="btn pri" id="npcapgo">Npcap\'i indir ve kur</button>' : "Pasif ölçüm: oyuna dokunmaz, sadece gelen trafiği okur."}</div></div>
     <div class="lv">${run ? '<button class="btn" id="dstop">⏹ Durdur</button><button class="btn" id="dreset">↻ Sıfırla</button>' : '<button class="btn pri" id="dstart">▶ Başlat</button><button class="btn" id="dstart2">Sadece ölç</button>'}
+    <label class="small">Karakter adın <input id="dself" value="${esc(set.selfName || "")}" placeholder="Miralay" style="width:100px"></label>
     <label class="small"><input type="checkbox" id="dparty" ${set.partyOnly !== false ? "checked" : ""}> Sadece parti</label>
     <label class="small"><input type="checkbox" id="dov" ${set.overlay !== false ? "checked" : ""}> Oyun üstü pencere</label></div></div>`;
   h += `<details class="card small"><summary><b>Oyun üstü pencere nasıl açılır?</b></summary><ol style="margin:6px 0;padding-left:18px">
@@ -3578,6 +3579,7 @@ document.addEventListener("click", async e => {
 });
 document.addEventListener("change", async e => {
   const a = DAPI(); if (!a || !a.dps_settings) return;
+  if (e.target.id === "dself") { DSET = await a.dps_settings({ selfName: e.target.value.trim() }); dpsPoll(); }
   if (e.target.id === "dparty") { DSET = await a.dps_settings({ partyOnly: e.target.checked }); dpsPoll(); }
   if (e.target.id === "dov") { DSET = await a.dps_settings({ overlay: e.target.checked }); }
 });

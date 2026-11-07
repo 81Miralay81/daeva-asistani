@@ -371,7 +371,8 @@ class Tracker:
         g = self.gear.get(c.name)
         if g:
             c.gear, c.cp = g[0] or c.gear, g[1] or c.cp
-        c.is_self = c.id == self.self_id
+        hint = getattr(self, "self_hint", "")
+        c.is_self = c.id == self.self_id or bool(self.self_id is None and hint and c.name.split("[")[0].strip().lower() == hint.lower())
 
     def _boss_info(self, enc, nid):
         n = self.npcs.get(nid, {})
