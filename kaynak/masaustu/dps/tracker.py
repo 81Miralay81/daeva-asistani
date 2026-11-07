@@ -502,7 +502,8 @@ class Tracker:
             self._ident(c)
         # Az oyunculu dövüşte (zindan/parti) kimseyi gizleme: parti listesi yarım/eski olsa da 6 kişiye kadar hepsi görünsün.
         players = [c for c in enc.cbt.values() if c.dmg > 0]
-        if enc.boss_id is not None and len(players) <= 6:
+        # Boss dövüşünde (alan bossu dahil) partin yoksa herkesi göster: sıralamada kaçıncı olduğunu görürsün.
+        if enc.boss_id is not None and (len(players) <= 6 or not self.roster_names):
             party_only = False
         rows = [c for c in enc.cbt.values() if (not party_only or self._in_party(c))]
         total = sum(c.dmg for c in rows) or 1

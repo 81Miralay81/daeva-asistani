@@ -199,12 +199,17 @@ class Overlay:
                     cv.create_rectangle(8, y, W - 8, y + 6, fill="#1a1f2a", outline="")
                     cv.create_rectangle(8, y, 8 + (W - 16) * max(0, min(100, b["pct"])) / 100, y + 6, fill="#c0504d", outline="")
                     y += 10
-                rows = (f or {}).get("members", [])[:int(self.s.get("rows", 8))]
+                allm = (f or {}).get("members", [])
+                n = int(self.s.get("rows", 8))
+                rows = list(enumerate(allm))[:n]
+                me = next(((i, r) for i, r in enumerate(allm) if r.get("self")), None)
+                if me and me[0] >= n:  # sen ilk sıralarda değilsen son satırda kendi sıran görünür
+                    rows = rows[:n - 1] + [me]
                 if not rows:
                     cv.create_text(8, y + 10, text="Savaş bekleniyor…", fill=MUT, anchor="w", font=(F, 9))
                     y += R
-                top = max([r["dmg"] for r in rows] or [1]) or 1
-                for i, r in enumerate(rows):
+                top = max([r["dmg"] for _, r in rows] or [1]) or 1
+                for i, r in rows:
                     col = CLASS_COLOR.get(r.get("cls", ""), CLASS_COLOR[""])
                     cv.create_rectangle(6, y + 1, W - 6, y + R - 1, fill="#141a24", outline=ACC if r.get("self") else "")
                     cv.create_rectangle(6, y + 1, 6 + (W - 12) * r["dmg"] / top, y + R - 1, fill=_dim(col), outline="")
