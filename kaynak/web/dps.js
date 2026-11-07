@@ -46,7 +46,7 @@ let DSNAP = null, DSET = null, DFIGHT = null, DTIMER = null, DOPEN = {}, DUPD = 
 async function dpsPoll() {
   const a = DAPI(); if (!a || !a.dps_snapshot) return;
   try { DSNAP = await a.dps_snapshot(null, DFIGHT); } catch (e) { DSNAP = null; }
-  if (TAB === "dps") { const m = document.getElementById("main"), y = window.scrollY; m.innerHTML = rDps(); window.scrollTo(0, y); }
+  if (TAB === "dps") { const ae = document.activeElement; if (ae && (ae.tagName === "INPUT" || ae.tagName === "TEXTAREA") && ae.type !== "checkbox") return; const m = document.getElementById("main"), y = window.scrollY; m.innerHTML = rDps(); window.scrollTo(0, y); }
 }
 function dpsStatus(s) {
   const st = (s && s.status) || {};
