@@ -482,6 +482,11 @@ class Tracker:
         adı bilinmiyorsa (#numara) gizleme: yoksa sadece kendi hasarın görünür."""
         if c.is_self or not self.roster_names:
             return True
+        # Parti listesi seni içermiyorsa eski ya da yarım okunmuştur (sen her zaman kendi partindesin):
+        # o zaman listeye güvenme, kimseyi gizleme.
+        me = self.self_info.get("name")
+        if not me or me not in self.roster_names or len(self.roster_names) < 2:
+            return True
         return c.name in self.roster_names or c.name.startswith("#")
 
     def fight_dict(self, enc, party_only=True, now=None, detail=True):

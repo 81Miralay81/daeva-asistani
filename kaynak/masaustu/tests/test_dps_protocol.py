@@ -245,3 +245,15 @@ def test_all_modules_compile():
     base = os.path.join(os.path.dirname(__file__), "..")
     for f in glob.glob(os.path.join(base, "*.py")) + glob.glob(os.path.join(base, "dps", "*.py")):
         py_compile.compile(f, doraise=True)
+
+
+def test_partial_roster_does_not_hide_party():
+    t = Tracker(DATA)
+    t.process(("self", 0, 100, "Miralay", 2305, "cleric", 45, 0))
+    t.process(("player", 0, 101, "Arzbaby", 2305, "sorcerer"))
+    t.process(("player", 0, 102, "Liisara", 2305, "ranger"))
+    t.process(("roster", 0, [{"name": "Arzbaby", "server": 2305, "level": 45, "gear": 2015, "cp": 0, "cls": "sorcerer"}]))
+    t.process(("npc", 0, 500, 0, 1000))
+    for a in (100, 101, 102):
+        t.process(("dmg", 1000, a, 500, 15010000, 1000, 0, 1))
+    assert {m["name"] for m in t.snapshot(party_only=True)["fight"]["members"]} == {"Miralay", "Arzbaby", "Liisara"}
