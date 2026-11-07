@@ -128,11 +128,25 @@ def fit(tps, marks):
 
 
 def _fit(tps, marks):
-    """Işınlanma varışlarını (oyun koord.) haritadaki ışınlanma taşlarına oturtan ölçek+kaydırma+eksen yönünü arar.
-    En az 3 varış gerekir (2 ile birden fazla çözüm çıkabiliyor)."""
+    """Işınlanma varışlarını (oyun koord.) haritadaki ışınlanma taşlarına oturtur. Farklı bölgelerdeki
+    (başka harita) varışlar eşleşmeyebilir: her birini çapa deneyip en çok varışı yakına düşüren çözüm seçilir."""
     pts = [(p[1], p[2]) for p in tps]
     if len(pts) < 3 or len(marks) < 3:
         return None
+    TOL = 40.0
+    grid = {}
+    for u, w in marks:
+        grid.setdefault((int(u // TOL), int(w // TOL)), []).append((u, w))
+
+    def near(x, y):
+        cx, cy, bd = int(x // TOL), int(y // TOL), None
+        for i in (cx - 1, cx, cx + 1):
+            for k in (cy - 1, cy, cy + 1):
+                for u, w in grid.get((i, k), ()):
+                    d = math.hypot(x - u, y - w)
+                    if bd is None or d < bd:
+                        bd = d
+        return bd
     best = None
     for sw in (0, 1):
         for sx in (1, -1):
@@ -140,16 +154,17 @@ def _fit(tps, marks):
                 for s10 in range(40, 600, 2):
                     s = s10 / 10.0
                     T = [((b if sw else a) / s * sx, (a if sw else b) / s * sy) for a, b in pts]
-                    for mx, my in marks:
-                        ox, oy = mx - T[0][0], my - T[0][1]
-                        err = 0
-                        for a, b in T[1:]:
-                            d = min(math.hypot(a + ox - u, b + oy - w) for u, w in marks)
-                            err += d
-                            if err > 40 * len(T):
-                                break
-                        if best is None or err < best[0]:
-                            best = (err, (s, sx, sy, ox, oy, sw))
-    if best and best[0] <= 15 * (len(pts) - 1):  # her varış bir taşın 15 piksel yakınına düşmeli
-        return best[1]
-    return None
+                    for ai in range(min(len(T), 4)):
+                        for mx, my in marks:
+                            ox, oy = mx - T[ai][0], my - T[ai][1]
+                            hit, err = 0, 0.0
+                            for j, (a, b) in enumerate(T):
+                                if j == ai:
+                                    continue
+                                d = near(a + ox, b + oy)
+                                if d is not None and d < TOL:
+                                    hit += 1
+                                    err += d
+                            if hit >= 2 and (best is None or (hit, -err) > (best[0], -best[1])):
+                                best = (hit, err, (s, sx, sy, ox, oy, sw))
+    return best[2] if best else None
