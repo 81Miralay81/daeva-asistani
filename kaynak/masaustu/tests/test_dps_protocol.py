@@ -193,7 +193,7 @@ def test_tracker_party_and_skills():
     t.process(("dmg", 3000, 900, 500, 16110000, 500, 0, 1))  # pet hasarı sahibine
     s = t.snapshot(party_only=True)
     m = {x["name"]: x for x in s["fight"]["members"]}
-    assert set(m) == {"Sylvaen", "Borgrim"}
+    assert {"Sylvaen", "Borgrim"} <= set(m)  # 6 kişiye kadar dövüşte herkes gösterilir
     assert m["Sylvaen"]["dmg"] == 4500 and m["Sylvaen"]["self"] and m["Sylvaen"]["gear"] == 2859
     assert m["Sylvaen"]["skills"][0]["dmg"] == 4000 and m["Sylvaen"]["skills"][0]["crit"] == 50.0
     assert m["Sylvaen"]["skills"][0]["icon"].endswith(".png")
