@@ -180,6 +180,9 @@ class DpsManager:
     def reset(self):
         if self.tracker:
             self.tracker.reset()
+        self.s["showDps"] = True  # kapatılmış DPS bölümü geri gelsin
+        self.s["dpsMin"] = False
+        self._save()
         if self.overlay:  # oyun üstü pencereyi kapatıp yeniden aç (tamamen tazelensin)
             self._stop_overlay()
             if self.s.get("overlay"):
