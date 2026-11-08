@@ -49,12 +49,20 @@ def install(url):
     exe = sys.executable
     tmp = os.path.join(tempfile.gettempdir(), "DaevaAsistani_yeni.exe")
     req = urllib.request.Request(url, headers={"User-Agent": UA["User-Agent"]})
-    with urllib.request.urlopen(req, timeout=300) as r, open(tmp, "wb") as f:
-        while True:
-            chunk = r.read(1 << 16)
-            if not chunk:
-                break
-            f.write(chunk)
+    import time as _t
+    for deneme in range(4):  # GitHub ara sıra 502/504 veriyor: birkaç kez yeniden dene
+        try:
+            with urllib.request.urlopen(req, timeout=300) as r, open(tmp, "wb") as f:
+                while True:
+                    chunk = r.read(1 << 16)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+            break
+        except Exception:
+            if deneme == 3:
+                raise
+            _t.sleep(3 * (deneme + 1))
     if os.path.getsize(tmp) < 1_000_000:
         return {"ok": False, "error": "İndirilen dosya eksik"}
     # Onefile exe iki işlemdir (başlatıcı + uygulama); ikisi de kapanınca dosya serbest kalır.
