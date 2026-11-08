@@ -338,23 +338,6 @@ class Api:
     def dps_overlay(self, on):
         return dps().overlay_toggle(on)
 
-    def kesif_data(self, map_name):
-        """Öğrenilen toplama noktaları / küpler. Bu haritanın ışınlanma taşlarıyla kalibre edilir."""
-        m = _harita().get("maps", {}).get(map_name) or {}
-        tps = [(x[3], x[4]) for x in m.get("markers", []) if x[0] == "teleport"]
-        k = dps().kesif_obj()
-        k.save()
-        return k.data(tps)
-
-    def kesif_cal(self, key, mx, my):
-        return dps().kesif_obj().add_cal(key, mx, my)
-
-    def kesif_cal_clear(self):
-        return dps().kesif_obj().clear_cal()
-
-    def kesif_name(self, code, name):
-        return dps().kesif_obj().set_name(int(code), name)
-
     def dps_record(self, on):
         return dps().record(bool(on))
 
