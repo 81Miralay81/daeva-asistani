@@ -513,8 +513,8 @@ class Tracker:
         adı bilinmiyorsa (#numara) gizleme: yoksa sadece kendi hasarın görünür."""
         if c.is_self:
             return True
-        if not self.roster_names or not self.self_info.get("name"):
-            return True  # partin yoksa (ya da kim olduğun bilinmiyorsa) herkes görünür
+        if not self.roster_names or not self.self_info.get("name") or len(self.roster_names) < getattr(self, "roster_count", 0):
+            return True  # partin yoksa, kim olduğun bilinmiyorsa ya da parti listesi eksik okunduysa herkes görünür
         # Parti listesi seni içermiyorsa eski ya da yarım okunmuştur (sen her zaman kendi partindesin):
         # o zaman listeye güvenme, kimseyi gizleme.
         me = self.self_info.get("name")
