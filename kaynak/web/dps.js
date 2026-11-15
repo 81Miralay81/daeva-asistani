@@ -65,7 +65,7 @@ function rDps() {
     <li>Oyunda <b>Ayarlar → Grafik → Ekran modu: Pencereli tam ekran</b> (ya da Çerçevesiz) seç. Özel tam ekranda Windows hiçbir pencereyi oyunun üstüne koymaz.</li>
     <li>Burada <b>"Oyun üstü pencere"</b> kutusunu işaretle (sayfanın üstünde).</li>
     <li><b>▶ Başlat</b>'a bas: ölçer başlar, pencere sol üstte belirir. Oyun kapalıysa açılır; <b>zaten açıksa kapatılmaz, yeniden açılmaz</b>, ölçer açık oyuna bağlanır.</li>
-    <li>Pencerede sadece parti DPS görünür; son boss dövüşü bir sonraki bossa vurana kadar ekranda kalır. Başlığından tutup sürükleyebilirsin; [–] küçültür, [×] kapatır, kalan küçük <b>D</b> düğmesi geri açar.</li></ol>
+    <li>Pencerede sadece parti DPS görünür; son boss dövüşü bir sonraki bossa vurana kadar ekranda kalır. Başlığından tutup sürükleyebilirsin; [–] küçültür, [×] kapatır, kalan küçük <b>D</b> düğmesi geri açar. <b>Ctrl+Shift+D</b> pencereyi oyundayken gizler/gösterir.</li></ol>
     Oyun Steam'den değil PURPLE'dan açılıyorsa: oyunu kendin aç, burada <b>Sadece ölç</b>'e bas.</details>`;
   if (s && s.status && s.status.error) h += `<div class="errcard small"><p class="bad"><b>⚠ ${esc(s.status.error)}</b></p></div>`;
   if (!s || !s.game) h += noGame("DPS ve parti bilgileri");

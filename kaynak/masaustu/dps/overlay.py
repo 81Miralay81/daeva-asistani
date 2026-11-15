@@ -90,6 +90,7 @@ class Overlay:
         self.cv.bind("<ButtonRelease-1>", self._release)
         root.after(80, self._style)
         root.after(120, self._tick)
+        root.after(200, self._hotkey)
         try:
             root.mainloop()
         finally:
@@ -136,6 +137,23 @@ class Overlay:
             self.s["hidden"] = list(set(self.s.get("hidden") or []) | {arg})
         self.on_change(self.s)
         self._draw()
+
+    def _hotkey(self):
+        """Ctrl+Shift+D: oyun üstü pencereyi gizle/göster (oyundayken de çalışır)."""
+        if self.alive and self.root:
+            try:
+                import ctypes
+                g = ctypes.windll.user32.GetAsyncKeyState
+                down = bool(g(0x11) & 0x8000 and g(0x10) & 0x8000 and g(0x44) & 0x8000)
+                if down and not getattr(self, "_hk", False):
+                    self._hidden = not getattr(self, "_hidden", False)
+                    (self.root.withdraw if self._hidden else self.root.deiconify)()
+                    if not self._hidden:
+                        self.root.attributes("-topmost", True)
+                self._hk = down
+            except Exception:
+                return
+            self.root.after(80, self._hotkey)
 
     def _tick(self):
         if not self.alive:
