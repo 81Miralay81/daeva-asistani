@@ -3511,7 +3511,7 @@ function rDps() {
     <label class="small">Karakter adın <input id="dself" value="${esc(set.selfName || "")}" placeholder="Miralay" style="width:100px"></label>
     <label class="small"><input type="checkbox" id="dparty" ${set.partyOnly !== false ? "checked" : ""}> Sadece parti</label>
     <label class="small"><input type="checkbox" id="dov" ${set.overlay !== false ? "checked" : ""}> Oyun üstü pencere</label></div></div>`;
-  h += `<details class="card small"><summary><b>Oyun üstü pencere nasıl açılır?</b></summary><ol style="margin:6px 0;padding-left:18px">
+  h += `<details class="card small" id="ovhelp" ${window.OVHELP ? "open" : ""}><summary><b>Oyun üstü pencere nasıl açılır?</b></summary><ol style="margin:6px 0;padding-left:18px">
     <li>Oyunda <b>Ayarlar → Grafik → Ekran modu: Pencereli tam ekran</b> (ya da Çerçevesiz) seç. Özel tam ekranda Windows hiçbir pencereyi oyunun üstüne koymaz.</li>
     <li>Burada <b>"Oyun üstü pencere"</b> kutusunu işaretle (sayfanın üstünde).</li>
     <li><b>▶ Başlat</b>'a bas: ölçer başlar, pencere sol üstte belirir. Oyun kapalıysa açılır; <b>zaten açıksa kapatılmaz, yeniden açılmaz</b>, ölçer açık oyuna bağlanır.</li>
@@ -3787,6 +3787,9 @@ window.addEventListener("pywebviewready", () => {
   b.style.cssText = "position:fixed;top:8px;right:10px;z-index:900;font-size:12px;padding:5px 10px";
   b.onclick = () => appUpdCheck(true); document.body.appendChild(b);
 });
+
+// Her saniye yenilenen ekranda "nasıl açılır" kutusu açık kalsın
+document.addEventListener("toggle", e => { if (e.target.id === "ovhelp") window.OVHELP = e.target.open; }, true);
 
 { const c0 = S.cls || "templar"; S.cls = null; applyClass(c0); }
 render();
