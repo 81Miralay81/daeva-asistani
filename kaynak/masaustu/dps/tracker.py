@@ -181,6 +181,7 @@ class Tracker:
         self.classy = set()    # sınıf yeteneği kullanan id'ler (oyuncu gibi)
         self.roster = []       # son parti listesi
         self.roster_names = set()
+        self.near = set()      # bu bölgede oyunun yanına getirdiği oyuncular (ad, küçük harf)
         self.map_id = 0
         self.zone = ""
         self.cur = None
@@ -222,6 +223,8 @@ class Tracker:
                         self.gear[name] = (g[0], cp)
             elif k == "player":
                 self._upsert(e[2], e[3], e[4], e[5])
+                if e[3]:
+                    self.near.add(self._norm(e[3]))
             elif k == "roster":
                 self.roster = e[2]
                 self.roster_names = {m["name"] for m in e[2]}
@@ -299,6 +302,7 @@ class Tracker:
                 if self.cur and self.cur.active and not tele:
                     self._finish("zone", self.cur.last)
                 if not tele:
+                    self.near = set()  # yeni bölge: yanındakiler yeniden sayılır
                     self.map_id, self.zone = mid, self.data.map_name(mid)
                     self.npcs.clear()
                     self.summon.clear()
@@ -594,6 +598,19 @@ class Tracker:
                             "dx": (x - me[0]) if me else None, "dy": (y - me[1]) if me else None})
             return {"me": {"x": me[0], "y": me[1]} if me else None, "members": out}
 
+    @staticmethod
+    def _norm(n):
+        return (n or "").split("[")[0].strip().lower()
+
+    def ready_info(self):
+        """Parti üyelerinden kaçı seninle aynı bölgede (oyun onları yanına getirdi mi)."""
+        if len(self.roster_names) < 2:
+            return None
+        me = self._norm((self.self_info or {}).get("name") or getattr(self, "self_hint", ""))
+        near = getattr(self, "near", set())
+        miss = sorted(n.split("[")[0] for n in self.roster_names if self._norm(n) != me and self._norm(n) not in near)
+        return {"total": len(self.roster_names), "here": len(self.roster_names) - len(miss), "missing": miss}
+
     def overlay_rows(self, party_only=True):
         """Oyun üstü pencere: son boss dövüşü, bir sonraki boss'a vurulana kadar ekranda kalır.
         Kilit meşgulse (büyük dövüşte paket yağarken) beklemez, son hesaplanan tabloyu döndürür: pencere donmaz."""
@@ -605,7 +622,12 @@ class Tracker:
                 enc = cur
             else:
                 enc = next((f for f in self.done if f.boss_id is not None), None) or cur or (self.done[0] if self.done else None)
-            self._ov_cache = self.fight_dict(enc, party_only, detail=False) if enc else None
+            d = self.fight_dict(enc, party_only, detail=False) if enc else None
+            r = self.ready_info()
+            if r:
+                d = dict(d) if d else {"members": [], "active": False}
+                d["ready"] = r
+            self._ov_cache = d
             return self._ov_cache
         finally:
             self.lock.release()

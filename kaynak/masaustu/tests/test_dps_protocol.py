@@ -258,3 +258,13 @@ def test_partial_roster_does_not_hide_party():
         t.process(("dmg", 1000, a, 500, 15010000, 1000, 0, 1))
     assert {m["name"] for m in t.snapshot(party_only=True)["fight"]["members"]} == {"Miralay", "Arzbaby", "Liisara"}
 
+
+
+def test_party_ready():
+    t = Tracker(DATA)
+    t.self_hint = "Ben"
+    t.roster_names = {"Ben", "Ali[FAF]", "Veli"}
+    r = t.ready_info()
+    assert r["here"] == 1 and set(r["missing"]) == {"Ali", "Veli"}
+    t.near = {"ali", "veli"}
+    assert t.ready_info()["missing"] == [] and t.overlay_rows()["ready"]["here"] == 3

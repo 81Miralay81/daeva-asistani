@@ -199,6 +199,15 @@ class Overlay:
             if f and b and not f.get("active"):
                 title += " ✓ kesildi" if f.get("reason") == "kill" else " (bitti)"
             y = self._head(y, title, right, "dpsMin", "showDps")
+            rd = (f or {}).get("ready")
+            if rd and not (f or {}).get("active"):  # boss öncesi: parti hazır mı
+                if not rd["missing"]:
+                    cv.create_rectangle(0, y, W, y + 20, fill="#173a24", outline="")
+                    cv.create_text(W // 2, y + 10, text=f"✓ HAZIR — herkes burada ({rd['here']}/{rd['total']})", fill="#5fd38a", font=(F, 10, "bold"))
+                else:
+                    cv.create_rectangle(0, y, W, y + 20, fill="#3a3220", outline="")
+                    cv.create_text(8, y + 10, text=f"⏳ {rd['here']}/{rd['total']} burada · eksik: {', '.join(rd['missing'])[:40]}", fill=WARN, anchor="w", font=(F, 9, "bold"))
+                y += 22
             if not self.s.get("dpsMin"):
                 if b and b.get("pct") is not None:
                     cv.create_rectangle(8, y, W - 8, y + 6, fill="#1a1f2a", outline="")
