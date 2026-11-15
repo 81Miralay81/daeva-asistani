@@ -3757,8 +3757,12 @@ async function forceAppUpdate(app) {
     document.body.appendChild(o);
   }
   FUPD_TRY++;
-  o.innerHTML = `<div class="card" style="max-width:440px;text-align:center;border-color:var(--acc)"><div class="nm" style="color:var(--acc);font-size:17px">Güncelleme gerekli</div>
-    <p>Kanatix Daeva Asistanı <b>${esc(app.version)}</b> indiriliyor (sende ${esc(app.current)}).<br>Bitince uygulama kapanıp yeni sürümle açılacak.</p><p class="mut small">Ayarların ve seviyelerin silinmez.</p></div>`;
+  const yen = String(app.notes || "").split("\n").filter(l => l.startsWith("- ")).map(l => `<li>${esc(l.slice(2).split(" (")[0])}</li>`).join("");
+  o.innerHTML = `<div class="card" style="max-width:480px;text-align:center;border-color:var(--acc)"><div class="nm" style="color:var(--acc);font-size:17px">Güncelleme geliyor</div>
+    <p>Kanatix Daeva Asistanı <b>${esc(app.version)}</b> indiriliyor (sende ${esc(app.current)}).<br>Bitince uygulama kapanıp yeni sürümle açılacak.</p>
+    ${yen ? `<div style="text-align:left"><b>Bu sürümde neler var:</b><ul class="small" style="margin:6px 0 0 18px">${yen}</ul></div>` : ""}
+    <p class="mut small">Ayarların ve seviyelerin silinmez.</p></div>`;
+  if (FUPD_TRY === 1 && yen) await new Promise(r => setTimeout(r, 6000));  // yenilikleri okumaya vakit
   let r = {}; try { r = await DAPI().app_install(app.url); } catch (e) { r = { ok: false, error: String(e) }; }
   if (r.ok) return;
   o.innerHTML = `<div class="card" style="max-width:440px;text-align:center;border-color:var(--bad)"><div class="nm">Güncelleme indirilemedi</div>

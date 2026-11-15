@@ -14,6 +14,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
+        with: { fetch-depth: 0 }
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - name: Paketler
@@ -36,11 +37,17 @@ jobs:
       - name: Exe
         working-directory: kaynak/masaustu
         run: python -m PyInstaller --noconfirm --onefile --windowed --name KanatixDaevaAsistani --icon icon.ico --add-data "app;app" --add-data "dps\data;dps\data" --add-data "harita;harita" --hidden-import tkinter --hidden-import yaml main.py
+      - name: Yenilikler (önceki sürümden bu yana yapılanlar)
+        shell: bash
+        run: |
+          prev=$(git tag -l 'exe-v*' --sort=-v:refname | head -1)
+          { echo "YENİLİKLER:"; git log ${prev:+$prev..}HEAD --no-merges --format='- %s' | grep -viE '^- (test|merge)' | head -15; echo; echo "Uygulama kuruluysa kendisi günceller. İlk kurulum: KanatixDaevaAsistani.exe dosyasını indir. DPS ölçer için Npcap gerekir: https://npcap.com"; } > notes.md
+          cat notes.md
       - name: Yayınla
         uses: softprops/action-gh-release@v2
         with:
           tag_name: exe-v${{ steps.v.outputs.ver }}
           name: Kanatix Daeva Asistanı (bilgisayar) ${{ steps.v.outputs.ver }}
-          body: "Uygulama kuruluysa açılışta bu sürümü kendisi önerir ve günceller. İlk kurulum: KanatixDaevaAsistani.exe dosyasını indir. DPS ölçer için Npcap gerekir: https://npcap.com"
+          body_path: notes.md
           files: kaynak/masaustu/dist/KanatixDaevaAsistani.exe
           make_latest: false
