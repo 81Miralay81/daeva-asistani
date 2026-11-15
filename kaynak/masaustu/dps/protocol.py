@@ -18,6 +18,7 @@ OPCODES = {
     "heartbeat": 0x0036, "self": 0x3336, "player": 0x4536, "player_old": 0x4436, "spawn": 0x4136,
     "death": 0x4236, "map": 0x2136, "pos": 0x2336, "cast": 0x0238, "hit": 0x0338, "damage": 0x0438, "dot": 0x0538,
     "remain_hp": 0x008D, "fieldboss": 0x0191, "kill": 0x048D, "hpmp": 0x1B92, "roster": 0x0297,
+    "mv_a": 0x1A37, "mv_b": 0x1B37, "mv_c": 0x1C37, "act_a": 0x2A38, "act_b": 0x2B38,
 }
 HEARTBEATS = [b"\x0e\x00\x36", b"\x06\x00\x36"]
 
@@ -398,6 +399,8 @@ class PacketParser:
             O["self"]: self._self, O["roster"]: self._roster, O["player"]: self._player,
             O["player_old"]: self._player, O["spawn"]: self._spawn, O["death"]: self._death,
             O["map"]: self._map, O["pos"]: self._pos, O["remain_hp"]: self._remain_hp, O["fieldboss"]: self._fieldboss, O["hpmp"]: self._hpmp, O["kill"]: self._kill,
+            O["mv_a"]: self._move, O["mv_b"]: self._move, O["mv_c"]: self._move,
+            O["act_a"]: self._act_pos, O["act_b"]: self._act_pos,
         }
 
     recorder = None  # keşif kaydı: (op, body) -> None
@@ -986,6 +989,30 @@ class PacketParser:
         x, y, z = struct.unpack_from("<fff", b, o)
         if all(v == v and abs(v) < 1e7 for v in (x, y, z)):
             self._emit("pos", self.t, eid, x, y, z)
+
+    @staticmethod
+    def _okpos(x, y, z):
+        return all(v == v for v in (x, y, z)) and 100 < abs(x) < 1e6 and 100 < abs(y) < 1e6 and abs(z) < 2e5
+
+    def _move(self, b):
+        """1A/1B/1C 37: varlık hareketi: id varint, 1-2 bayt bayrak, x y z f32."""
+        eid, o = varint(b, 0)
+        if not eid:
+            return
+        for k in (1, 2):
+            if o + k + 12 <= len(b):
+                x, y, z = struct.unpack_from("<fff", b, o + k)
+                if self._okpos(x, y, z):
+                    self._emit("epos", self.t, eid, x, y)
+                    return
+
+    def _act_pos(self, b):
+        """2A/2B 38: yetenek/eylem: başta yapanın id'si, son 12 bayt o anki konumu (kendi konumun da buradan gelir)."""
+        eid, o = varint(b, 0)
+        if eid and len(b) >= o + 12:
+            x, y, z = struct.unpack_from("<fff", b, len(b) - 12)
+            if self._okpos(x, y, z):
+                self._emit("epos", self.t, eid, x, y)
 
     def _map(self, b):
         if len(b) < 8:

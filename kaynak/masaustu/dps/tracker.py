@@ -181,6 +181,7 @@ class Tracker:
         self.classy = set()    # sınıf yeteneği kullanan id'ler (oyuncu gibi)
         self.roster = []       # son parti listesi
         self.roster_names = set()
+        self.epos = {}         # varlık id -> (x, y, an): oyunun gönderdiği son konum
         self.near = set()      # bu bölgede oyunun yanına getirdiği oyuncular (ad, küçük harf)
         self.map_id = 0
         self.zone = ""
@@ -221,6 +222,10 @@ class Tracker:
                     if cp:
                         g = self.gear.get(name, (0, 0))
                         self.gear[name] = (g[0], cp)
+            elif k == "epos":
+                self.epos[e[2]] = (e[3], e[4], e[1])
+                if len(self.epos) > 3000:
+                    self.epos.clear()
             elif k == "player":
                 self._upsert(e[2], e[3], e[4], e[5])
                 if e[3]:
@@ -602,14 +607,37 @@ class Tracker:
     def _norm(n):
         return (n or "").split("[")[0].strip().lower()
 
+    NEAR_UNITS = 3000   # bu kadar oyun biriminden yakınsa "yanında" (yaklaşık 30 m)
+
     def ready_info(self):
-        """Parti üyelerinden kaçı seninle aynı bölgede (oyun onları yanına getirdi mi)."""
+        """Parti üyeleri senin yanında mı: oyunun gönderdiği konumlardan mesafe."""
         if len(self.roster_names) < 2:
             return None
-        me = self._norm((self.self_info or {}).get("name") or getattr(self, "self_hint", ""))
-        near = getattr(self, "near", set())
-        miss = sorted(n.split("[")[0] for n in self.roster_names if self._norm(n) != me and self._norm(n) not in near)
-        return {"total": len(self.roster_names), "here": len(self.roster_names) - len(miss), "missing": miss}
+        me_name = self._norm((self.self_info or {}).get("name") or getattr(self, "self_hint", ""))
+        ids = {}
+        for pid, p in self.players.items():
+            if p.get("name"):
+                ids[self._norm(p["name"])] = pid
+        sid = self.self_id if self.self_id is not None else ids.get(me_name)
+        now = max((v[2] for v in self.epos.values()), default=0)
+        me = self.epos.get(sid) if sid is not None else None
+        if not me or now - me[2] > 60_000:
+            return {"nopos": True, "total": len(self.roster_names)}
+        far, here = [], 1
+        for n in self.roster_names:
+            nn = self._norm(n)
+            if nn == me_name:
+                continue
+            q = self.epos.get(ids.get(nn))
+            if q and now - q[2] < 60_000:
+                d = ((q[0] - me[0]) ** 2 + (q[1] - me[1]) ** 2) ** 0.5
+                if d <= self.NEAR_UNITS:
+                    here += 1
+                    continue
+                far.append(f"{n.split('[')[0]} {d / 100:.0f}m")
+            else:
+                far.append(n.split("[")[0])
+        return {"total": len(self.roster_names), "here": here, "missing": far}
 
     def overlay_rows(self, party_only=True):
         """Oyun üstü pencere: son boss dövüşü, bir sonraki boss'a vurulana kadar ekranda kalır.

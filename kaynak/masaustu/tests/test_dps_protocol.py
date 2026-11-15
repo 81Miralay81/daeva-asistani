@@ -264,7 +264,10 @@ def test_party_ready():
     t = Tracker(DATA)
     t.self_hint = "Ben"
     t.roster_names = {"Ben", "Ali[FAF]", "Veli"}
+    t.players = {1: {"name": "Ben"}, 2: {"name": "Ali[FAF]"}, 3: {"name": "Veli"}}
+    assert t.ready_info()["nopos"]
+    t.epos = {1: (1000.0, 1000.0, 10_000), 2: (1500.0, 1200.0, 10_000), 3: (9000.0, 1000.0, 10_000)}
     r = t.ready_info()
-    assert r["here"] == 1 and set(r["missing"]) == {"Ali", "Veli"}
-    t.near = {"ali", "veli"}
-    assert t.ready_info()["missing"] == [] and t.overlay_rows()["ready"]["here"] == 3
+    assert r["here"] == 2 and r["missing"] == ["Veli 80m"]
+    t.epos[3] = (1200.0, 900.0, 10_000)
+    assert t.overlay_rows()["ready"]["missing"] == []
