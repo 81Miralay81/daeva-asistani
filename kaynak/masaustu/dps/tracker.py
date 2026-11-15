@@ -321,6 +321,7 @@ class Tracker:
 
     def tick(self, now_ms):
         with self.lock:
+            self.now_ms = now_ms
             self._idle(now_ms)
 
     def reset(self):
@@ -655,6 +656,9 @@ class Tracker:
                 enc = cur
             else:
                 enc = next((f for f in self.done if f.boss_id is not None), None) or cur or (self.done[0] if self.done else None)
+            # Dövüş biteli 3 dakika olduysa pencereyi temizle (sıradaki boss öncesi parti kontrolü görünsün)
+            if enc is not None and not enc.active and enc.end and max(self.last_event, getattr(self, 'now_ms', 0)) - enc.end > 180_000:
+                enc = None
             d = self.fight_dict(enc, party_only, detail=False) if enc else None
             r = self.ready_info()
             if r:
