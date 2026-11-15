@@ -149,6 +149,7 @@ class Encounter:
         self.by_target = {}
         self.cbt = {}
         self.boss_id = None
+        self.boss_last = {}  # boss id -> son vurulduğu an
         self.boss_name = ""
         self.boss_code = 0
         self.boss_max = 0
@@ -426,10 +427,17 @@ class Tracker:
         n = self._npc(tgt)
         if n["hp"] == 0:
             return
+        # Zindanda art arda bosslar: önceki boss öldüyse ya da 20 sn'dir vurulmuyorsa bu yeni bir dövüş.
+        if (self.cur and self.cur.active and n["boss"] and self.cur.boss_id is not None and tgt != self.cur.boss_id):
+            ob = self.cur.boss_id
+            if self.npcs.get(ob, {}).get("hp", -1) == 0 or t - self.cur.boss_last.get(ob, self.cur.start) > 20_000:
+                self._finish("kill" if self.npcs.get(ob, {}).get("hp", -1) == 0 else "idle", self.cur.last)
         if self.cur is None or not self.cur.active:
             self.cur = Encounter(t, self.zone)
         enc = self.cur
-        if n["boss"] and (enc.boss_id is None or self.npcs.get(enc.boss_id, {}).get("hp", -1) == 0):
+        if n["boss"]:
+            enc.boss_last[tgt] = t
+        if n["boss"] and enc.boss_id is None:
             enc.boss_id = tgt
             enc.boss_hp = n["hp"]
             self._boss_info(enc, tgt)
