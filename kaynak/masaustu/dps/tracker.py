@@ -232,6 +232,7 @@ class Tracker:
                     self.near.add(self._norm(e[3]))
             elif k == "roster":
                 self.roster = e[2]
+                self.roster_count = e[3] if len(e) > 3 else len(e[2])
                 self.roster_names = {m["name"] for m in e[2]}
                 for m in e[2]:
                     self.gear[m["name"]] = (m["gear"], m["cp"])
@@ -622,7 +623,7 @@ class Tracker:
         now = max((v[2] for v in self.epos.values()), default=0)
         me = self.epos.get(sid) if sid is not None else None
         if not me or now - me[2] > 60_000:
-            return {"nopos": True, "total": len(self.roster_names)}
+            return {"nopos": True, "total": max(len(self.roster_names), getattr(self, "roster_count", 0))}
         far, here = [], 1
         for n in self.roster_names:
             nn = self._norm(n)
@@ -637,7 +638,11 @@ class Tracker:
                 far.append(f"{n.split('[')[0]} {d / 100:.0f}m")
             else:
                 far.append(n.split("[")[0])
-        return {"total": len(self.roster_names), "here": here, "missing": far}
+        total = max(len(self.roster_names), getattr(self, "roster_count", 0))
+        unk = total - len(self.roster_names)
+        if unk > 0:
+            far.append(f"{unk} kişi (adı okunamadı)")
+        return {"total": total, "here": here, "missing": far}
 
     def overlay_rows(self, party_only=True):
         """Oyun üstü pencere: son boss dövüşü, bir sonraki boss'a vurulana kadar ekranda kalır.

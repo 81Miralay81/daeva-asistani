@@ -780,7 +780,8 @@ class PacketParser:
             i += 1
         if not members:
             return False
-        self._emit("roster", self.t, members)
+        self._emit("roster", self.t, members, cnt)
+        self.roster_count = cnt  # oyunun söylediği parti büyüklüğü (adların hepsi okunamasa da)
         return True
 
     @staticmethod
