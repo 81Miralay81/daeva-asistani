@@ -36,7 +36,7 @@ jobs:
         run: echo "ver=$(grep -oP 'APP_VERSION = \"\K[^\"]+' kaynak/masaustu/main.py)" >> $GITHUB_OUTPUT
       - name: Exe
         working-directory: kaynak/masaustu
-        run: python -m PyInstaller --noconfirm --onefile --windowed --name KanatixDaevaAsistani --icon icon.ico --add-data "app;app" --add-data "dps\data;dps\data" --add-data "harita;harita" --hidden-import tkinter --hidden-import yaml main.py
+        run: python -m PyInstaller --noconfirm --onefile --windowed --name KanatixDaevaAsistani --icon icon.ico --add-data "app;app" --add-data "dps\data;dps\data" --add-data "harita;harita" --add-data "craft;craft" --hidden-import tkinter --hidden-import yaml main.py
       - name: Yenilikler (önceki sürümden bu yana yapılanlar)
         shell: bash
         run: |

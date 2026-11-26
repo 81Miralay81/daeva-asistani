@@ -249,6 +249,34 @@ def _harita():
         return {"maps": {}}
 
 
+_CRAFT = None
+_CRAFT_INFO = None
+_CRAFT_LOCK = threading.Lock()
+
+
+def _craft():
+    global _CRAFT
+    if _CRAFT is None:
+        try:
+            with open(resource(os.path.join("craft", "craft.json")), encoding="utf-8") as f:
+                _CRAFT = json.load(f)
+        except (OSError, ValueError):
+            _CRAFT = {"recipes": [], "names": {}}
+    return _CRAFT
+
+
+def _craft_info_cache():
+    """NC'den çekilen eşya bilgileri (ad, simge, nereden) diske önbellek: bir kez çekilen bir daha çekilmez."""
+    global _CRAFT_INFO
+    if _CRAFT_INFO is None:
+        try:
+            with open(os.path.join(DATA_DIR, "zanaat_esya.json"), encoding="utf-8") as f:
+                _CRAFT_INFO = json.load(f)
+        except (OSError, ValueError):
+            _CRAFT_INFO = {}
+    return _CRAFT_INFO
+
+
 def _safe(fn):
     try:
         return fn()
@@ -271,6 +299,39 @@ class Api:
 
     def item_search(self, q):
         return _safe(lambda: {"ok": True, "items": ncsoft.item_search(q)})
+
+    def craft_data(self):
+        """Zanaat: tüm tarifler + eşya adları + daha önce çekilmiş simge/kaynak bilgileri."""
+        d = _craft()
+        return {"recipes": d.get("recipes", []), "names": d.get("names", {}), "grades": d.get("grades", {}),
+                "info": _craft_info_cache()}
+
+    def craft_items(self, ids, region="eu"):
+        """Verilen eşyaların simge/ad/nereden bilgisini NC'den çek (en fazla 40, paralel), önbelleğe yaz."""
+        cache = _craft_info_cache()
+        need = [str(i) for i in ids if str(i) not in cache][:40]
+        if need:
+            from concurrent.futures import ThreadPoolExecutor
+
+            def one(i):
+                try:
+                    r = ncsoft.item_info(int(i), region)
+                    return i, {"name": r.get("name"), "icon": r.get("icon"), "sources": r.get("sources") or [],
+                               "grade": r.get("grade")}
+                except Exception as e:
+                    return i, {"err": str(e)[:80]}
+            with ThreadPoolExecutor(8) as ex:
+                got = list(ex.map(one, need))
+            with _CRAFT_LOCK:
+                for i, v in got:
+                    cache[i] = v
+                try:
+                    os.makedirs(DATA_DIR, exist_ok=True)
+                    with open(os.path.join(DATA_DIR, "zanaat_esya.json"), "w", encoding="utf-8") as f:
+                        json.dump(cache, f, ensure_ascii=False)
+                except OSError:
+                    pass
+        return {str(i): cache.get(str(i)) for i in ids}
 
     def item_info(self, item_id, region="eu"):
         return _safe(lambda: ncsoft.item_info(item_id, region))
