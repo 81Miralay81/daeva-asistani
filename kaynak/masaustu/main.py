@@ -9,6 +9,7 @@ import os
 import re
 import sys
 import threading
+import html
 import time
 import urllib.error
 import urllib.parse
@@ -277,6 +278,94 @@ def _craft_info_cache():
     return _CRAFT_INFO
 
 
+_MB_LOCK = threading.Lock()
+
+
+def _mb_get(path):
+    req = urllib.request.Request("https://metabot.gg" + path, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) KanatixDaevaAsistani", "Accept-Language": "en"})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return html.unescape(r.read().decode("utf-8", "replace"))
+
+
+def _mb_spawns(page):
+    """Canavar sayfasındaki harita kırpıntılarından doğma noktaları -> {harita: [[lat, lng], ...]} (Daeva harita pikseli)."""
+    out = {}
+    for b in page.split("_spawnBlock")[1:]:
+        b = b[:60000]
+        tiles = re.findall(r"left:(-?[\d.]+)%;top:(-?[\d.]+)%;width:calc\(([\d.]+)%[^;]*;height:calc\(([\d.]+)%[^;]*;background-image:url\([^)]*worldmap/([a-z_]+)/(\d+)/(\d+)/(\d+)\.webp", b)
+        dots = re.findall(r'_dot"\s+style="left:([\d.]+)%;top:([\d.]+)%', b)
+        if not tiles or not dots:
+            continue
+        l0, t0, w, h, mp, z, x, y = tiles[0]
+        l0, t0, w, h, z, x, y = float(l0), float(t0), float(w), float(h), int(z), int(x), int(y)
+        key = "_".join(p.capitalize() if len(p) > 1 else p.upper() for p in mp.split("_"))  # world_l_a -> World_L_A
+        hm = _harita().get("maps", {}).get(key) or {"w": 8192, "h": 8192}
+        n = 2 ** z
+        pts = out.setdefault(key, [])
+        for dl, dt in dots:
+            tx = x + (float(dl) - l0) / w
+            ty = y + (float(dt) - t0) / h
+            pts.append([round(hm["h"] - ty / n * hm["h"], 1), round(tx / n * hm["w"], 1)])
+    return out
+
+
+def _mb_item(name):
+    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    cache_f = os.path.join(DATA_DIR, "metabot_cache.json")
+    with _MB_LOCK:
+        try:
+            with open(cache_f, encoding="utf-8") as f:
+                cache = json.load(f)
+        except (OSError, ValueError):
+            cache = {}
+        hit = cache.get(slug)
+        if hit and time.time() - hit.get("t", 0) < 7 * 86400:
+            return hit["d"]
+        try:
+            page = _mb_get("/en/aion-2/items/" + slug)
+        except urllib.error.HTTPError as e:
+            return {"ok": False, "error": "MetaBot'ta bu eşyanın sayfası yok" if e.code == 404 else f"MetaBot cevap vermedi ({e.code})"}
+        icon = re.search(r"/web/aion2/items/[a-z0-9_]+\.webp", page)
+        drops = []
+        for t in page.split("<table")[1:]:
+            t = t.split("</table>")[0]
+            head, _, body = t.partition("</thead>")
+            if not re.search(r">\s*Monsters\s*<", head, re.I):
+                continue
+            for r in re.findall(r"<tr[^>]*>([\s\S]*?)</tr>", body):
+                c = re.findall(r"<t[hd][^>]*>([\s\S]*?)</t[hd]>", r)
+                if len(c) < 5:
+                    continue
+                txt = lambda s: re.sub(r"<[^>]+>", "", s).strip()
+                href = re.search(r'href="(/en/aion-2/monsters/[^"?]+)"', c[0])
+                drops.append({"name": txt(c[0]), "path": href.group(1) if href else "", "level": txt(c[1]),
+                              "chance": txt(c[2]), "qty": txt(c[3]), "kills": txt(c[4])})
+            break
+        # en yüksek şanslı ilk 6 farklı canavarın doğma noktaları
+        seen = 0
+        for d in drops:
+            if seen >= 6 or not d["path"]:
+                continue
+            try:
+                mp = _mb_get(d["path"])
+                d["spawns"] = _mb_spawns(mp)
+                d["zones"] = [f"{z} ({m})" for z, m in re.findall(r'href="/en/aion-2/zones/[^"]+">([^<]+)</a></th><td>([^<]+)</td>', mp)][:4]
+                seen += 1
+                time.sleep(0.3)
+            except Exception:
+                pass
+        res = {"ok": True, "icon": ("https://metabot.gg" + icon.group(0)) if icon else "", "drops": drops[:15],
+               "total": len(drops), "url": "https://metabot.gg/en/aion-2/items/" + slug}
+        cache[slug] = {"t": time.time(), "d": res}
+        try:
+            os.makedirs(DATA_DIR, exist_ok=True)
+            with open(cache_f, "w", encoding="utf-8") as f:
+                json.dump(cache, f, ensure_ascii=False)
+        except OSError:
+            pass
+        return res
+
+
 def _safe(fn):
     try:
         return fn()
@@ -331,6 +420,39 @@ class Api:
                 except OSError:
                     pass
         return {str(i): cache.get(str(i)) for i in ids}
+
+    # ------------------------------------------------------------ MetaBot: canavar düşüşleri ve doğma noktaları
+    def craft_mb(self, name):
+        """Malzemenin MetaBot sayfasını bu bilgisayardan okur: düşüren canavarlar, şans, bölgeler, doğma noktaları.
+        Sadece istenen malzeme okunur, sonuç 7 gün bilgisayarda saklanır."""
+        return _safe(lambda: _mb_item(name))
+
+    # ------------------------------------------------------------ Sohbet
+    def chat_device(self):
+        """Cihaz kimliği: ağ kartı (MAC) + Windows makine kimliği, özetlenmiş (atılan kişi aynı cihazdan giremesin)."""
+        import hashlib, uuid
+        mac = "%012x" % uuid.getnode()
+        guid = ""
+        try:
+            import winreg
+            k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Cryptography", 0, winreg.KEY_READ | 0x0100)
+            guid = winreg.QueryValueEx(k, "MachineGuid")[0]
+        except Exception:
+            pass
+        return {"device": hashlib.sha256((mac + "|" + guid).encode()).hexdigest()[:32],
+                "mac": hashlib.sha256(mac.encode()).hexdigest()[:32]}
+
+    def chat_me(self):
+        """Oyundaki karakter: DPS ölçerin tanıdığı ad/sunucu ve uygulamadaki ırk/sunucu ayarı."""
+        try:
+            m = dps()
+            si = (m.tracker.self_info if m.tracker else None) or {}
+            srv = si.get("serverId") or m.s.get("serverId")
+            name = si.get("name") or m.s.get("selfName") or ""
+            sname = m.data.servers.get(srv) if srv else (m.s.get("serverName") or "")
+            return {"name": name.split("[")[0], "server": sname or m.s.get("serverName") or "", "race": m.s.get("race") or ""}
+        except Exception:
+            return {"name": "", "server": "", "race": ""}
 
     def item_info(self, item_id, region="eu"):
         return _safe(lambda: ncsoft.item_info(item_id, region))
