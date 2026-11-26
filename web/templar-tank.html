@@ -3852,7 +3852,7 @@ function crSources(id, depth) {
   if (g && Object.keys(g.pts).length) {
     const mine = crRace() === "L" ? "World_L_A" : "World_D_A";
     const maps = Object.keys(g.pts).sort((a, b) => (b === mine) - (a === mine));
-    rows.push(["#27ae60", "🌿 Toplama", "Kolay · ücretsiz", `${esc(g.kind)}: <b>${esc(g.node)}</b> toplama noktalarından (Öz Çıkarma ile) toplanır.${g.kind.startsWith("Odyle") ? " Yerde değil, havada süzülür; kanatla toplanır." : ""}<br>${maps.map(m => `<button class="btn" data-crmap="${id}|${m}" style="margin:4px 4px 0 0">🗺 ${esc(CR_MAPTR[m] || m)} — ${g.pts[m].length} bölge</button>`).join("")}`]);
+    rows.push(["#27ae60", "🌿 Toplama", "Kolay · ücretsiz", `${esc(g.kind)}: <b>${esc(g.node)}</b> toplama noktalarından (Öz Çıkarma ile) toplanır.${g.kind.startsWith("Odyle") ? " Yerde değil, havada süzülür; kanatla toplanır." : ""}<br>${maps.map(m => `<button class="btn" data-crmap="${id}|${m}" style="margin:4px 4px 0 0">🗺 ${esc(CR_MAPTR[m] || m)} — ${g.pts[m].length} bölge (tam ekran harita)</button>`).join("")}`]);
   }
   if (r) rows.push(["#3498db", "🔨 Üretim", "Orta · ücretsiz", `${esc(CR_MES_TR[r.cat] || r.cat)} (Sv ${r.lv}) ile üretilir: ${r.k.map(k => `${k[1]}× ${esc(crName(k[0]))}`).join(", ")}. <button class="btn" data-crs="${r.id}">Tarife git</button>`]);
   if (dr.length) rows.push(["#e67e22", "⚔️ Boss / zindan", "Zor · şansa bağlı", dr.slice(0, 6).map(d => `${esc(d.boss)} <span class="mut">(${esc(d.dungeon)}, ${esc(d.mode)})</span> — ${d.chance >= 100 ? `ortalama ${(d.chance / 100).toFixed(1)} adet` : `%${d.chance}`}`).join("<br>")]);
@@ -3863,20 +3863,57 @@ function crSources(id, depth) {
   return `<div style="margin:6px 0 8px ${depth * 18}px;padding:8px;background:#151a24;border-radius:8px">
     <div class="nm small" style="margin:0 0 6px">📦 ${esc(crName(id))} — nereden bulunur? <span class="mut">(kolaydan zora)</span></div>
     ${rows.map(([c, t, z, d]) => `<div style="border-left:4px solid ${c};padding:4px 8px;margin-bottom:6px"><b style="color:${c}">${t}</b> <span class="mut small">· ${z}</span><div class="small">${d}</div></div>`).join("")}
-    ${CRMAP && CRMAP.id === id ? `<div id="crmapbox" style="height:420px;border-radius:8px;margin-top:6px"></div><div class="mut small">Turuncu halkalar toplama bölgeleri. Tekerlekle yakınlaştır.</div>` : ""}</div>`;
+    </div>`;
 }
-function crMapInit() {
-  const el = document.getElementById("crmapbox"); if (!el || !CRMAP || typeof L === "undefined") return;
-  const m = HARITA.maps[CRMAP.map]; if (!m) { el.innerHTML = '<div class="mut">Bu haritanın görüntüsü yok.</div>'; return; }
-  const mp = L.map(el, { crs: L.CRS.Simple, minZoom: -5, maxZoom: 1, zoomSnap: 0.25, attributionControl: false });
-  const T = L.TileLayer.extend({ getTileUrl(c) { const x = c.x, y = m.ty + c.y; if (x < 0 || y < 0 || x >= m.tx || y >= m.ty) return "data:image/gif;base64,R0lGODlhAQABAAAAACw="; const p = n => String(n).padStart(2, "0"); return `${HARITA.tiles || ""}${CRMAP.map}/Res/${CRMAP.map}_${p(x)}_${p(y)}.webp`; } });
-  new T("", { tileSize: m.ts || 1024, minZoom: -5, maxZoom: 1, minNativeZoom: 0, maxNativeZoom: 0, noWrap: true, bounds: [[0, 0], [m.h, m.w]] }).addTo(mp);
-  const pts = (CR.gather[CRMAP.id] || { pts: {} }).pts[CRMAP.map] || [];
-  pts.forEach(p => L.circleMarker(p, { radius: 9, color: "#fff", weight: 2, fillColor: "#ff8c1a", fillOpacity: .9 }).bindTooltip(esc(crName(CRMAP.id))).addTo(mp));
-  // yakındaki yer adları (köy, karakol, ışınlanma) yön bulmak için
-  (m.markers || []).forEach(x => { if (["village", "outpost", "teleport"].includes(x[0])) L.circleMarker([x[4], x[3]], { radius: 3, color: "#9ab", weight: 1, fillOpacity: .6 }).bindTooltip(esc(x[1])).addTo(mp); });
-  if (pts.length) mp.fitBounds(L.latLngBounds(pts).pad(0.4)); else mp.fitBounds([[0, 0], [m.h, m.w]]);
+// ---- Tam ekran harita (oyun istemcisinin yüksek çözünürlüklü karoları; tekerlekle yakınlaş)
+const CR_TILES = "https://raw.githubusercontent.com/81Miralay81/daeva-asistani/main/harita_hd/";  // oyun istemcisi karoları, maskesi uygulanmış (Aion-DPS-Meter, MIT)
+const CR_MAPDIR = { World_L_A: ["verteron", 8], World_D_A: ["altgard", 8], Abyss_Reshanta_A: ["abyss", 4] };
+let CRLM = null;
+function crMapOpen(id, map) {
+  crMapClose();
+  const md = CR_MAPDIR[map], hm = HARITA.maps[map]; if (!md || !hm) return;
+  const W = hm.w, Hh = hm.h, n = md[1], ts = W / n;
+  const o = document.createElement("div"); o.id = "crmapov";
+  o.style.cssText = "position:fixed;inset:0;z-index:9000;background:rgba(6,9,14,.92);display:flex;flex-direction:column;padding:14px";
+  const pts = (CR.gather[id] || { pts: {} }).pts[map] || [];
+  o.innerHTML = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;color:#e8edf5">
+      ${crIcon(id, 34)}<div><div style="font-size:18px;font-weight:700">${esc(crName(id))}</div>
+      <div class="small" style="color:#9fb0c8">${esc(CR_MAPTR[map] || map)} · ${pts.length} toplama bölgesi · tekerlekle yakınlaş, sürükleyerek gez</div></div>
+      <div style="flex:1"></div>
+      <label class="small" style="color:#cfd8e6"><input type="checkbox" id="crroad" checked> Yollar</label>
+      <label class="small" style="color:#cfd8e6"><input type="checkbox" id="crlbl" checked> Yer adları</label>
+      <button class="btn" id="crfit">⤢ Noktalara git</button>
+      <button class="btn" id="crclose" style="font-size:16px">✕ Kapat</button></div>
+    <div id="crmapfs" style="flex:1;border-radius:12px;overflow:hidden;border:1px solid #2b3a52;background:#1e272c"></div>
+    <div class="small" style="color:#9fb0c8;margin-top:8px">🟠 toplama bölgesi · 🏠 köy · 🏰 karakol · ✦ ışınlanma taşı · Harita: oyun istemcisi karoları (Aion-DPS-Meter, MIT)</div>`;
+  document.body.appendChild(o);
+  const mp = CRLM = L.map("crmapfs", { crs: L.CRS.Simple, minZoom: -4, maxZoom: 3, zoomSnap: 0.25, zoomDelta: 0.5, wheelPxPerZoomLevel: 70, attributionControl: false, zoomControl: true,
+    maxBounds: [[-Hh * 0.15, -W * 0.15], [Hh * 1.15, W * 1.15]] });
+  const blank = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
+  const Base = L.TileLayer.extend({ getTileUrl(c) { const x = c.x, y = n + c.y; if (x < 0 || y < 0 || x >= n || y >= n) return blank; return `${CR_TILES}${md[0]}/${x}_${y}.${this.options.ext}`; } });
+  new Base("", { ext: "webp", tileSize: ts, minZoom: -4, maxZoom: 3, minNativeZoom: 0, maxNativeZoom: 0, noWrap: true, bounds: [[0, 0], [Hh, W]], errorTileUrl: blank, keepBuffer: 6 }).addTo(mp);
+  const roads = new Base("", { ext: "png", tileSize: ts, minZoom: -4, maxZoom: 3, minNativeZoom: 0, maxNativeZoom: 0, noWrap: true, bounds: [[0, 0], [Hh, W]], errorTileUrl: blank, opacity: .85 });
+  roads.getTileUrl = function (c) { const x = c.x, y = n + c.y; if (x < 0 || y < 0 || x >= n || y >= n) return blank; return `${CR_TILES}${md[0]}/${x}_${y}_p.webp`; };
+  roads.addTo(mp);
+  // haritadaki yer adlarını bu karolara çevir (Daeva haritası verisiyle küçük ölçek farkı var)
+  const f = (CR.fit && CR.fit[map]) || [1, 0, 1, 0], inv = (la, ln) => [(la - f[3]) / f[2], (ln - f[1]) / f[0]];
+  const lbl = L.layerGroup().addTo(mp), ICO = { village: ["🏠", 15, 700], occupation: ["🏰", 13, 600], teleport: ["✦", 11, 500], battlefield: ["⚔", 11, 500] };
+  function drawLabels() { lbl.clearLayers(); const z = mp.getZoom();
+    (hm.markers || []).forEach(x => { const s = ICO[x[0]]; if (!s) return; if (x[0] === "teleport" && z < -1.5) return; if ((x[0] === "occupation" || x[0] === "battlefield") && z < -2.5) return;
+      L.marker(inv(x[4], x[3]), { interactive: false, icon: L.divIcon({ className: "", iconSize: null, html: `<div style="transform:translate(-50%,-50%);white-space:nowrap;font:${s[2]} ${s[1]}px system-ui;color:#fff;text-shadow:0 0 3px #000,0 0 6px #000,0 1px 2px #000">${s[0]} ${esc(x[1])}</div>` }) }).addTo(lbl); }); }
+  drawLabels(); mp.on("zoomend", drawLabels);
+  const gl = L.layerGroup().addTo(mp);
+  pts.forEach(p => { L.circle(p, { radius: 60, color: "#ffb347", weight: 2, fillColor: "#ff8c1a", fillOpacity: .18, interactive: false }).addTo(gl);
+    L.circleMarker(p, { radius: 8, color: "#fff", weight: 2, fillColor: "#ff8c1a", fillOpacity: 1 }).bindTooltip(`<b>${esc(crName(id))}</b><br>${esc((CR.gather[id] || {}).kind || "")}`, { direction: "top" }).addTo(gl); });
+  const fit = () => pts.length ? mp.fitBounds(L.latLngBounds(pts).pad(0.35), { maxZoom: 0 }) : mp.fitBounds([[0, 0], [Hh, W]]);
+  fit();
+  document.getElementById("crclose").onclick = crMapClose;
+  document.getElementById("crfit").onclick = fit;
+  document.getElementById("crroad").onchange = e => e.target.checked ? roads.addTo(mp) : mp.removeLayer(roads);
+  document.getElementById("crlbl").onchange = e => e.target.checked ? lbl.addTo(mp) : mp.removeLayer(lbl);
 }
+function crMapClose() { if (CRLM) { CRLM.remove(); CRLM = null; } const o = document.getElementById("crmapov"); if (o) o.remove(); }
+document.addEventListener("keydown", e => { if (e.key === "Escape") crMapClose(); });
 
 function rZan() {
   if (!DESK()) return `<div class="card">Zanaat sadece bilgisayar uygulamasında var.</div>`;
@@ -3920,7 +3957,7 @@ function crDetail() {
 document.addEventListener("click", e => {
   const t = e.target.closest("[data-crp],[data-crs],[data-crx],[data-crm],[data-crmap]"); if (!t) return;
   if (t.dataset.crm) { CRM = CRM === t.dataset.crm ? null : t.dataset.crm; CRMAP = null; const y = window.scrollY; render(); window.scrollTo(0, y); return; }
-  if (t.dataset.crmap) { const [id, map] = t.dataset.crmap.split("|"); CRMAP = CRMAP && CRMAP.id === id && CRMAP.map === map ? null : { id, map }; const y = window.scrollY; render(); window.scrollTo(0, y); setTimeout(crMapInit, 30); return; }
+  if (t.dataset.crmap) { const [id, map] = t.dataset.crmap.split("|"); crMapOpen(id, map); return; }
   if (t.dataset.crp) { CRP = t.dataset.crp; CRQ = ""; render(); }
   else if (t.dataset.crs) { CRSEL = +t.dataset.crs; CRN = 1; CRX = {}; CRM = null; CRMAP = null; render(); window.scrollTo(0, 0); }
   else if (t.dataset.crx) { CRX[t.dataset.crx] = !CRX[t.dataset.crx]; const y = window.scrollY; render(); window.scrollTo(0, y); }
@@ -3932,7 +3969,7 @@ document.addEventListener("change", e => {
 });
 let CRQT = null;
 document.addEventListener("input", e => { if (e.target.id === "crq") { CRQ = e.target.value; clearTimeout(CRQT); CRQT = setTimeout(() => { render(); const i = document.getElementById("crq"); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 300); } });
-R.zan = () => { if (CRMAP) setTimeout(crMapInit, 30); return rZan(); };
+R.zan = rZan;
 TABS.splice(TABS.findIndex(t => t[0] === "esy") + 1, 0, ["zan", "🔨 Zanaat"]);
 
 { const c0 = S.cls || "templar"; S.cls = null; applyClass(c0); }

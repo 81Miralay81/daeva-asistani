@@ -303,8 +303,7 @@ class Api:
     def craft_data(self):
         """Zanaat: tüm tarifler + eşya adları + daha önce çekilmiş simge/kaynak bilgileri."""
         d = _craft()
-        return {"recipes": d.get("recipes", []), "names": d.get("names", {}), "grades": d.get("grades", {}),
-                "info": _craft_info_cache()}
+        return dict(d, info=_craft_info_cache())
 
     def craft_items(self, ids, region="eu"):
         """Verilen eşyaların simge/ad/nereden bilgisini NC'den çek (en fazla 40, paralel), önbelleğe yaz."""

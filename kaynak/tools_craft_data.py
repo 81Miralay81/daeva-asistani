@@ -46,7 +46,7 @@ for mk, m in MM.items():
 def to_map(ours, x, y):
     c = conv[ours]
     px, py = x * c["s"] + c["ox"], c["h"] - (y * c["s"] + c["oy"])
-    return [round(py * c["c"] + c["d"]), round(px * c["a"] + c["b"])]  # [lat, lng]
+    return [round(py, 1), round(px, 1)]  # [lat, lng] — yüksek çözünürlüklü istemci karolarıyla birebir (ince ayar yok)
 
 
 # --- toplama: malzeme adında toplama nesnesinin adı geçiyorsa (kelime olarak) o nesnenin noktaları
@@ -92,5 +92,6 @@ for v in drops.values():
 out = here / "masaustu" / "craft"
 out.mkdir(exist_ok=True)
 (out / "craft.json").write_text(json.dumps({"recipes": R, "names": names, "grades": grades, "gather": gather, "drops": drops,
+    "fit": {k: [round(v["a"], 6), round(v["b"], 3), round(v["c"], 6), round(v["d"], 3)] for k, v in conv.items()},
     "kaynak": "SkeeveAN/Aion-DPS-Meter (MIT)"}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 print(len(R), "tarif,", len(names), "/", len(ids), "ad,", len(gather), "toplanan malzeme,", len(drops), "düşen malzeme")
