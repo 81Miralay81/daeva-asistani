@@ -3807,9 +3807,14 @@ const CR_MES_TR = Object.fromEntries(CR_MES.map(([k, v]) => [k, v.split(" ").sli
 function crRace() { return /asmo/i.test((S.prof && S.prof.race) || "") ? "D" : "L"; }
 function crHave() { S.crHave = S.crHave || {}; return S.crHave; }
 function crName(id) { return (CR.names[id] || (CR.info[id] && CR.info[id].name) || `Eşya #${id}`); }
-function crIcon(id, sz) { const i = CR.info[id]; return i && i.icon ? `<img src="${esc(i.icon)}" style="width:${sz || 24}px;height:${sz || 24}px;vertical-align:middle;border-radius:4px;margin-right:6px">` : `<span style="display:inline-block;width:${sz || 24}px;height:${sz || 24}px;margin-right:6px;vertical-align:middle;border-radius:4px;background:#2a3140"></span>`; }
+const CR_ICON = "https://raw.githubusercontent.com/aion2-interactive-map/aion2-interactive-map/master/public/UI/Resource/Texture/Item/";
+function crIcon(id, sz) { const i = CR.info[id] || {}; const u = (CR.icons && CR.icons[id]) ? CR_ICON + CR.icons[id] : i.icon; return u ? `<img src="${esc(u)}" loading="lazy" style="width:${sz || 24}px;height:${sz || 24}px;vertical-align:middle;border-radius:5px;margin-right:6px;background:#1c2330;border:1px solid #2c3a50">` : (i && i.icon ? `<img src="${esc(i.icon)}" style="width:${sz || 24}px;height:${sz || 24}px;vertical-align:middle;border-radius:4px;margin-right:6px">` : `<span style="display:inline-block;width:${sz || 24}px;height:${sz || 24}px;margin-right:6px;vertical-align:middle;border-radius:4px;background:#2a3140"></span>`); }
 function crSrc(id) { const i = CR.info[id]; if (!i || !i.sources) return ""; return i.sources.map(s => (typeof SRC_TR !== "undefined" && SRC_TR[s]) || s).join(", "); }
-function crByProduct() { if (!CR._bp) { CR._bp = {}; for (const r of CR.recipes) if (r.race === crRace() && !CR._bp[r.p]) CR._bp[r.p] = r; } return CR._bp; }
+function crByProduct() { if (!CR._bp) { CR._bp = {}; for (const r of CR.recipes) if (r.race === crRace() && r.learn !== "Combo" && !CR._bp[r.p]) CR._bp[r.p] = r; } return CR._bp; }
+function crCombo(r) { const c = CR.recipes.find(x => x.learn === "Combo" && x.race === r.race && x.cat === r.cat && x.order === r.order && x.id !== r.id && x.k.length === r.k.length && x.k.every((k, i) => k[0] === r.k[i][0])); return c ? ` · kombo şansıyla: <b>${esc(crName(c.p))}</b>` : ""; }
+function crLv(lv) { return !lv ? "özel tarif" : lv <= 50 ? `Acemi ${lv}` : `Profesyonel ${lv - 50}`; }
+const CR_TAB_TR = { Misc: "🧱 Ara malzemeler", Sword: "Kılıç (Longsword)", Greatsword: "Büyük kılıç", Dagger: "Hançer", Mace: "Topuz", Guarder: "Kalkan", Potion: "İksir", Magicbook: "Büyü kitabı", Orb: "Küre (Orb)", MagicStone: "Manastone", Scroll: "Parşömen" };
+function crTab(r) { if (r.sub === "Misc") return "Misc"; return r.tab || r.sub; }
 function crRecipe(id) { return CR.recipes.find(r => r.id === id); }
 
 async function crLoad() { const a = DAPI(); if (!a || !a.craft_data || CRB) return; CRB = true; try { CR = await a.craft_data(); } catch (e) { CR = null; } CRB = false; if (TAB === "zan") render(); }
@@ -3847,7 +3852,7 @@ function crTree(rid, mult, depth) {
     return `<div style="margin-left:${depth * 18}px;padding:4px 0;border-bottom:1px solid #1f2633">
       ${sub ? `<button class="btn" data-crx="${key}" style="padding:0 6px;margin-right:4px">${open ? "▾" : "▸"}</button>` : `<span style="display:inline-block;width:26px"></span>`}
       <span data-crm="t${key}" style="cursor:pointer">${crIcon(mid, 22)}<b>${tot}×</b> <u>${esc(crName(mid))}</u></span>
-      ${sub ? `<span class="mut small"> · üretilir (${esc(CR_MES_TR[sub.cat] || sub.cat)} Sv ${sub.lv})</span>` : `<span class="mut small"> · ${esc(crSrc(mid) || "ham malzeme")}</span>`}
+      ${sub ? `<span class="mut small"> · üretilir (${esc(CR_MES_TR[sub.cat] || sub.cat)} ${crLv(sub.lv)})</span>` : `<span class="mut small"> · ${esc(crSrc(mid) || "ham malzeme")}</span>`}
       ${alt ? `<span class="mut small"> · yerine: ${alt.map(a => esc(crName(a[0]))).join(", ")}</span>` : ""}
     </div>${CRM === "t" + key ? crSources(mid, depth + 1) : ""}${sub && open ? crTree(sub.id, Math.ceil(tot / (sub.n || 1)), depth + 1) : ""}`;
   }).join("");
@@ -3862,7 +3867,7 @@ function crSources(id, depth) {
     const maps = Object.keys(g.pts).sort((a, b) => (b === mine) - (a === mine));
     rows.push(["#27ae60", "🌿 Toplama", "Kolay · ücretsiz", `${esc(g.kind)}: <b>${esc(g.node)}</b> toplama noktalarından (Öz Çıkarma ile) toplanır.${g.kind.startsWith("Odyle") ? " Yerde değil, havada süzülür; kanatla toplanır." : ""}<br>${maps.map(m => `<button class="btn" data-crmap="${id}|${m}" style="margin:4px 4px 0 0">🗺 ${esc(CR_MAPTR[m] || m)} — ${g.pts[m].length} bölge (tam ekran harita)</button>`).join("")}`]);
   }
-  if (r) rows.push(["#3498db", "🔨 Üretim", "Orta · ücretsiz", `${esc(CR_MES_TR[r.cat] || r.cat)} (Sv ${r.lv}) ile üretilir: ${r.k.map(k => `${k[1]}× ${esc(crName(k[0]))}`).join(", ")}. <button class="btn" data-crs="${r.id}">Tarife git</button>`]);
+  if (r) rows.push(["#3498db", "🔨 Üretim", "Orta · ücretsiz", `${esc(CR_MES_TR[r.cat] || r.cat)} (${crLv(r.lv)}) ile üretilir: ${r.k.map(k => `${k[1]}× ${esc(crName(k[0]))}`).join(", ")}. <button class="btn" data-crs="${r.id}">Tarife git</button>`]);
   if (dr.length) rows.push(["#e67e22", "⚔️ Boss / zindan", "Zor · şansa bağlı", dr.slice(0, 6).map(d => `${esc(d.boss)} <span class="mut">(${esc(d.dungeon)}, ${esc(d.mode)})</span> — ${d.chance >= 100 ? `ortalama ${(d.chance / 100).toFixed(1)} adet` : `%${d.chance}`}`).join("<br>")]);
   const ns = (inf.sources || []).filter(x => x !== "Crafting");
   if (ns.length) rows.push(["#9b59b6", "📜 Diğer yollar", "NCSOFT bilgisi", ns.map(x => esc((typeof SRC_TR !== "undefined" && SRC_TR[x]) || x)).join(", ")]);
@@ -3890,7 +3895,7 @@ function crMapOpen(id, map) {
       <div style="flex:1"></div>
       <label class="small" style="color:#cfd8e6"><input type="checkbox" id="crroad" checked> Yollar</label>
       <label class="small" style="color:#cfd8e6"><input type="checkbox" id="crlbl" checked> Yer adları</label>
-      <button class="btn" id="crfit">⤢ Noktalara git</button>
+      <button class="btn" id="crfit">⤢ Noktalara git</button><button class="btn" id="crall">🗺 Tüm harita</button>
       <button class="btn" id="crclose" style="font-size:16px">✕ Kapat</button></div>
     <div id="crmapfs" style="flex:1;border-radius:12px;overflow:hidden;border:1px solid #2b3a52;background:#1e272c"></div>
     <div class="small" style="color:#9fb0c8;margin-top:8px">🟠 toplama bölgesi · 🏠 köy · 🏰 karakol · ✦ ışınlanma taşı · Harita: oyun istemcisi karoları (Aion-DPS-Meter, MIT)</div>`;
@@ -3911,12 +3916,14 @@ function crMapOpen(id, map) {
       L.marker(inv(x[4], x[3]), { interactive: false, icon: L.divIcon({ className: "", iconSize: null, html: `<div style="transform:translate(-50%,-50%);white-space:nowrap;font:${s[2]} ${s[1]}px system-ui;color:#fff;text-shadow:0 0 3px #000,0 0 6px #000,0 1px 2px #000">${s[0]} ${esc(x[1])}</div>` }) }).addTo(lbl); }); }
   drawLabels(); mp.on("zoomend", drawLabels);
   const gl = L.layerGroup().addTo(mp);
+  let SEL = null;
   pts.forEach(p => { L.circle(p, { radius: 60, color: "#ffb347", weight: 2, fillColor: "#ff8c1a", fillOpacity: .18, interactive: false }).addTo(gl);
-    L.circleMarker(p, { radius: 8, color: "#fff", weight: 2, fillColor: "#ff8c1a", fillOpacity: 1 }).bindTooltip(`<b>${esc(crName(id))}</b><br>${esc((CR.gather[id] || {}).kind || "")}`, { direction: "top" }).addTo(gl); });
-  const fit = () => pts.length ? mp.fitBounds(L.latLngBounds(pts).pad(0.35), { maxZoom: 0 }) : mp.fitBounds([[0, 0], [Hh, W]]);
-  fit();
+    L.circleMarker(p, { radius: 8, color: "#fff", weight: 2, fillColor: "#ff8c1a", fillOpacity: 1 }).bindTooltip(`<b>${esc(crName(id))}</b><br>${esc((CR.gather[id] || {}).kind || "")}<br><span style="opacity:.7">tıkla: yakınlaş</span>`, { direction: "top" }).on("click", () => { SEL = p; mp.flyTo(p, 1, { duration: 0.6 }); }).addTo(gl); });
+  const fit = () => SEL ? mp.flyTo(SEL, 1, { duration: 0.6 }) : pts.length ? mp.flyToBounds(L.latLngBounds(pts).pad(0.15), { maxZoom: 1, duration: 0.6 }) : mp.fitBounds([[0, 0], [Hh, W]]);
+  pts.length ? mp.fitBounds(L.latLngBounds(pts).pad(0.15), { maxZoom: 1 }) : mp.fitBounds([[0, 0], [Hh, W]]);
   document.getElementById("crclose").onclick = crMapClose;
   document.getElementById("crfit").onclick = fit;
+  document.getElementById("crall").onclick = () => { SEL = null; mp.flyToBounds([[0, 0], [Hh, W]], { duration: 0.6 }); };
   document.getElementById("crroad").onchange = e => e.target.checked ? roads.addTo(mp) : mp.removeLayer(roads);
   document.getElementById("crlbl").onchange = e => e.target.checked ? lbl.addTo(mp) : mp.removeLayer(lbl);
 }
@@ -3928,18 +3935,21 @@ function rZan() {
   if (!CR) { crLoad(); return `<div class="card">Tarifler yükleniyor…</div>`; }
   const race = crRace();
   const q = CRQ.trim().toLowerCase();
-  let list = CR.recipes.filter(r => r.race === race && (q ? crName(r.p).toLowerCase().includes(q) || r.k.some(k => crName(k[0]).toLowerCase().includes(q)) : r.cat === CRP));
-  list.sort((a, b) => a.lv - b.lv || crName(a.p).localeCompare(crName(b.p)));
+  let list = CR.recipes.filter(r => r.race === race && r.learn !== "Combo" && (q ? crName(r.p).toLowerCase().includes(q) || r.k.some(k => crName(k[0]).toLowerCase().includes(q)) : r.cat === CRP));
+  const tabOrder = {}; CR.recipes.filter(r => r.race === race && r.cat === CRP).forEach(r => { const t = crTab(r); if (!(t in tabOrder)) tabOrder[t] = r.order * 1000 + Object.keys(tabOrder).length; });
+  list.sort((a, b) => (q ? 0 : (tabOrder[crTab(a)] || 0) - (tabOrder[crTab(b)] || 0)) || a.lv - b.lv || a.order - b.order || crName(a.p).localeCompare(crName(b.p)));
   crWant(list.slice(0, 60).map(r => r.p));
   let h = `<div class="card"><div class="nm">🔨 Zanaat <span class="mut small">(${race === "L" ? "Elyos" : "Asmodian"} tarifleri)</span></div>
     <p class="mut small">1) Mesleği seç ya da ara · 2) Tarife tıkla · 3) Kaç tane istediğini yaz → neyin ne kadar gerektiğini, ham malzeme listesini ve sırayla ne üreteceğini görürsün. Elindekileri yazarsan hesaptan düşülür.</p>
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0">${CR_MES.map(([k, t]) => `<button class="${!q && CRP === k ? "on" : ""}" data-crp="${k}">${t}</button>`).join("")}</div>
     <input id="crq" value="${esc(CRQ)}" placeholder="Eşya ya da malzeme ara (örn. Orichalcum, Potion, Sword)" style="width:100%;max-width:420px"></div>`;
   h += `<div style="display:grid;grid-template-columns:minmax(260px,1fr) 2fr;gap:12px;align-items:start">`;
-  h += `<div class="card" style="max-height:75vh;overflow:auto">${list.length ? list.slice(0, 300).map(r => `<div data-crs="${r.id}" style="cursor:pointer;padding:5px;border-radius:6px;${CRSEL === r.id ? "background:#2a3550" : ""}">${crIcon(r.p, 22)}${esc(crName(r.p))}${r.n > 1 ? ` <span class="mut">×${r.n}</span>` : ""}<span class="mut small" style="float:right">Sv ${r.lv}${r.learn !== "Auto" ? " · 📜" : ""}</span></div>`).join("") : '<div class="mut">Bulunamadı.</div>'}
-    <p class="mut small">📜 = tarif kitabıyla öğrenilir.</p></div>`;
+  let lastTab = null;
+  h += `<div class="card" style="max-height:75vh;overflow:auto">${list.length ? list.slice(0, 400).map(r => { const t = crTab(r); const head = !q && t !== lastTab ? `<div style="margin:10px 0 4px;padding:4px 8px;border-radius:6px;background:#1d2636;color:var(--acc);font-weight:700;font-size:13px">${esc(CR_TAB_TR[t] || t)}</div>` : ""; lastTab = t;
+    return head + `<div data-crs="${r.id}" style="cursor:pointer;padding:5px 6px;border-radius:8px;display:flex;align-items:center;${CRSEL === r.id ? "background:#2a3550;outline:1px solid var(--acc)" : ""}">${crIcon(r.p, 30)}<span style="flex:1">${esc(crName(r.p))}${r.n > 1 ? ` <span class="mut">×${r.n}</span>` : ""}</span><span class="mut small" style="white-space:nowrap;margin-left:6px">${crLv(r.lv)}${r.learn === "Advancement" ? " · 🎖" : r.learn !== "Auto" ? " · 📜" : ""}</span></div>`; }).join("") : '<div class="mut">Bulunamadı.</div>'}
+    <p class="mut small">📜 tarif kitabıyla öğrenilir · 🎖 meslek terfi görevi</p></div>`;
   h += `<div>${CRSEL ? crDetail() : '<div class="card mut">Soldan bir tarif seç.</div>'}</div></div>`;
-  h += `<p class="mut small">Tarif verisi: Aion-DPS-Meter projesi (MIT lisansı); simgeler ve "nereden" bilgisi NCSOFT'un resmi eşya sayfasından.</p>`;
+  h += `<p class="mut small">Tarif, toplama ve harita verisi: Aion-DPS-Meter (MIT) · simgeler: aion2-interactive-map (CC BY-NC) · ek kaynak bilgisi: NCSOFT.</p>`;
   return h;
 }
 
@@ -3950,14 +3960,14 @@ function crDetail() {
   crWant([r.p, ...r.k.map(k => k[0]), ...rawIds, ...p.order.map(id => crRecipe(id).p)]);
   const have = crHave();
   let h = `<div class="card"><div style="display:flex;align-items:center;gap:10px">${crIcon(r.p, 44)}<div><div class="nm" style="margin:0">${esc(crName(r.p))}</div>
-    <div class="mut small">${esc(CR_MES_TR[r.cat] || r.cat)} · Ustalık Sv ${r.lv} · bir üretim ${r.n} adet verir${r.learn !== "Auto" ? " · tarif kitabı gerekir" : ""}${r.combo ? " · kombo şansı var" : ""}</div></div></div>
+    <div class="mut small">${esc(CR_MES_TR[r.cat] || r.cat)} · ${crLv(r.lv)} · bir üretim ${r.n} adet verir${r.learn === "Book" || (r.learn !== "Auto" && r.learn !== "Advancement") ? " · tarif kitabı gerekir" : ""}${crCombo(r)}</div></div></div>
     <div style="margin:10px 0"><label>Kaç tane istiyorsun? <input id="crn" type="number" min="1" value="${CRN}" style="width:80px"></label> <span class="mut small">→ ${times} kez üretilecek</span></div>
     <div class="nm small" style="margin-top:8px">Malzemeler <span class="mut">(▸ ile alt tarifi aç)</span></div>${crTree(r.id, times, 0)}</div>`;
   h += `<div class="card"><div class="nm">🧺 Toplanacak / alınacak ham malzemeler</div>
     <p class="mut small">👉 Bir malzemenin adına tıkla: nereden bulunacağı (kolaydan zora) ve haritadaki yeri açılır. Alt tarifler dahil her şey açıldı. "Elimde" kutusuna sahip olduğun miktarı yaz, kalan otomatik hesaplanır.</p>
     <table>${rawIds.length ? rawIds.sort((a, b) => p.raw[b] - p.raw[a]).map(id => `<tr><td data-crm="r${id}" style="cursor:pointer">${crIcon(id, 22)}<u>${esc(crName(id))}</u></td><td><b>${p.raw[id]}</b> gerekli</td>
       <td class="small">elimde <input data-crh="${id}" type="number" min="0" value="${have[id] || 0}" style="width:64px"></td><td class="mut small">${esc(crSrc(id))}</td></tr>${CRM === "r" + id ? `<tr><td colspan="4">${crSources(id, 0)}</td></tr>` : ""}`).join("") : '<tr><td class="ok">Hepsi elinde var ✓</td></tr>'}</table></div>`;
-  h += `<div class="card"><div class="nm">🪜 Adım adım yapım sırası</div><ol style="margin:6px 0;padding-left:20px">${p.order.map(id => { const s = crRecipe(id); return `<li style="margin:4px 0">${crIcon(s.p, 20)}<b>${p.steps[id]}×</b> üret: ${esc(crName(s.p))} <span class="mut small">(${esc(CR_MES_TR[s.cat] || s.cat)} Sv ${s.lv}${s.n > 1 ? `, her seferde ${s.n} adet` : ""})</span></li>`; }).join("")}</ol>
+  h += `<div class="card"><div class="nm">🪜 Adım adım yapım sırası</div><ol style="margin:6px 0;padding-left:20px">${p.order.map(id => { const s = crRecipe(id); return `<li style="margin:4px 0">${crIcon(s.p, 20)}<b>${p.steps[id]}×</b> üret: ${esc(crName(s.p))} <span class="mut small">(${esc(CR_MES_TR[s.cat] || s.cat)} ${crLv(s.lv)}${s.n > 1 ? `, her seferde ${s.n} adet` : ""})</span></li>`; }).join("")}</ol>
     <p class="mut small">Önce üstteki ara malzemeleri üret, en son asıl eşyayı. Başarısız üretim ve kombo bonusları hesaba katılmaz.</p></div>`;
   return h;
 }

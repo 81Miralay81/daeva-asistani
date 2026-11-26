@@ -89,9 +89,22 @@ for v in drops.values():
     v.sort(key=lambda d: -d["chance"])
     del v[12:]
 
+# --- simgeler: istemcinin simge adı -> aion2-interactive-map deposundaki webp (CC BY-NC)
+import subprocess, os
+icon_name = {}
+for f in ("Client/assets/aion2/craft/item_icons.json", "Backend/src/data/aion2/item_icons.json"):
+    for k, v in J(f).items():
+        icon_name.setdefault(k, v)
+icons = {}
+imap = os.environ.get("IMAP_DIR", "/tmp/imap")
+if os.path.isdir(imap):
+    files = {os.path.splitext(os.path.basename(p))[0]: p.replace("public/UI/Resource/Texture/Item/", "") for p in
+             subprocess.check_output(["git", "-C", imap, "ls-tree", "-r", "--name-only", "HEAD"], text=True).split() if "/Texture/Item/" in p}
+    icons = {str(i): files[icon_name[str(i)]] for i in ids if icon_name.get(str(i)) in files}
+
 out = here / "masaustu" / "craft"
 out.mkdir(exist_ok=True)
-(out / "craft.json").write_text(json.dumps({"recipes": R, "names": names, "grades": grades, "gather": gather, "drops": drops,
+(out / "craft.json").write_text(json.dumps({"recipes": R, "names": names, "grades": grades, "gather": gather, "drops": drops, "icons": icons,
     "fit": {k: [round(v["a"], 6), round(v["b"], 3), round(v["c"], 6), round(v["d"], 3)] for k, v in conv.items()},
     "kaynak": "SkeeveAN/Aion-DPS-Meter (MIT)"}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-print(len(R), "tarif,", len(names), "/", len(ids), "ad,", len(gather), "toplanan malzeme,", len(drops), "düşen malzeme")
+print(len(icons), "simge,", len(R), "tarif,", len(names), "/", len(ids), "ad,", len(gather), "toplanan malzeme,", len(drops), "düşen malzeme")
