@@ -1,16 +1,51 @@
 // ---------------- Zanaat (craft): tarif seç → kaç tane → malzeme ağacı, ham malzeme listesi, adım adım yapım sırası
 // Tarif verisi: SkeeveAN/Aion-DPS-Meter (MIT). Simge ve "nereden" bilgisi NCSOFT'un resmi eşya sayfasından.
-let CRMB = {}, CRMBL = {}; let CR = null, CRB = false, CRP = "Alchemy", CRQ = "", CRSEL = null, CRN = 1, CRX = {}, CRM = null, CRMAP = null;
+let CRMB = {}, CRMBL = {}, CRC = {}, CRCL = {}; let CR = null, CRB = false, CRP = "Alchemy", CRQ = "", CRSEL = null, CRN = 1, CRX = {}, CRM = null, CRMAP = null;
 const CR_MES = [["Alchemy", "⚗️ Simya"], ["Cooking", "🍲 Aşçılık"], ["Blacksmithing", "⚔️ Demircilik"], ["Tailoring", "🛡️ Terzilik"], ["Jewelcrafting", "💍 Kuyumculuk"]];
 const CR_MES_TR = Object.fromEntries(CR_MES.map(([k, v]) => [k, v.split(" ").slice(1).join(" ")]));
 function crRace() { return /asmo/i.test((S.prof && S.prof.race) || "") ? "D" : "L"; }
 function crHave() { S.crHave = S.crHave || {}; return S.crHave; }
 function crName(id) { return (CR.names[id] || (CR.info[id] && CR.info[id].name) || `Eşya #${id}`); }
 const CR_ICON = "https://raw.githubusercontent.com/aion2-interactive-map/aion2-interactive-map/master/public/UI/Resource/Texture/Item/";
-function crIcon(id, sz) { const i = CR.info[id] || {}; const u = (CR.icons && CR.icons[id]) ? CR_ICON + CR.icons[id] : (CRMB[id] && CRMB[id].icon) || i.icon; return u ? `<img src="${esc(u)}" loading="lazy" style="width:${sz || 24}px;height:${sz || 24}px;vertical-align:middle;border-radius:5px;margin-right:6px;background:#1c2330;border:1px solid #2c3a50">` : (i && i.icon ? `<img src="${esc(i.icon)}" style="width:${sz || 24}px;height:${sz || 24}px;vertical-align:middle;border-radius:4px;margin-right:6px">` : `<span style="display:inline-block;width:${sz || 24}px;height:${sz || 24}px;margin-right:6px;vertical-align:middle;border-radius:4px;background:#2a3140"></span>`); }
+function crIcon(id, sz) { const i = CR.info[id] || {}; const u = (CR.icons && CR.icons[id]) ? CR_ICON + CR.icons[id] : (CRMB[id] && CRMB[id].icon) || i.icon; return u ? `<img src="${esc(u)}" loading="lazy" style="width:${sz || 24}px;height:${sz || 24}px;vertical-align:middle;border-radius:5px;margin-right:6px;background:#1c2330;border:1px solid #2c3a50">` : (i && i.icon ? `<img src="${esc(i.icon)}" style="width:${sz || 24}px;height:${sz || 24}px;vertical-align:middle;border-radius:4px;margin-right:6px">` : `<span style="display:inline-block;width:${sz || 24}px;height:${sz || 24}px;margin-right:6px;vertical-align:middle;border-radius:4px;background:#2a3140" data-crimg="${id}" data-sz="${sz || 24}"></span>`); }
 function crSrc(id) { const i = CR.info[id]; if (!i || !i.sources) return ""; return i.sources.map(s => (typeof SRC_TR !== "undefined" && SRC_TR[s]) || s).join(", "); }
 function crByProduct() { if (!CR._bp) { CR._bp = {}; for (const r of CR.recipes) if (r.race === crRace() && r.learn !== "Combo" && !CR._bp[r.p]) CR._bp[r.p] = r; } return CR._bp; }
 function crCombo(r) { const c = CR.recipes.find(x => x.learn === "Combo" && x.race === r.race && x.cat === r.cat && x.order === r.order && x.id !== r.id && x.k.length === r.k.length && x.k.every((k, i) => k[0] === r.k[i][0])); return c ? ` · kombo şansıyla: <b>${esc(crName(c.p))}</b>` : ""; }
+const CR_GCOL = { 1: "#d9dde4", 2: "#5fd35f", 3: "#4aa3ff", 4: "#f5c542", 5: "#ff8a3d", 6: "#c77dff" };
+const CR_GTR = { Common: "Sıradan", Rare: "Nadir", Legend: "Efsane", Epic: "Destansı", Unique: "Eşsiz", Heroic: "Kahramanca", Mythic: "Mitik" };
+function crCol(id) { return CR_GCOL[(CR.grades || {})[id]] || "#d9dde4"; }
+function crNm(id) { return `<span data-cri="${id}" style="color:${crCol(id)};cursor:help">${esc(crName(id))}</span>`; }
+// kombo: ürün -> temel tarif (o tarif üretilirken kombo şansıyla bu ürün çıkar)
+function crComboBase() { if (!CR._cb) { CR._cb = {}; const byId = {}; CR.recipes.forEach(r => byId[r.id] = r); CR.recipes.forEach(r => { if (r.race === crRace() && r.cr && byId[r.cr] && r.learn !== "Combo") { const c = byId[r.cr]; if (!CR._cb[c.p]) CR._cb[c.p] = { base: r, combo: c, ch: (r.combo || 0) / 10000 }; } }); } return CR._cb; }
+function crComboOf(r) { const byId = r.cr && CR.recipes.find(x => x.id === r.cr); return byId ? { p: byId.p, ch: (r.combo || 0) / 10000 } : null; }
+async function crCard(id) { const a = DAPI(); if (!a || !a.craft_mb_item || CRCL[id]) return; CRCL[id] = 1; try { CRC[id] = await a.craft_mb_item(crName(id)); } catch (e) { CRC[id] = { ok: false }; } if (CRC[id] && CRC[id].icon && !(CR.icons || {})[id]) { CRMB[id] = Object.assign(CRMB[id] || {}, { icon: CRC[id].icon }); crIconFix(id); } crTipRefresh(id); const m = document.getElementById("critemov"); if (m && m.dataset.id == id) crItemOpen(id); }
+function crIconFix(id) { document.querySelectorAll(`[data-crimg="${id}"]`).forEach(el => { el.outerHTML = crIcon(id, +el.dataset.sz || 24); }); }
+function crStatsHtml(c) { if (!c) return '<div class="mut small">Yükleniyor…</div>'; if (!c.ok) return '<div class="mut small">Özellik bilgisi yok.</div>'; return (c.stats || []).map(([k, v]) => `<div style="display:flex;justify-content:space-between;gap:14px"><span style="color:#9fb0c8">${esc(k)}</span><b>${esc(v)}</b></div>`).join("") || '<div class="mut small">Özellik yok (malzeme).</div>'; }
+function crCardHtml(id, big) {
+  const c = CRC[id]; const g = c && c.grade ? (CR_GTR[c.grade] || c.grade) : "";
+  return `<div style="min-width:${big ? 280 : 230}px;background:linear-gradient(180deg,#1b2231,#121722);border:1px solid ${crCol(id)}66;border-radius:10px;padding:10px">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">${crIcon(id, big ? 52 : 40)}<div><div style="font-weight:700;color:${crCol(id)}">${esc(crName(id))}</div>
+    <div class="small" style="color:#9fb0c8">${esc([g, c && c.kind, c && c.ilvl ? "Eşya Sv " + c.ilvl : ""].filter(Boolean).join(" · "))}</div></div></div>${crStatsHtml(c)}</div>`;
+}
+// fareyle üstüne gelince eşya kartı
+let CRTIP = null;
+function crTipShow(el) { const id = el.dataset.cri; if (!CRC[id]) crCard(id); let t = document.getElementById("crtip"); if (!t) { t = document.createElement("div"); t.id = "crtip"; t.style.cssText = "position:fixed;z-index:9600;pointer-events:none;box-shadow:0 8px 30px #000c;border-radius:10px"; document.body.appendChild(t); }
+  CRTIP = id; const r = el.getBoundingClientRect(); t.innerHTML = crCardHtml(id); t.style.display = "block"; const w = t.offsetWidth, h = t.offsetHeight; t.style.left = Math.min(window.innerWidth - w - 8, r.left) + "px"; t.style.top = (r.bottom + h + 8 > window.innerHeight ? r.top - h - 6 : r.bottom + 6) + "px"; }
+function crTipRefresh(id) { const t = document.getElementById("crtip"); if (t && CRTIP == id && t.style.display === "block") t.innerHTML = crCardHtml(id); }
+document.addEventListener("mouseover", e => { const el = e.target.closest && e.target.closest("[data-cri]"); if (el) crTipShow(el); });
+document.addEventListener("mouseout", e => { const el = e.target.closest && e.target.closest("[data-cri]"); if (el && !el.contains(e.relatedTarget)) { const t = document.getElementById("crtip"); if (t) t.style.display = "none"; CRTIP = null; } });
+// tıklayınca oyundaki gibi pencere: eşya + kombo sonucu
+function crItemOpen(id) {
+  const tp = document.getElementById("crtip"); if (tp) tp.style.display = "none";
+  let o = document.getElementById("critemov"); if (!o) { o = document.createElement("div"); o.id = "critemov"; o.style.cssText = "position:fixed;inset:0;z-index:9100;background:rgba(5,8,13,.8);display:flex;align-items:center;justify-content:center"; o.onclick = e => { if (e.target === o) o.remove(); }; document.body.appendChild(o); }
+  o.dataset.id = id; if (!CRC[id]) crCard(id);
+  const r = crByProduct()[id], co = r ? crComboOf(r) : null; if (co && !CRC[co.p]) crCard(co.p);
+  o.innerHTML = `<div style="background:#0e131c;border:1px solid #3a4a66;border-radius:14px;padding:16px;max-width:90vw;box-shadow:0 10px 40px #000">
+    <div style="display:flex;gap:14px;align-items:stretch;flex-wrap:wrap">${crCardHtml(id, true)}
+    ${co ? `<div style="display:flex;flex-direction:column;justify-content:center;align-items:center;color:#ffcf4a;font-weight:700;padding:0 6px">⇢<div class="small">kombo %${Math.round(co.ch * 100)}</div></div>${crCardHtml(co.p, true)}` : ""}</div>
+    ${r ? `<div class="small" style="margin-top:10px;color:#9fb0c8">${r.type === "Succession" ? "🔁 Aktarma tarifi: elindeki bir silahın/zırhın gelişimini yeni eşyaya aktararak üretilir. " : ""}${co ? `Üretimde %${Math.round(co.ch * 100)} ihtimalle <b style="color:${crCol(co.p)}">${esc(crName(co.p))}</b> çıkar.` : "Bu tarifin kombo sonucu yok."}</div>` : ""}
+    <div style="text-align:right;margin-top:10px"><button class="btn" onclick="document.getElementById('critemov').remove()">Kapat</button></div></div>`;
+}
 function crLv(lv) { return !lv ? "özel tarif" : lv <= 50 ? `Acemi ${lv}` : `Profesyonel ${lv - 50}`; }
 const CR_TAB_TR = { Misc: "🧱 Ara malzemeler", Sword: "Kılıç (Longsword)", Greatsword: "Büyük kılıç", Dagger: "Hançer", Mace: "Topuz", Guarder: "Kalkan", Potion: "İksir", Magicbook: "Büyü kitabı", Orb: "Küre (Orb)", MagicStone: "Manastone", Scroll: "Parşömen" };
 function crTab(r) { if (r.sub === "Misc") return "Misc"; return r.tab || r.sub; }
@@ -31,9 +66,10 @@ function crPlan(rid, qty) {
   const bp = crByProduct(), have = Object.assign({}, crHave()), raw = {}, steps = {}, order = [];
   function need(id, q, depth) {
     const h = Math.min(have[id] || 0, q); if (h) { have[id] -= h; q -= h; } if (q <= 0) return;
-    const r = bp[id];
+    let r = bp[id], ch = 1;
+    if (!r) { const cb = crComboBase()[id]; if (cb && cb.ch > 0) { r = cb.base; ch = cb.ch; } }
     if (!r || depth > 8) { raw[id] = (raw[id] || 0) + q; return; }
-    const times = Math.ceil(q / (r.n || 1));
+    const times = Math.ceil(q / (r.n || 1) / ch);
     for (const [mid, mq] of r.k) need(mid, mq * times, depth + 1);
     if (!steps[r.id]) { steps[r.id] = 0; order.push(r.id); } steps[r.id] += times;
   }
@@ -46,14 +82,14 @@ function crPlan(rid, qty) {
 function crTree(rid, mult, depth) {
   const r = crRecipe(rid), bp = crByProduct();
   return r.k.map(([mid, mq, alt]) => {
-    const sub = bp[mid], key = rid + ":" + mid, open = CRX[key];
+    const sub = bp[mid], cb = !sub ? crComboBase()[mid] : null, key = rid + ":" + mid, open = CRX[key];
     const tot = mq * mult;
     return `<div style="margin-left:${depth * 18}px;padding:4px 0;border-bottom:1px solid #1f2633">
-      ${sub ? `<button class="btn" data-crx="${key}" style="padding:0 6px;margin-right:4px">${open ? "▾" : "▸"}</button>` : `<span style="display:inline-block;width:26px"></span>`}
-      <span data-crm="t${key}" style="cursor:pointer">${crIcon(mid, 22)}<b>${tot}×</b> <u>${esc(crName(mid))}</u></span>
-      ${sub ? `<span class="mut small"> · üretilir (${esc(CR_MES_TR[sub.cat] || sub.cat)} ${crLv(sub.lv)})</span>` : `<span class="mut small"> · ${esc(crSrc(mid) || "ham malzeme")}</span>`}
+      ${sub || cb ? `<button class="btn" data-crx="${key}" style="padding:0 6px;margin-right:4px">${open ? "▾" : "▸"}</button>` : `<span style="display:inline-block;width:26px"></span>`}
+      <span data-crm="t${key}" style="cursor:pointer"><span data-cri="${mid}">${crIcon(mid, 22)}</span><b>${tot}×</b> <u style="color:${crCol(mid)}" data-cri="${mid}">${esc(crName(mid))}</u></span>
+      ${sub ? `<span class="mut small"> · üretilir (${esc(CR_MES_TR[sub.cat] || sub.cat)} ${crLv(sub.lv)})</span>` : cb ? `<span class="small" style="color:#ffcf4a"> · ✨ kombo ile çıkar: ${esc(crName(cb.base.p))} üretiminde %${Math.round(cb.ch * 100)} (ortalama ${Math.ceil(tot / (cb.base.n || 1) / (cb.ch || 1))} deneme)</span>` : `<span class="mut small"> · ${esc(crSrc(mid) || "ham malzeme")}</span>`}
       ${alt ? `<span class="mut small"> · yerine: ${alt.map(a => esc(crName(a[0]))).join(", ")}</span>` : ""}
-    </div>${CRM === "t" + key ? crSources(mid, depth + 1) : ""}${sub && open ? crTree(sub.id, Math.ceil(tot / (sub.n || 1)), depth + 1) : ""}`;
+    </div>${CRM === "t" + key ? crSources(mid, depth + 1) : ""}${sub && open ? crTree(sub.id, Math.ceil(tot / (sub.n || 1)), depth + 1) : ""}${cb && open ? crTree(cb.base.id, Math.ceil(tot / (cb.base.n || 1) / (cb.ch || 1)), depth + 1) : ""}`;
   }).join("");
 }
 
@@ -163,7 +199,7 @@ function rZan() {
   h += `<div style="display:grid;grid-template-columns:minmax(260px,1fr) 2fr;gap:12px;align-items:start">`;
   let lastTab = null;
   h += `<div class="card" style="max-height:75vh;overflow:auto">${list.length ? list.slice(0, 400).map(r => { const t = crTab(r); const head = !q && t !== lastTab ? `<div style="margin:10px 0 4px;padding:4px 8px;border-radius:6px;background:#1d2636;color:var(--acc);font-weight:700;font-size:13px">${esc(CR_TAB_TR[t] || t)}</div>` : ""; lastTab = t;
-    return head + `<div data-crs="${r.id}" style="cursor:pointer;padding:5px 6px;border-radius:8px;display:flex;align-items:center;${CRSEL === r.id ? "background:#2a3550;outline:1px solid var(--acc)" : ""}">${crIcon(r.p, 30)}<span style="flex:1">${esc(crName(r.p))}${r.n > 1 ? ` <span class="mut">×${r.n}</span>` : ""}</span><span class="mut small" style="white-space:nowrap;margin-left:6px">${crLv(r.lv)}${r.learn === "Advancement" ? " · 🎖" : r.learn !== "Auto" ? " · 📜" : ""}</span></div>`; }).join("") : '<div class="mut">Bulunamadı.</div>'}
+    return head + `<div data-crs="${r.id}" style="cursor:pointer;padding:5px 6px;border-radius:8px;display:flex;align-items:center;${CRSEL === r.id ? "background:#2a3550;outline:1px solid var(--acc)" : ""}"><span data-cri="${r.p}">${crIcon(r.p, 30)}</span><span style="flex:1;color:${crCol(r.p)}">${esc(crName(r.p))}${r.n > 1 ? ` <span class="mut">×${r.n}</span>` : ""}</span><span class="mut small" style="white-space:nowrap;margin-left:6px">${r.type === "Succession" ? "🔁 aktarma" : crLv(r.lv)}${r.learn === "Advancement" ? " · 🎖" : r.learn !== "Auto" ? " · 📜" : ""}</span></div>`; }).join("") : '<div class="mut">Bulunamadı.</div>'}
     <p class="mut small">📜 tarif kitabıyla öğrenilir · 🎖 meslek terfi görevi</p></div>`;
   h += `<div>${CRSEL ? crDetail() : '<div class="card mut">Soldan bir tarif seç.</div>'}</div></div>`;
   h += `<p class="mut small">Tarif, toplama ve harita verisi: Aion-DPS-Meter (MIT) · simgeler: aion2-interactive-map (CC BY-NC) · ek kaynak bilgisi: NCSOFT.</p>`;
@@ -175,21 +211,26 @@ function crDetail() {
   const p = crPlan(r.id, CRN), times = Math.ceil(CRN / (r.n || 1));
   const rawIds = Object.keys(p.raw);
   crWant([r.p, ...r.k.map(k => k[0]), ...rawIds, ...p.order.map(id => crRecipe(id).p)]);
+  [r.p, ...r.k.map(k => k[0]), ...rawIds].forEach(i => { if (!(CR.icons || {})[i] && !CRCL[i]) setTimeout(() => crCard(String(i)), 50); });
   const have = crHave();
-  let h = `<div class="card"><div style="display:flex;align-items:center;gap:10px">${crIcon(r.p, 44)}<div><div class="nm" style="margin:0">${esc(crName(r.p))}</div>
-    <div class="mut small">${esc(CR_MES_TR[r.cat] || r.cat)} · ${crLv(r.lv)} · bir üretim ${r.n} adet verir${r.learn === "Book" || (r.learn !== "Auto" && r.learn !== "Advancement") ? " · tarif kitabı gerekir" : ""}${crCombo(r)}</div></div></div>
+  const co = crComboOf(r);
+  let h = `<div class="card"><div style="display:flex;align-items:center;gap:10px"><span data-critem="${r.p}" data-cri="${r.p}" style="cursor:pointer">${crIcon(r.p, 52)}</span><div><div class="nm" style="margin:0;cursor:pointer;color:${crCol(r.p)}" data-critem="${r.p}">${esc(crName(r.p))} <span class="small mut">(tıkla: eşya kartı)</span></div>
+    <div class="mut small">${esc(CR_MES_TR[r.cat] || r.cat)} · ${r.type === "Succession" ? "🔁 Aktarma tarifi" : crLv(r.lv)} · bir üretim ${r.n} adet verir${r.learn === "Advancement" ? " · terfi görevi" : ""}</div>
+    ${co ? `<div class="small">✨ Kombo %${Math.round(co.ch * 100)}: ${crNm(co.p)}</div>` : ""}
+    ${r.type === "Succession" ? `<div class="small mut">Aktarma: listedeki ilk eşya (örn. Splendent silah) tüketilir, gelişimi yeni eşyaya geçer.</div>` : ""}</div></div>
     <div style="margin:10px 0"><label>Kaç tane istiyorsun? <input id="crn" type="number" min="1" value="${CRN}" style="width:80px"></label> <span class="mut small">→ ${times} kez üretilecek</span></div>
     <div class="nm small" style="margin-top:8px">Malzemeler <span class="mut">(▸ ile alt tarifi aç)</span></div>${crTree(r.id, times, 0)}</div>`;
   h += `<div class="card"><div class="nm">🧺 Toplanacak / alınacak ham malzemeler</div>
     <p class="mut small">👉 Bir malzemenin adına tıkla: nereden bulunacağı (kolaydan zora) ve haritadaki yeri açılır. Alt tarifler dahil her şey açıldı. "Elimde" kutusuna sahip olduğun miktarı yaz, kalan otomatik hesaplanır.</p>
-    <table>${rawIds.length ? rawIds.sort((a, b) => p.raw[b] - p.raw[a]).map(id => `<tr><td data-crm="r${id}" style="cursor:pointer">${crIcon(id, 22)}<u>${esc(crName(id))}</u></td><td><b>${p.raw[id]}</b> gerekli</td>
+    <table>${rawIds.length ? rawIds.sort((a, b) => p.raw[b] - p.raw[a]).map(id => `<tr><td data-crm="r${id}" style="cursor:pointer"><span data-cri="${id}">${crIcon(id, 22)}</span><u style="color:${crCol(id)}" data-cri="${id}">${esc(crName(id))}</u></td><td><b>${p.raw[id]}</b> gerekli</td>
       <td class="small">elimde <input data-crh="${id}" type="number" min="0" value="${have[id] || 0}" style="width:64px"></td><td class="mut small">${esc(crSrc(id))}</td></tr>${CRM === "r" + id ? `<tr><td colspan="4">${crSources(id, 0)}</td></tr>` : ""}`).join("") : '<tr><td class="ok">Hepsi elinde var ✓</td></tr>'}</table></div>`;
-  h += `<div class="card"><div class="nm">🪜 Adım adım yapım sırası</div><ol style="margin:6px 0;padding-left:20px">${p.order.map(id => { const s = crRecipe(id); return `<li style="margin:4px 0">${crIcon(s.p, 20)}<b>${p.steps[id]}×</b> üret: ${esc(crName(s.p))} <span class="mut small">(${esc(CR_MES_TR[s.cat] || s.cat)} ${crLv(s.lv)}${s.n > 1 ? `, her seferde ${s.n} adet` : ""})</span></li>`; }).join("")}</ol>
+  h += `<div class="card"><div class="nm">🪜 Adım adım yapım sırası</div><ol style="margin:6px 0;padding-left:20px">${p.order.map(id => { const s = crRecipe(id); return `<li style="margin:4px 0">${crIcon(s.p, 20)}<b>${p.steps[id]}×</b> üret: ${crNm(s.p)} <span class="mut small">(${esc(CR_MES_TR[s.cat] || s.cat)} ${crLv(s.lv)}${s.n > 1 ? `, her seferde ${s.n} adet` : ""})</span></li>`; }).join("")}</ol>
     <p class="mut small">Önce üstteki ara malzemeleri üret, en son asıl eşyayı. Başarısız üretim ve kombo bonusları hesaba katılmaz.</p></div>`;
   return h;
 }
 
 document.addEventListener("click", e => {
+  const ti = e.target.closest("[data-critem]"); if (ti) { crItemOpen(ti.dataset.critem); return; }
   const t = e.target.closest("[data-crp],[data-crs],[data-crx],[data-crm],[data-crmap],[data-crmob]"); if (!t) return;
   if (t.dataset.crm) { CRM = CRM === t.dataset.crm ? null : t.dataset.crm; CRMAP = null; const y = window.scrollY; render(); window.scrollTo(0, y); return; }
   if (t.dataset.crmap) { const [id, map] = t.dataset.crmap.split("|"); crMapOpen(id, map); return; }

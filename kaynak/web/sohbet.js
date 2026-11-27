@@ -34,10 +34,11 @@ async function sbAfterLogin() {
   if (!snap.exists) await ref.set(Object.assign({ name: (SB.user.email || "").split("@")[0], admin: false, mod: false, banned: false, muteUntil: 0 }, base));
   else await ref.update(base);
   ref.onSnapshot(d => { SB.me = d.data(); if (SB.me && SB.me.banned) { SB.err = "Sohbetten atıldın."; firebase.auth().signOut(); } if (TAB === "soh") sbRender(); });
-  sbDB().collection("users").onSnapshot(s => { s.forEach(d => SB.users[d.id] = d.data()); if (TAB === "soh" && SB.panel) render(); }, () => {});
+  sbDB().collection("users").onSnapshot(s => { s.forEach(d => SB.users[d.id] = d.data()); if (TAB === "soh") sbRender(); }, () => {});
   const me = (await ref.get()).data();
   if (me && me.admin && !sessionStorage.getItem("sbAdminSaid")) { sessionStorage.setItem("sbAdminSaid", "1"); sbDB().collection("events").add({ type: "admin", name: me.name, ts: Date.now() }).catch(() => {}); }
   sbListen();
+  clearInterval(SB.hb); SB.hb = setInterval(() => { if (SB.user) ref.update({ seen: Date.now() }).catch(() => {}); }, 60000);  // çevrimiçi göstergesi
 }
 function sbListen() {
   if (SB.unsub) SB.unsub();
@@ -115,8 +116,12 @@ function rSoh() {
       <p class="mut small">"Yetki ver": Admin odasını görür, susturur ve atabilir. Sadece admin yetki verir. Atılan kişinin cihazı yasaklanır.</p></div>`;
     return h;
   }
-  h += `<div class="card" style="padding:0"><div id="sbmsgs" style="height:58vh;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:4px">${list}</div>
+  const on = Object.values(SB.users).filter(u => !u.banned && Date.now() - (u.seen || 0) < 150000).sort((a, b) => (b.admin - a.admin) || (b.mod - a.mod) || String(a.name).localeCompare(b.name));
+  const side = `<div class="card" style="margin:0;max-height:66vh;overflow-y:auto"><div class="nm small">🟢 Çevrimiçi (${on.length})</div>${on.map(u => `<div class="small" style="padding:3px 0">${u.admin ? "🛡 " : u.mod ? "⭐ " : "• "}<b style="color:${u.admin ? "#ffcf4a" : u.mod ? "#7fd1ff" : "inherit"}">${esc(u.name || "")}</b>${u.char ? `<div class="mut" style="margin-left:14px">${esc(u.char)}${u.server ? " · " + esc(u.server) : ""}${u.race ? " · " + esc(u.race) : ""}</div>` : ""}</div>`).join("") || '<div class="mut small">Kimse yok</div>'}</div>`;
+  h += `<div style="display:grid;grid-template-columns:1fr 220px;gap:10px;align-items:start"><div>`;
+  h += `<div class="card" style="padding:0;margin:0"><div id="sbmsgs" style="height:58vh;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:4px">${list}</div>
     <div style="display:flex;gap:6px;padding:8px;border-top:1px solid var(--line)"><input id="sbtxt" maxlength="500" placeholder="${me.muteUntil > Date.now() ? "Susturuldun" : "Mesaj yaz, Enter ile gönder"}" style="flex:1"><button class="btn" id="sbsend">Gönder</button></div></div>`;
+  h += `</div>${side}</div>`;
   return h;
 }
 document.addEventListener("click", e => {

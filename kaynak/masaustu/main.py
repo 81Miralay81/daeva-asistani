@@ -309,6 +309,59 @@ def _mb_spawns(page):
     return out
 
 
+def _mb_cache_rw(key, fn, ttl=7 * 86400):
+    cache_f = os.path.join(DATA_DIR, "metabot_cache.json")
+    with _MB_LOCK:
+        try:
+            with open(cache_f, encoding="utf-8") as f:
+                cache = json.load(f)
+        except (OSError, ValueError):
+            cache = {}
+        hit = cache.get(key)
+        if hit and time.time() - hit.get("t", 0) < ttl:
+            return hit["d"]
+    res = fn()
+    if res.get("ok"):
+        with _MB_LOCK:
+            try:
+                with open(cache_f, encoding="utf-8") as f:
+                    cache = json.load(f)
+            except (OSError, ValueError):
+                cache = {}
+            cache[key] = {"t": time.time(), "d": res}
+            try:
+                os.makedirs(DATA_DIR, exist_ok=True)
+                with open(cache_f, "w", encoding="utf-8") as f:
+                    json.dump(cache, f, ensure_ascii=False)
+            except OSError:
+                pass
+    return res
+
+
+def _mb_card(name):
+    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+
+    def fetch():
+        try:
+            page = _mb_get("/en/aion-2/items/" + slug)
+        except urllib.error.HTTPError as e:
+            return {"ok": False, "error": "MetaBot'ta sayfası yok" if e.code == 404 else f"MetaBot cevap vermedi ({e.code})"}
+        icon = re.search(r"/web/aion2/items/[a-z0-9_]+\.webp", page)
+        m = re.search(r"is an? ([A-Z][a-z]+) ([A-Za-z' -]+?) in AION 2(?: at item level (\d+))?", page)
+        stats = []
+        sec = page.split('id="stats"', 1)
+        if len(sec) > 1:
+            dl = sec[1].split("</dl>", 1)[0]
+            for dt, dd in re.findall(r"<dt[^>]*>([\s\S]*?)</dt>\s*<dd[^>]*>([\s\S]*?)</dd>", dl)[:14]:
+                first = re.search(r"<span[^>]*>([\s\S]*?)</span>", dd)
+                val = re.sub(r"<[^>]+>", "", first.group(1) if first else dd).strip()
+                stats.append([re.sub(r"<[^>]+>", "", dt).strip(), val])
+        return {"ok": True, "icon": ("https://metabot.gg" + icon.group(0)) if icon else "", "grade": m.group(1) if m else "",
+                "kind": m.group(2) if m else "", "ilvl": m.group(3) if m and m.group(3) else "", "stats": stats,
+                "url": "https://metabot.gg/en/aion-2/items/" + slug}
+    return _mb_cache_rw("card:" + slug, fetch)
+
+
 def _mb_item(name):
     slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
     cache_f = os.path.join(DATA_DIR, "metabot_cache.json")
@@ -426,6 +479,10 @@ class Api:
         """Malzemenin MetaBot sayfasını bu bilgisayardan okur: düşüren canavarlar, şans, bölgeler, doğma noktaları.
         Sadece istenen malzeme okunur, sonuç 7 gün bilgisayarda saklanır."""
         return _safe(lambda: _mb_item(name))
+
+    def craft_mb_item(self, name):
+        """Eşyanın MetaBot sayfasından sadece kart bilgisi: derece, tür, eşya seviyesi, özellikler, simge (hafif)."""
+        return _safe(lambda: _mb_card(name))
 
     # ------------------------------------------------------------ Sohbet
     def chat_device(self):
